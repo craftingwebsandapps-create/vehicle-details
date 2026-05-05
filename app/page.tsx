@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type Contractor = {
   _id: string;
@@ -63,6 +63,8 @@ function DetailRow({ label, value }: DetailProps) {
 }
 
 export default function Home() {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const registrationNumber = useMemo(
     () => searchParams.get("registrationNumber")?.trim() ?? "",
@@ -71,6 +73,22 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<ApiResponse>(null);
+  const vehicleDocumentUrl = result?.data?.vehicle?.document ?? "";
+
+  function handleSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+    const value = String(formData.get("registrationNumber") ?? "").trim();
+    if (!value) {
+      setError("Please enter a registration number.");
+      return;
+    }
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("registrationNumber", value);
+    router.push(`${pathname}?${params.toString()}`);
+  }
 
   useEffect(() => {
     let ignore = false;
@@ -128,6 +146,25 @@ export default function Home() {
           Fetching data based on the URL param: registrationNumber.
         </p>
 
+        <form
+          onSubmit={handleSearch}
+          className="mt-4 flex flex-col gap-3 sm:flex-row"
+        >
+          <input
+            type="text"
+            name="registrationNumber"
+            defaultValue={registrationNumber}
+            placeholder="Enter registration number"
+            className="h-11 w-full rounded-md border border-slate-300 px-3 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500"
+          />
+          <button
+            type="submit"
+            className="h-11 rounded-md bg-slate-900 px-5 text-sm font-medium text-white transition hover:bg-slate-700"
+          >
+            Search
+          </button>
+        </form>
+
         <p className="mt-4 rounded-md bg-slate-100 px-3 py-2 text-sm text-slate-700">
           registrationNumber: {registrationNumber || "(not provided)"}
         </p>
@@ -155,10 +192,31 @@ export default function Home() {
                   value={result.data.vehicle.registrationNumber}
                 />
                 <DetailRow label="Status" value={result.data.vehicle.status} />
-                <DetailRow
-                  label="Document"
-                  value={result.data.vehicle.document}
-                />
+                <div className="border-b border-slate-200 py-2 last:border-b-0">
+                  <p className="text-sm font-medium text-slate-700">Document</p>
+                  {vehicleDocumentUrl ? (
+                    <div className="mt-2 space-y-2">
+                      <a
+                        href={vehicleDocumentUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm text-blue-700 underline"
+                      >
+                        Open image
+                      </a>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={vehicleDocumentUrl}
+                        alt="Vehicle document"
+                        className="h-44 w-full max-w-sm rounded-md border border-slate-200 object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-sm text-slate-600">
+                      No document image.
+                    </p>
+                  )}
+                </div>
                 <DetailRow
                   label="Created At"
                   value={result.data.vehicle.createdAt}
