@@ -206,21 +206,21 @@ function VehicleSearchContent() {
   return (
     <div className="min-h-screen bg-[#fde6d3]/30">
       {/* Header */}
-      <header className="bg-[#a31e22] shadow-md">
-        <div className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-4">
+      <header className="bg-white shadow-md border-b-4 border-[#a31e22]">
+        <div className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-3">
           <Image
             src="/APCRDA-LOGO.png"
             alt="APCRDA Logo"
-            width={52}
-            height={52}
-            className="h-13 w-13 object-contain"
+            width={64}
+            height={64}
+            className="h-16 w-auto object-contain"
             priority
           />
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-[#fbb980]">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-[#a31e22]">
               Government of Andhra Pradesh
             </p>
-            <h1 className="text-lg font-bold leading-tight text-white">
+            <h1 className="text-lg font-bold leading-tight text-[#7a1315]">
               APCRDA — Vehicle Information Portal
             </h1>
           </div>
