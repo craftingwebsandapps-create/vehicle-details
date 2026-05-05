@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type Contractor = {
@@ -53,6 +54,8 @@ type DetailProps = {
   value?: string | number | null;
 };
 
+const REGISTRATION_NUMBER_PATTERN = /^[A-Za-z0-9-]{4,20}$/;
+
 function DetailRow({ label, value }: DetailProps) {
   return (
     <div className="grid grid-cols-[140px_1fr] gap-3 border-b border-slate-200 py-2 text-sm last:border-b-0">
@@ -62,12 +65,24 @@ function DetailRow({ label, value }: DetailProps) {
   );
 }
 
-export default function Home() {
+function formatDate(value: string): string {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return parsed.toLocaleString("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
+function VehicleSearchContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const registrationNumber = useMemo(
-    () => searchParams.get("registrationNumber")?.trim() ?? "",
+    () => (searchParams.get("registrationNumber")?.trim() ?? "").toUpperCase(),
     [searchParams],
   );
   const [loading, setLoading] = useState(false);
@@ -79,23 +94,39 @@ export default function Home() {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    const value = String(formData.get("registrationNumber") ?? "").trim();
+    const value = String(formData.get("registrationNumber") ?? "")
+      .trim()
+      .toUpperCase();
+
     if (!value) {
       setError("Please enter a registration number.");
       return;
     }
 
+    if (!REGISTRATION_NUMBER_PATTERN.test(value)) {
+      setError("Registration number format is invalid.");
+      return;
+    }
+
+    setError("");
     const params = new URLSearchParams(searchParams.toString());
     params.set("registrationNumber", value);
     router.push(`${pathname}?${params.toString()}`);
   }
 
   useEffect(() => {
-    let ignore = false;
+    const controller = new AbortController();
 
     async function fetchVehicleDetails() {
       if (!registrationNumber) {
-        setError("Missing registrationNumber param in URL.");
+        setError("");
+        setResult(null);
+        setLoading(false);
+        return;
+      }
+
+      if (!REGISTRATION_NUMBER_PATTERN.test(registrationNumber)) {
+        setError("Registration number format is invalid.");
         setResult(null);
         setLoading(false);
         return;
@@ -107,23 +138,31 @@ export default function Home() {
 
       try {
         const response = await fetch(
-          `https://vi-backend.theamaravaticity.com/vehicle/search?registrationNumber=${encodeURIComponent(registrationNumber)}`,
+          `/api/vehicle/search?registrationNumber=${encodeURIComponent(registrationNumber)}`,
+          {
+            cache: "no-store",
+            signal: controller.signal,
+          },
         );
 
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}.`);
+        const data = (await response.json()) as ApiResponse;
+        if (!response.ok || !data?.success) {
+          throw new Error(data?.message || "Unable to fetch vehicle details.");
         }
 
-        const data = (await response.json()) as ApiResponse;
-        if (!ignore) {
+        if (!controller.signal.aborted) {
           setResult(data);
         }
-      } catch {
-        if (!ignore) {
-          setError("Unable to fetch vehicle details. Please try again.");
+      } catch (fetchError) {
+        if (!controller.signal.aborted) {
+          const message =
+            fetchError instanceof Error
+              ? fetchError.message
+              : "Unable to fetch vehicle details. Please try again.";
+          setError(message);
         }
       } finally {
-        if (!ignore) {
+        if (!controller.signal.aborted) {
           setLoading(false);
         }
       }
@@ -132,7 +171,7 @@ export default function Home() {
     fetchVehicleDetails();
 
     return () => {
-      ignore = true;
+      controller.abort();
     };
   }, [registrationNumber]);
 
@@ -151,15 +190,19 @@ export default function Home() {
           className="mt-4 flex flex-col gap-3 sm:flex-row"
         >
           <input
+            key={registrationNumber}
             type="text"
             name="registrationNumber"
             defaultValue={registrationNumber}
             placeholder="Enter registration number"
             className="h-11 w-full rounded-md border border-slate-300 px-3 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500"
+            autoComplete="off"
+            aria-label="Vehicle registration number"
           />
           <button
             type="submit"
-            className="h-11 rounded-md bg-slate-900 px-5 text-sm font-medium text-white transition hover:bg-slate-700"
+            disabled={loading}
+            className="h-11 rounded-md bg-slate-900 px-5 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-500"
           >
             Search
           </button>
@@ -168,6 +211,12 @@ export default function Home() {
         <p className="mt-4 rounded-md bg-slate-100 px-3 py-2 text-sm text-slate-700">
           registrationNumber: {registrationNumber || "(not provided)"}
         </p>
+
+        {!registrationNumber && (
+          <p className="mt-4 text-sm text-slate-600">
+            Enter a registration number and search to load vehicle details.
+          </p>
+        )}
 
         {loading && (
           <p className="mt-4 text-sm text-slate-600">
@@ -204,10 +253,11 @@ export default function Home() {
                       >
                         Open image
                       </a>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <Image
                         src={vehicleDocumentUrl}
                         alt="Vehicle document"
+                        width={640}
+                        height={320}
                         className="h-44 w-full max-w-sm rounded-md border border-slate-200 object-cover"
                       />
                     </div>
@@ -219,11 +269,11 @@ export default function Home() {
                 </div>
                 <DetailRow
                   label="Created At"
-                  value={result.data.vehicle.createdAt}
+                  value={formatDate(result.data.vehicle.createdAt)}
                 />
                 <DetailRow
                   label="Updated At"
-                  value={result.data.vehicle.updatedAt}
+                  value={formatDate(result.data.vehicle.updatedAt)}
                 />
               </div>
             </section>
@@ -277,5 +327,21 @@ export default function Home() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-slate-50 px-4 py-10">
+          <div className="mx-auto w-full max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <p className="text-sm text-slate-600">Loading page...</p>
+          </div>
+        </main>
+      }
+    >
+      <VehicleSearchContent />
+    </Suspense>
   );
 }
