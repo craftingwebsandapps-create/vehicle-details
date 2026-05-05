@@ -113,7 +113,7 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-slate-300 bg-white shadow-sm">
+    <div className="rounded-xl border overflow-hidden border-slate-300 bg-white shadow-sm">
       <div className="flex items-center gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3.5 sm:px-5 sm:py-4">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#fde6d3] text-[#a31e22]">
           {icon}
