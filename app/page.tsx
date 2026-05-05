@@ -31,11 +31,14 @@ type Vehicle = {
   site: Site;
   createdAt: string;
   updatedAt: string;
-  __v: number;
+  __v?: number;
 };
 
 type Driver = {
-  [key: string]: unknown;
+  _id: string;
+  name: string;
+  mobileNumber: string;
+  licenceNumber: string;
 } | null;
 
 type ApiResponse = {
@@ -58,6 +61,10 @@ function formatDate(value: string): string {
     dateStyle: "medium",
     timeStyle: "short",
   });
+}
+
+function isLikelyUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value);
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -409,23 +416,35 @@ function VehicleSearchContent() {
                     <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
                       Document
                     </p>
-                    <a href={vehicle.document} target="_blank" rel="noreferrer">
-                      <Image
-                        src={vehicle.document}
-                        alt="Vehicle document"
-                        width={200}
-                        height={130}
-                        className="h-32 w-48 rounded-lg border border-slate-200 object-cover shadow-sm transition hover:opacity-90"
-                      />
-                    </a>
-                    <a
-                      href={vehicle.document}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs font-medium text-blue-600 hover:underline"
-                    >
-                      View full image ↗
-                    </a>
+                    {isLikelyUrl(vehicle.document) ? (
+                      <>
+                        <a
+                          href={vehicle.document}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <Image
+                            src={vehicle.document}
+                            alt="Vehicle document"
+                            width={200}
+                            height={130}
+                            className="h-32 w-48 rounded-lg border border-slate-200 object-cover shadow-sm transition hover:opacity-90"
+                          />
+                        </a>
+                        <a
+                          href={vehicle.document}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs font-medium text-blue-600 hover:underline"
+                        >
+                          View full image ↗
+                        </a>
+                      </>
+                    ) : (
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
+                        {vehicle.document}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -522,11 +541,13 @@ function VehicleSearchContent() {
             >
               {driver ? (
                 <div className="grid grid-cols-2 gap-x-6 gap-y-3.5">
-                  {Object.entries(driver).map(([key, val]) => (
-                    <Field key={key} label={key}>
-                      {String(val ?? "-")}
-                    </Field>
-                  ))}
+                  <Field label="Driver Name">{driver.name || "-"}</Field>
+                  <Field label="Mobile Number">
+                    {driver.mobileNumber || "-"}
+                  </Field>
+                  <Field label="Licence Number">
+                    {driver.licenceNumber || "-"}
+                  </Field>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-sm text-slate-500">
