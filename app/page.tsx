@@ -219,10 +219,10 @@ function VehicleSearchContent() {
           <Image
             src="/APCRDA-LOGO.png"
             alt="APCRDA Logo"
-            width={64}
-            height={64}
+            width={3508}
+            height={2244}
             className="object-contain"
-            style={{ height: "4rem", width: "auto" }}
+            style={{ height: "4.5rem", width: "auto" }}
             priority
           />
           <div>
