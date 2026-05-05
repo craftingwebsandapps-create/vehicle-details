@@ -39,6 +39,7 @@ type Driver = {
   name: string;
   mobileNumber: string;
   licenceNumber: string;
+  licenceUrl?: string;
 } | null;
 
 type ApiResponse = {
@@ -113,13 +114,13 @@ function SectionCard({
 }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex items-center gap-2.5 border-b border-slate-100 px-5 py-3.5">
+      <div className="flex items-center gap-2.5 border-b border-slate-100 px-4 py-3 sm:px-5 sm:py-3.5">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#fde6d3] text-[#a31e22]">
           {icon}
         </span>
         <h2 className="text-sm font-semibold text-slate-800">{title}</h2>
       </div>
-      <div className="p-5">{children}</div>
+      <div className="p-4 sm:p-5">{children}</div>
     </div>
   );
 }
@@ -214,29 +215,29 @@ function VehicleSearchContent() {
     <div className="min-h-screen bg-[#fde6d3]/30">
       {/* Header */}
       <header className="bg-white shadow-md border-b-4 border-[#a31e22]">
-        <div className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-3">
+        <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3 sm:gap-4">
           <Image
             src="/APCRDA-LOGO.png"
             alt="APCRDA Logo"
             width={64}
             height={64}
-            className="h-16 w-auto object-contain"
+            className="h-12 w-auto object-contain sm:h-16"
             priority
           />
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-widest text-[#a31e22]">
               Government of Andhra Pradesh
             </p>
-            <h1 className="text-lg font-bold leading-tight text-[#7a1315]">
+            <h1 className="text-base font-bold leading-tight text-[#7a1315] sm:text-lg">
               APCRDA — Vehicle Information Portal
             </h1>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-8">
+      <main className="mx-auto max-w-4xl px-4 py-6 sm:py-8">
         {/* Search card */}
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <h2 className="text-base font-semibold text-slate-800">
             Search Vehicle
           </h2>
@@ -393,7 +394,7 @@ function VehicleSearchContent() {
               }
             >
               <div className="flex flex-col gap-6 sm:flex-row">
-                <div className="grid flex-1 grid-cols-2 gap-x-6 gap-y-4">
+                <div className="grid flex-1 grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
                   <Field label="Registration No.">
                     <span className="font-mono text-base font-bold text-[#a31e22]">
                       {vehicle.registrationNumber}
@@ -412,7 +413,7 @@ function VehicleSearchContent() {
                   </Field>
                 </div>
                 {vehicle.document && (
-                  <div className="flex flex-col items-center gap-2 sm:items-end">
+                  <div className="flex flex-col items-start gap-2 sm:items-end">
                     <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
                       Document
                     </p>
@@ -428,7 +429,7 @@ function VehicleSearchContent() {
                             alt="Vehicle document"
                             width={200}
                             height={130}
-                            className="h-32 w-48 rounded-lg border border-slate-200 object-cover shadow-sm transition hover:opacity-90"
+                            className="h-32 w-full max-w-48 rounded-lg border border-slate-200 object-cover shadow-sm transition hover:opacity-90"
                           />
                         </a>
                         <a
@@ -540,7 +541,7 @@ function VehicleSearchContent() {
               }
             >
               {driver ? (
-                <div className="grid grid-cols-2 gap-x-6 gap-y-3.5">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Field label="Driver Name">{driver.name || "-"}</Field>
                   <Field label="Mobile Number">
                     {driver.mobileNumber || "-"}
@@ -548,6 +549,35 @@ function VehicleSearchContent() {
                   <Field label="Licence Number">
                     {driver.licenceNumber || "-"}
                   </Field>
+                  {driver.licenceUrl && isLikelyUrl(driver.licenceUrl) && (
+                    <div className="sm:col-span-2">
+                      <Field label="Licence Document">
+                        <div className="mt-1 flex flex-col items-start gap-2">
+                          <a
+                            href={driver.licenceUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <Image
+                              src={driver.licenceUrl}
+                              alt="Driver licence"
+                              width={220}
+                              height={140}
+                              className="h-32 w-full max-w-56 rounded-lg border border-slate-200 object-cover shadow-sm transition hover:opacity-90"
+                            />
+                          </a>
+                          <a
+                            href={driver.licenceUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs font-medium text-blue-600 hover:underline"
+                          >
+                            View licence image ↗
+                          </a>
+                        </div>
+                      </Field>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-sm text-slate-500">
