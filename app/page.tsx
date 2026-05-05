@@ -72,12 +72,12 @@ function StatusBadge({ status }: { status: string }) {
   const isActive = status?.toUpperCase() === "ACTIVE";
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-        isActive ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold ${
+        isActive ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-700"
       }`}
     >
       <span
-        className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-red-500"}`}
+        className={`h-2 w-2 rounded-full ${isActive ? "bg-emerald-600" : "bg-red-600"}`}
       />
       {status}
     </span>
@@ -93,10 +93,10 @@ function Field({
 }) {
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+      <p className="text-xs font-bold uppercase tracking-widest text-slate-600">
         {label}
       </p>
-      <div className="mt-0.5 text-sm font-medium text-slate-800">
+      <div className="mt-1 text-base font-semibold text-slate-900">
         {children}
       </div>
     </div>
@@ -113,14 +113,14 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex items-center gap-2.5 border-b border-slate-100 px-4 py-3 sm:px-5 sm:py-3.5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#fde6d3] text-[#a31e22]">
+    <div className="rounded-xl border border-slate-300 bg-white shadow-sm">
+      <div className="flex items-center gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3.5 sm:px-5 sm:py-4">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#fde6d3] text-[#a31e22]">
           {icon}
         </span>
-        <h2 className="text-sm font-semibold text-slate-800">{title}</h2>
+        <h2 className="text-base font-bold text-slate-900">{title}</h2>
       </div>
-      <div className="p-4 sm:p-5">{children}</div>
+      <div className="p-4 sm:p-6">{children}</div>
     </div>
   );
 }
@@ -221,14 +221,15 @@ function VehicleSearchContent() {
             alt="APCRDA Logo"
             width={64}
             height={64}
-            className="h-12 w-auto object-contain sm:h-16"
+            className="object-contain"
+            style={{ height: "4rem", width: "auto" }}
             priority
           />
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-[#a31e22]">
+            <p className="text-xs font-bold uppercase tracking-widest text-[#a31e22]">
               Government of Andhra Pradesh
             </p>
-            <h1 className="text-base font-bold leading-tight text-[#7a1315] sm:text-lg">
+            <h1 className="text-lg font-extrabold leading-tight text-[#7a1315] sm:text-xl">
               APCRDA — Vehicle Information Portal
             </h1>
           </div>
@@ -237,11 +238,9 @@ function VehicleSearchContent() {
 
       <main className="mx-auto max-w-4xl px-4 py-6 sm:py-8">
         {/* Search card */}
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-          <h2 className="text-base font-semibold text-slate-800">
-            Search Vehicle
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
+        <div className="rounded-xl border border-slate-300 bg-white p-4 shadow-sm sm:p-6">
+          <h2 className="text-lg font-bold text-slate-900">Search Vehicle</h2>
+          <p className="mt-1 text-base text-slate-700">
             Enter a vehicle registration number to fetch details.
           </p>
           <form
@@ -265,7 +264,7 @@ function VehicleSearchContent() {
                 name="registrationNumber"
                 defaultValue={registrationNumber}
                 placeholder="e.g. AP09DR9900"
-                className="h-11 w-full rounded-lg border border-slate-300 bg-slate-50 pl-9 pr-3 text-sm font-medium uppercase tracking-wider text-slate-900 placeholder:normal-case placeholder:tracking-normal placeholder:text-slate-400 focus:border-[#a31e22] focus:bg-white focus:outline-none"
+                className="h-12 w-full rounded-lg border-2 border-slate-400 bg-white pl-10 pr-3 text-base font-semibold uppercase tracking-wider text-slate-900 placeholder:normal-case placeholder:tracking-normal placeholder:text-slate-500 focus:border-[#a31e22] focus:outline-none focus:ring-2 focus:ring-[#a31e22]/20"
                 autoComplete="off"
                 aria-label="Vehicle registration number"
               />
@@ -273,7 +272,7 @@ function VehicleSearchContent() {
             <button
               type="submit"
               disabled={loading}
-              className="flex h-11 items-center justify-center gap-2 rounded-lg bg-[#a31e22] px-6 text-sm font-semibold text-white transition hover:bg-[#7a1315] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-12 min-w-28 items-center justify-center gap-2 rounded-lg bg-[#a31e22] px-6 text-base font-bold text-white transition hover:bg-[#7a1315] focus:outline-none focus:ring-2 focus:ring-[#a31e22]/40 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <>
@@ -305,9 +304,9 @@ function VehicleSearchContent() {
           </form>
 
           {error && (
-            <div className="mt-3 flex items-start gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="mt-3 flex items-start gap-3 rounded-lg border border-red-300 bg-red-50 px-4 py-3.5 text-base font-semibold text-red-800">
               <svg
-                className="mt-0.5 h-4 w-4 shrink-0"
+                className="mt-0.5 h-5 w-5 shrink-0"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -337,7 +336,7 @@ function VehicleSearchContent() {
                 d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"
               />
             </svg>
-            <p className="mt-4 text-sm font-medium text-slate-500">
+            <p className="mt-4 text-base font-semibold text-slate-700">
               Enter a registration number to get started
             </p>
           </div>
@@ -365,7 +364,7 @@ function VehicleSearchContent() {
                 d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
               />
             </svg>
-            <p className="mt-4 text-sm font-medium text-slate-500">
+            <p className="mt-4 text-base font-semibold text-slate-700">
               Fetching vehicle details…
             </p>
           </div>
@@ -396,7 +395,7 @@ function VehicleSearchContent() {
               <div className="flex flex-col gap-6 sm:flex-row">
                 <div className="grid flex-1 grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
                   <Field label="Registration No.">
-                    <span className="font-mono text-base font-bold text-[#a31e22]">
+                    <span className="font-mono text-xl font-extrabold tracking-wider text-[#7a1315]">
                       {vehicle.registrationNumber}
                     </span>
                   </Field>
@@ -414,7 +413,7 @@ function VehicleSearchContent() {
                 </div>
                 {vehicle.document && (
                   <div className="flex flex-col items-start gap-2 sm:items-end">
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                    <p className="text-xs font-bold uppercase tracking-widest text-slate-600">
                       Document
                     </p>
                     {isLikelyUrl(vehicle.document) ? (
@@ -429,6 +428,7 @@ function VehicleSearchContent() {
                             alt="Vehicle document"
                             width={200}
                             height={130}
+                            loading="eager"
                             className="h-32 w-full max-w-48 rounded-lg border border-slate-200 object-cover shadow-sm transition hover:opacity-90"
                           />
                         </a>
@@ -436,7 +436,7 @@ function VehicleSearchContent() {
                           href={vehicle.document}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-xs font-medium text-blue-600 hover:underline"
+                          className="text-sm font-semibold text-blue-700 underline hover:text-blue-900"
                         >
                           View full image ↗
                         </a>
@@ -563,6 +563,7 @@ function VehicleSearchContent() {
                               alt="Driver licence"
                               width={220}
                               height={140}
+                              loading="eager"
                               className="h-32 w-full max-w-56 rounded-lg border border-slate-200 object-cover shadow-sm transition hover:opacity-90"
                             />
                           </a>
@@ -570,7 +571,7 @@ function VehicleSearchContent() {
                             href={driver.licenceUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-xs font-medium text-blue-600 hover:underline"
+                            className="text-sm font-semibold text-blue-700 underline hover:text-blue-900"
                           >
                             View licence image ↗
                           </a>
@@ -580,9 +581,9 @@ function VehicleSearchContent() {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-sm text-slate-500">
+                <div className="flex items-center gap-2 text-base font-semibold text-slate-700">
                   <svg
-                    className="h-4 w-4 shrink-0 text-slate-400"
+                    className="h-5 w-5 shrink-0 text-slate-500"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -602,7 +603,7 @@ function VehicleSearchContent() {
         )}
       </main>
 
-      <footer className="mt-8 border-t border-[#a31e22]/20 bg-[#a31e22] py-4 text-center text-xs text-[#fde6d3]">
+      <footer className="mt-8 border-t-4 border-[#7a1315] bg-[#a31e22] py-5 text-center text-sm font-semibold text-white">
         © {new Date().getFullYear()} APCRDA — Amaravati Capital Region
         Development Authority
       </footer>
