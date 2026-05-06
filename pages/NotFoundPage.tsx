@@ -18,10 +18,10 @@ export default function NotFoundPage() {
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Button asChild>
-            <Link to="/home">Go to web home</Link>
+            <Link to="/web">Go to web home</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link to="/app/dashboard">Open mobile app</Link>
+            <Link to="/mobile/dashboard">Open mobile app</Link>
           </Button>
         </div>
       </div>

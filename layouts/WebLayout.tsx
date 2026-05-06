@@ -1,20 +1,16 @@
 import { Outlet } from "react-router"
 
-import Navbar from "~/components/Navbar"
+import Footer from "~/components/web/Footer"
+import Navbar from "~/components/web/Navbar"
 
 export default function WebLayout() {
   return (
-    <div className="min-h-dvh bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,248,251,1))]">
+    <div className="min-h-dvh bg-[linear-gradient(180deg,rgba(255,255,255,0.97),rgba(248,250,252,1))]">
       <Navbar />
-      <main className="mx-auto flex w-full max-w-7xl flex-1 px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+      <main className="mx-auto flex w-full max-w-6xl flex-1 px-4 pt-8 pb-14 sm:px-6 lg:px-8">
         <Outlet />
       </main>
-      <footer className="border-t border-border/60 bg-background/85">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <p>Vehicle Information platform for web and app-first journeys.</p>
-          <p>Built with React Router Data Mode, Redux Toolkit, TypeScript, and shadcn/ui.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }
