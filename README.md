@@ -1,38 +1,21 @@
-# Vehicle Details Search
+# React Router + shadcn/ui
 
-Production-focused Next.js application for searching vehicle details by registration number.
+This is a template for a new React Router project with React, TypeScript, and shadcn/ui.
 
-## Features
+## Adding components
 
-- Search by registration number from the homepage UI.
-- URL param support: `/?registrationNumber=AP09DR9900`.
-- Internal server API route: `/api/vehicle/search`.
-- Input validation and upstream timeout handling.
-- Structured result rendering (vehicle, contractor, site, driver).
-
-## Environment Variables
-
-Create a `.env.local` file:
+To add components to your app, run the following command:
 
 ```bash
-VEHICLE_API_BASE_URL=https://vi-backend.theamaravaticity.com
+npx shadcn@latest add button
 ```
 
-If not provided, the app uses the same URL as default.
+This will place the ui components in the `components` directory.
 
-## Run Locally
+## Using components
 
-```bash
-npm install
-npm run dev
-```
+To use the components in your app, import them as follows:
 
-Open [http://localhost:3000](http://localhost:3000).
-
-## Production Build
-
-```bash
-npm run lint
-npm run build
-npm run start
+```tsx
+import { Button } from "@/components/ui/button";
 ```
