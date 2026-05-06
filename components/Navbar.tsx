@@ -68,7 +68,7 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <Button variant="outline" asChild>
-            <Link to="/app/home" className="gap-2">
+            <Link to="/app/dashboard" className="gap-2">
               <Smartphone className="size-4" />
               Open app
             </Link>
