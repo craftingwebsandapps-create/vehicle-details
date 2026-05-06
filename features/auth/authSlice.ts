@@ -55,13 +55,6 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    signInDemo(state) {
-      setAccessToken(`mobile-token-${Date.now()}`)
-      state.isAuthenticated = true
-      state.user = demoUser
-      state.status = "succeeded"
-      state.error = null
-    },
     signOut(state) {
       clearAccessToken()
       state.isAuthenticated = false
@@ -91,6 +84,6 @@ const authSlice = createSlice({
   },
 })
 
-export const { signInDemo, signOut } = authSlice.actions
+export const { signOut } = authSlice.actions
 
 export default authSlice.reducer
