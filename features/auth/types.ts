@@ -13,3 +13,18 @@ export type MobileLoginApiResponse = {
   message: string
   data: MobileLoginResponse
 }
+
+export type RefreshTokenPayload = {
+  refreshToken: string
+}
+
+export type RefreshTokenResponse = {
+  accessToken: string
+  refreshToken: string
+}
+
+export type RefreshTokenApiResponse = {
+  success: boolean
+  message: string
+  data: RefreshTokenResponse
+}

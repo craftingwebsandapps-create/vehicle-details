@@ -7,7 +7,7 @@ export default function BottomTabs() {
   return (
     <nav
       aria-label="Mobile navigation tabs"
-      className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-[480px] px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+      className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-120 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
     >
       <div className="grid grid-cols-5 rounded-3xl border border-border/70 bg-background/95 p-2 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.45)] backdrop-blur-md">
         {MOBILE_TABS.map((tab) => {

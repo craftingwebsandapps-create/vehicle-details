@@ -23,11 +23,9 @@ export const fetchVehiclesThunk = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const token = getAccessToken()
-      const response = await apiClient.get<VehicleListResponse>(
+      const response = await apiClient.getWithAuth<VehicleListResponse>(
         "/vehicles?page=1&limit=10",
-        {
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        }
+        token ?? undefined
       )
 
       if (!response.success) {
