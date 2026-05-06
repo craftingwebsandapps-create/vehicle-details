@@ -1,4 +1,4 @@
-# React Router + shadcn/ui
+# React Router + shadcn/ui + data mode
 
 This is a template for a new React Router project with React, TypeScript, and shadcn/ui.
 
