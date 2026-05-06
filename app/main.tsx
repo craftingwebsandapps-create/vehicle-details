@@ -6,7 +6,6 @@ import { RouterProvider } from "react-router"
 import { router } from "./router"
 import { store } from "./store"
 import "./app.css"
-import { RouterProvider } from "react-router"
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <StrictMode>
