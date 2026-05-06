@@ -18,6 +18,18 @@ class ApiClient {
 
   private refreshPromise: Promise<string | null> | null = null
 
+  private handleSessionExpired() {
+    clearAccessToken()
+
+    if (typeof window === "undefined") {
+      return
+    }
+
+    if (window.location.pathname !== "/mobile/login") {
+      window.location.replace("/mobile/login")
+    }
+  }
+
   private async refreshAuthToken() {
     if (this.refreshPromise) {
       return this.refreshPromise
@@ -27,30 +39,35 @@ class ApiClient {
       const refreshToken = getRefreshToken()
 
       if (!refreshToken) {
-        clearAccessToken()
+        this.handleSessionExpired()
         return null
       }
 
-      const response = await this.request<RefreshTokenApiResponse>(
-        "/auth/refresh",
-        {
-          method: "POST",
-          skipAuthRefresh: true,
-          body: JSON.stringify({ refreshToken }),
+      try {
+        const response = await this.request<RefreshTokenApiResponse>(
+          "/auth/refresh",
+          {
+            method: "POST",
+            skipAuthRefresh: true,
+            body: JSON.stringify({ refreshToken }),
+          }
+        )
+
+        if (!response.success || !response.data?.accessToken) {
+          this.handleSessionExpired()
+          return null
         }
-      )
 
-      if (!response.success || !response.data?.accessToken) {
-        clearAccessToken()
+        setAccessToken(response.data.accessToken)
+        if (response.data.refreshToken) {
+          setRefreshToken(response.data.refreshToken)
+        }
+
+        return response.data.accessToken
+      } catch {
+        this.handleSessionExpired()
         return null
       }
-
-      setAccessToken(response.data.accessToken)
-      if (response.data.refreshToken) {
-        setRefreshToken(response.data.refreshToken)
-      }
-
-      return response.data.accessToken
     })()
 
     try {
