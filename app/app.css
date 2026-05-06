@@ -121,11 +121,23 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
-  body {
-    @apply bg-background text-foreground;
-    }
+  }
+
   html {
     @apply font-sans;
-    }
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  body,
+  #root {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  a {
+    @apply transition-colors;
+  }
 }

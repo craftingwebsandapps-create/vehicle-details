@@ -1,22 +1,17 @@
+import { StrictMode } from "react"
 import ReactDOM from "react-dom/client"
-import { createBrowserRouter, RouterProvider } from "react-router"
-import Root from "./root"
-import Home from "./routes/home"
-import "./app.css"
+import { Provider } from "react-redux"
+import { RouterProvider } from "react-router"
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    Component: Root,
-    children: [
-      {
-        index: true,
-        Component: Home,
-      },
-    ],
-  },
-])
+import { router } from "./router"
+import { store } from "./store"
+import "./app.css"
+import { RouterProvider } from "react-router"
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <RouterProvider router={router} />
+  <StrictMode>
+    <Provider store={store}>
+      <RouterProvider router={router} />
+    </Provider>
+  </StrictMode>
 )
