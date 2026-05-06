@@ -11,7 +11,7 @@ export default function Login() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const authState = useAppSelector((state) => state.auth)
-  const [username, setUsername] = useState("")
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
   if (isMobileAuthenticated()) {
@@ -22,7 +22,7 @@ export default function Login() {
     event.preventDefault()
 
     try {
-      await dispatch(loginMobileThunk({ username, password })).unwrap()
+      await dispatch(loginMobileThunk({ email, password })).unwrap()
       navigate("/mobile/dashboard", { replace: true })
     } catch {
       return
@@ -44,17 +44,18 @@ export default function Login() {
       <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
         <div className="space-y-2">
           <label
-            htmlFor="username"
+            htmlFor="email"
             className="text-sm font-medium text-foreground"
           >
-            Username
+            Email
           </label>
           <Input
-            id="username"
-            autoComplete="username"
-            placeholder="demo.user"
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
+            id="email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
           />
         </div>
 

@@ -1,18 +1,25 @@
 import type {
+  MobileLoginApiResponse,
   MobileLoginPayload,
   MobileLoginResponse,
 } from "~/features/auth/types"
+import { apiClient } from "~/services/api-client"
 
 export const mobileLogin = async (
   payload: MobileLoginPayload
 ): Promise<MobileLoginResponse> => {
-  await new Promise((resolve) => window.setTimeout(resolve, 500))
-
-  if (!payload.username || !payload.password) {
-    throw new Error("Username and password are required")
+  if (!payload.email || !payload.password) {
+    throw new Error("Email and password are required")
   }
 
-  return {
-    accessToken: `mobile-token-${Date.now()}`,
+  const response = await apiClient.post<MobileLoginApiResponse>(
+    "/auth/login",
+    payload
+  )
+
+  if (!response.success || !response.data?.accessToken) {
+    throw new Error(response.message || "Login failed")
   }
+
+  return response.data
 }

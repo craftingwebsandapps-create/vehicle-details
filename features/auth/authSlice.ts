@@ -1,7 +1,11 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 
 import { mobileLogin } from "~/features/auth/api"
-import { clearAccessToken, setAccessToken } from "~/features/auth/auth-storage"
+import {
+  clearAccessToken,
+  setAccessToken,
+  setRefreshToken,
+} from "~/features/auth/auth-storage"
 import type { MobileLoginPayload } from "~/features/auth/types"
 
 export type AuthUser = {
@@ -14,6 +18,36 @@ const demoUser: AuthUser = {
   name: "Aarav Kumar",
   email: "aarav.kumar@example.com",
   initials: "AK",
+}
+
+const getInitials = (value: string) => {
+  const source = value.includes("@") ? value.split("@")[0] : value
+  const parts = source.split(/[._\s-]+/).filter(Boolean)
+
+  if (parts.length === 0) {
+    return "GU"
+  }
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase()
+  }
+
+  return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase()
+}
+
+const buildUserFromEmail = (email: string): AuthUser => {
+  const localPart = email.split("@")[0] ?? "Guest User"
+  const displayName = localPart
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((chunk) => `${chunk.charAt(0).toUpperCase()}${chunk.slice(1)}`)
+    .join(" ")
+
+  return {
+    name: displayName || "Guest User",
+    email,
+    initials: getInitials(email),
+  }
 }
 
 type AuthState = {
@@ -71,8 +105,9 @@ const authSlice = createSlice({
       })
       .addCase(loginMobileThunk.fulfilled, (state, action) => {
         setAccessToken(action.payload.accessToken)
+        setRefreshToken(action.payload.refreshToken)
         state.isAuthenticated = true
-        state.user = demoUser
+        state.user = buildUserFromEmail(action.meta.arg.email)
         state.status = "succeeded"
         state.error = null
       })
