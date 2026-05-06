@@ -1,6 +1,11 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 
-export type MobileTabKey = "home" | "search" | "orders" | "profile"
+export type MobileTabKey =
+  | "dashboard"
+  | "sites"
+  | "vehicles"
+  | "drivers"
+  | "assignments"
 
 type UiState = {
   activeMobileTab: MobileTabKey
@@ -8,7 +13,7 @@ type UiState = {
 }
 
 const initialState: UiState = {
-  activeMobileTab: "home",
+  activeMobileTab: "dashboard",
   mobileMenuOpen: false,
 }
 

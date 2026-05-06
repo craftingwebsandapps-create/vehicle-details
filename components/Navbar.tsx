@@ -82,7 +82,9 @@ export default function Navbar() {
                 {user?.name ?? "Guest User"}
               </p>
               <p className="truncate text-xs text-muted-foreground">
-                {isAuthenticated ? user?.email : "Sign in to manage your account"}
+                {isAuthenticated
+                  ? user?.email
+                  : "Sign in to manage your account"}
               </p>
             </div>
           </div>
@@ -112,8 +114,14 @@ export default function Navbar() {
         </Button>
       </div>
 
-      <Dialog open={mobileMenuOpen} onOpenChange={(open) => dispatch(setMobileMenuOpen(open))}>
-        <DialogContent className="max-w-sm rounded-[28px] border border-border/70 p-6" showCloseButton={false}>
+      <Dialog
+        open={mobileMenuOpen}
+        onOpenChange={(open) => dispatch(setMobileMenuOpen(open))}
+      >
+        <DialogContent
+          className="max-w-sm rounded-[28px] border border-border/70 p-6"
+          showCloseButton={false}
+        >
           <DialogHeader>
             <DialogTitle className="text-xl">Navigation</DialogTitle>
             <DialogDescription>
@@ -130,7 +138,8 @@ export default function Navbar() {
                 className={({ isActive }) =>
                   cn(
                     "flex items-center rounded-2xl px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-                    isActive && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
+                    isActive &&
+                      "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
                   )
                 }
               >
@@ -138,7 +147,7 @@ export default function Navbar() {
               </NavLink>
             ))}
             <Link
-              to="/app/home"
+              to="/app/dashboard"
               onClick={closeMobileMenu}
               className="flex items-center gap-2 rounded-2xl border border-border/70 px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
             >
@@ -157,7 +166,9 @@ export default function Navbar() {
                   {user?.name ?? "Guest User"}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {isAuthenticated ? user?.email : "Use the demo auth state to preview flows."}
+                  {isAuthenticated
+                    ? user?.email
+                    : "Use the demo auth state to preview flows."}
                 </p>
               </div>
             </div>

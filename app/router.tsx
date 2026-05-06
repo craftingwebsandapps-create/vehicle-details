@@ -3,10 +3,11 @@ import { createBrowserRouter, redirect } from "react-router"
 import Root from "./root"
 import MobileLayout from "~/layouts/MobileLayout"
 import WebLayout from "~/layouts/WebLayout"
-import MobileHomePage from "~/pages/mobile/HomePage"
-import OrdersPage from "~/pages/mobile/OrdersPage"
-import ProfilePage from "~/pages/mobile/ProfilePage"
-import SearchPage from "~/pages/mobile/SearchPage"
+import AssignmentsPage from "~/pages/mobile/AssignmentsPage"
+import DashboardPage from "~/pages/mobile/HomePage"
+import DriversPage from "~/pages/mobile/DriversPage"
+import SitesPage from "~/pages/mobile/SitesPage"
+import VehiclesPage from "~/pages/mobile/VehiclesPage"
 import NotFoundPage from "~/pages/NotFoundPage"
 import AboutPage from "~/pages/web/AboutPage"
 import ContactPage from "~/pages/web/ContactPage"
@@ -44,23 +45,27 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            loader: () => redirect("/app/home"),
+            loader: () => redirect("/app/dashboard"),
           },
           {
-            path: "home",
-            Component: MobileHomePage,
+            path: "dashboard",
+            Component: DashboardPage,
           },
           {
-            path: "search",
-            Component: SearchPage,
+            path: "sites",
+            Component: SitesPage,
           },
           {
-            path: "orders",
-            Component: OrdersPage,
+            path: "vehicles",
+            Component: VehiclesPage,
           },
           {
-            path: "profile",
-            Component: ProfilePage,
+            path: "drivers",
+            Component: DriversPage,
+          },
+          {
+            path: "assignments",
+            Component: AssignmentsPage,
           },
         ],
       },

@@ -6,17 +6,20 @@ import { Button } from "~/components/ui/button"
 const highlights = [
   {
     title: "Unified journeys",
-    description: "Serve both responsive web visitors and app-style users from one production-ready codebase.",
+    description:
+      "Serve both responsive web visitors and app-style users from one production-ready codebase.",
     icon: ShieldCheck,
   },
   {
     title: "Data-aware routing",
-    description: "React Router Data Mode keeps route boundaries explicit and scalable as features grow.",
+    description:
+      "React Router Data Mode keeps route boundaries explicit and scalable as features grow.",
     icon: BarChart3,
   },
   {
     title: "App shell parity",
-    description: "A mobile-first tabbed experience sits alongside the full web navigation without sharing layout assumptions.",
+    description:
+      "A mobile-first tabbed experience sits alongside the full web navigation without sharing layout assumptions.",
     icon: Smartphone,
   },
 ]
@@ -34,12 +37,14 @@ export default function WebHomePage() {
               Build once for the web, ship again for the app shell.
             </h1>
             <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
-              This project separates the website journey from the mobile app journey with isolated layouts, typed global state, and reusable UI components.
+              This project separates the website journey from the mobile app
+              journey with isolated layouts, typed global state, and reusable UI
+              components.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Button asChild size="lg">
-              <Link to="/app/home" className="gap-2">
+              <Link to="/app/dashboard" className="gap-2">
                 Launch mobile app
                 <ArrowRight className="size-4" />
               </Link>
@@ -55,11 +60,14 @@ export default function WebHomePage() {
             <p className="text-sm uppercase opacity-80">Current status</p>
             <p className="mt-3 text-3xl font-semibold">Production ready</p>
             <p className="mt-3 text-sm leading-6 opacity-90">
-              Router, layouts, state, and installable PWA behavior are already integrated.
+              Router, layouts, state, and installable PWA behavior are already
+              integrated.
             </p>
           </div>
           <div className="rounded-[28px] border border-border/60 bg-muted/40 p-6">
-            <p className="text-sm font-medium text-muted-foreground">What you can extend next</p>
+            <p className="text-sm font-medium text-muted-foreground">
+              What you can extend next
+            </p>
             <ul className="mt-4 space-y-3 text-sm leading-6 text-foreground">
               <li>Typed loaders and actions per route</li>
               <li>Role-aware profile and order flows</li>

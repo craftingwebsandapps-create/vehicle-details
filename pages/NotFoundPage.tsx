@@ -13,14 +13,15 @@ export default function NotFoundPage() {
           The requested route does not exist.
         </h1>
         <p className="mt-3 text-sm leading-7 text-muted-foreground">
-          Head back to the website home or jump directly into the mobile app experience.
+          Head back to the website home or jump directly into the mobile app
+          experience.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Button asChild>
             <Link to="/home">Go to web home</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link to="/app/home">Open mobile app</Link>
+            <Link to="/app/dashboard">Open mobile app</Link>
           </Button>
         </div>
       </div>
