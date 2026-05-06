@@ -8,6 +8,7 @@ import Drivers from "~/pages/mobile/Drivers"
 import Login from "~/pages/mobile/Login"
 import Sites from "~/pages/mobile/Sites"
 import Vehicles from "~/pages/mobile/Vehicles"
+
 import { mobileProtectedLoader } from "~/routes/protected-route"
 
 export const mobileRoutes: RouteObject[] = [
