@@ -5,6 +5,7 @@ import MobileProtectedLayout from "~/layouts/MobileProtectedLayout"
 import Assignments from "~/pages/mobile/Assignments"
 import Dashboard from "~/pages/mobile/Dashboard"
 import Drivers from "~/pages/mobile/Drivers"
+import FormSystemDemo from "~/pages/mobile/FormSystemDemo"
 import Login from "~/pages/mobile/Login"
 import Sites from "~/pages/mobile/Sites"
 import Vehicles from "~/pages/mobile/Vehicles"
@@ -27,6 +28,7 @@ export const mobileRoutes: RouteObject[] = [
       { path: "vehicles", Component: Vehicles },
       { path: "drivers", Component: Drivers },
       { path: "assignments", Component: Assignments },
+      { path: "forms", Component: FormSystemDemo },
     ],
   },
 ]
