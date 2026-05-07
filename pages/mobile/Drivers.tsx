@@ -1,9 +1,49 @@
-import { useEffect } from "react"
+import { useEffect, useMemo, useState } from "react"
 
-import { BadgeCheck, Clock3, ExternalLink, UserRound } from "lucide-react"
+import {
+  BadgeCheck,
+  Clock3,
+  ExternalLink,
+  Pencil,
+  Plus,
+  UserRound,
+} from "lucide-react"
+import { toast } from "sonner"
 
 import { useAppDispatch, useAppSelector } from "~/app/hooks"
+import { FormBuilder } from "~/components/form"
+import { Button } from "~/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "~/components/ui/dialog"
+import {
+  createDriver,
+  updateDriver,
+  uploadDriverLicence,
+} from "~/features/drivers/api"
 import { fetchDriversThunk } from "~/features/drivers/driversSlice"
+import { getDriverDialogFormConfig } from "~/schemas/driver-dialog-form-config"
+import type {
+  CreateDriverRequest,
+  Driver,
+  DriverFormValues,
+  UpdateDriverRequest,
+} from "~/types/driver"
+
+const initialFormState: DriverFormValues = {
+  name: "",
+  licenceNumber: "",
+  licenceUrl: "",
+  mobileNumber: "",
+  contractor: "",
+  status: "ACTIVE",
+  licenceFile: null,
+}
 
 export default function Drivers() {
   const dispatch = useAppDispatch()
@@ -13,17 +53,144 @@ export default function Drivers() {
     error,
   } = useAppSelector((state) => state.drivers)
 
+  const [isDriverDialogOpen, setIsDriverDialogOpen] = useState(false)
+  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create")
+  const [editingDriverId, setEditingDriverId] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formDefaults, setFormDefaults] =
+    useState<DriverFormValues>(initialFormState)
+
+  const driverFormConfig = useMemo(
+    () => getDriverDialogFormConfig(dialogMode === "edit"),
+    [dialogMode]
+  )
+
   useEffect(() => {
     void dispatch(fetchDriversThunk())
   }, [dispatch])
 
+  const openCreateDialog = () => {
+    setDialogMode("create")
+    setEditingDriverId(null)
+    setFormDefaults(initialFormState)
+    setIsDriverDialogOpen(true)
+  }
+
+  const openEditDialog = (driver: Driver) => {
+    setDialogMode("edit")
+    setEditingDriverId(driver.id)
+    setFormDefaults({
+      name: driver.name,
+      licenceNumber: driver.licenceNumber,
+      licenceUrl: driver.licenceUrl ?? "",
+      mobileNumber: driver.mobileNumber,
+      contractor: driver.contractor?.id ?? "",
+      status: driver.status,
+      licenceFile: null,
+    })
+    setIsDriverDialogOpen(true)
+  }
+
+  const handleSubmitDriver = async (values: DriverFormValues) => {
+    setIsSubmitting(true)
+
+    try {
+      let licenceUrl = values.licenceUrl.trim()
+
+      if (values.licenceFile instanceof File) {
+        licenceUrl = await uploadDriverLicence(values.licenceFile)
+      }
+
+      if (!licenceUrl) {
+        throw new Error("Please upload a licence file")
+      }
+
+      const payload: CreateDriverRequest = {
+        name: values.name.trim(),
+        licenceNumber: values.licenceNumber.trim(),
+        licenceUrl,
+        mobileNumber: values.mobileNumber.trim(),
+        contractor: values.contractor.trim(),
+        status: values.status,
+      }
+
+      if (dialogMode === "edit") {
+        if (!editingDriverId) {
+          throw new Error("Driver id is required")
+        }
+
+        const updatePayload: UpdateDriverRequest = {
+          ...payload,
+        }
+
+        await updateDriver(editingDriverId, updatePayload)
+        toast.success("Driver updated successfully", { position: "top-center" })
+      } else {
+        await createDriver(payload)
+        toast.success("Driver created successfully", { position: "top-center" })
+      }
+
+      await dispatch(fetchDriversThunk())
+
+      setFormDefaults(initialFormState)
+      setIsDriverDialogOpen(false)
+      setEditingDriverId(null)
+      setDialogMode("create")
+    } catch (error) {
+      if (dialogMode === "edit") {
+        toast.error("Unable to update driver")
+      } else {
+        toast.error("Unable to create driver")
+      }
+
+      if (error instanceof Error) {
+        toast.error(error.message)
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <section>
-        <p className="text-sm font-medium text-muted-foreground">Drivers</p>
-        <h2 className="mt-1 font-heading text-2xl font-semibold text-foreground">
-          Keep driver availability and compliance visible.
-        </h2>
+      <section className="flex items-end justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">Drivers</p>
+          <h2 className="mt-1 font-heading text-2xl font-semibold text-foreground">
+            Keep driver availability and compliance visible.
+          </h2>
+        </div>
+
+        <Dialog open={isDriverDialogOpen} onOpenChange={setIsDriverDialogOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" onClick={openCreateDialog}>
+              <Plus className="size-4" />
+              Create Driver
+            </Button>
+          </DialogTrigger>
+
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {dialogMode === "edit" ? "Edit Driver" : "Create Driver"}
+              </DialogTitle>
+              <DialogDescription>
+                {dialogMode === "edit"
+                  ? "Update driver details and optionally replace licence file."
+                  : "Add a new driver and upload licence file."}
+              </DialogDescription>
+            </DialogHeader>
+
+            <FormBuilder
+              key={`${dialogMode}-${editingDriverId ?? "new"}-${isDriverDialogOpen ? "open" : "closed"}`}
+              config={driverFormConfig}
+              defaultValues={formDefaults}
+              onSubmit={handleSubmitDriver}
+              isSubmitting={isSubmitting}
+              className="space-y-4"
+            />
+          </DialogContent>
+        </Dialog>
       </section>
 
       {status === "loading" ? (
@@ -114,6 +281,17 @@ export default function Drivers() {
                       </a>
                     </div>
                   ) : null}
+
+                  <div className="mt-4 flex justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEditDialog(driver)}
+                    >
+                      <Pencil className="size-4" />
+                      Edit
+                    </Button>
+                  </div>
                 </div>
               </div>
             </article>

@@ -79,3 +79,38 @@ export type DriverListResponse = {
     meta: DriverMeta
   }
 }
+
+export type DriverUpsertRequest = {
+  name: string
+  licenceNumber: string
+  licenceUrl: string
+  mobileNumber: string
+  contractor: string
+  status: string
+}
+
+export type CreateDriverRequest = DriverUpsertRequest
+
+export type UpdateDriverRequest = DriverUpsertRequest
+
+export type DriverFormValues = {
+  name: string
+  licenceNumber: string
+  licenceUrl: string
+  mobileNumber: string
+  contractor: string
+  status: string
+  licenceFile: File | null
+}
+
+export type UploadSingleFileResponse = {
+  success: boolean
+  message: string
+  data?: {
+    filename: string
+    originalName: string
+    mimeType: string
+    size: number
+    url: string
+  }
+}

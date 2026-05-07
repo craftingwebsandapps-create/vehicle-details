@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react"
 import type { FieldValues } from "react-hook-form"
 
 import {
@@ -17,6 +18,11 @@ export function FileUploadController<TFormValues extends FieldValues>({
   name,
   disabled,
 }: ControllerBaseProps<TFormValues>) {
+  const inputProps = (fieldConfig.props ?? {}) as Omit<
+    ComponentProps<"input">,
+    "type" | "onChange" | "disabled"
+  >
+
   return (
     <FormField
       control={form.control}
@@ -30,6 +36,7 @@ export function FileUploadController<TFormValues extends FieldValues>({
             <Input
               type="file"
               disabled={disabled}
+              {...inputProps}
               onChange={(event) => {
                 const file = event.target.files?.[0] ?? null
                 field.onChange(file)
