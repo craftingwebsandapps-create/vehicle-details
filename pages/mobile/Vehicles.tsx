@@ -25,7 +25,10 @@ import {
   updateVehicle,
   uploadVehicleDocument,
 } from "~/features/vehicles/api"
-import { fetchVehiclesThunk } from "~/features/vehicles/vehiclesSlice"
+import {
+  fetchVehiclesThunk,
+  fetchMoreVehiclesThunk,
+} from "~/features/vehicles/vehiclesSlice"
 import { getVehicleDialogFormConfig } from "~/schemas/vehicle-dialog-form-config"
 import type {
   CreateVehicleRequest,
@@ -56,6 +59,8 @@ export default function Vehicles() {
   const dispatch = useAppDispatch()
   const {
     items: vehicles,
+    hasNextPage,
+    loadMoreStatus,
     status,
     error,
   } = useAppSelector((state) => state.vehicles)
@@ -71,7 +76,6 @@ export default function Vehicles() {
   const [query, setQuery] = useState("")
   const [segment, setSegment] = useState<VehicleSegment>("all")
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
-  const [visibleCount, setVisibleCount] = useState(12)
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
@@ -116,10 +120,6 @@ export default function Vehicles() {
   }, [vehicles, query, segment])
 
   useEffect(() => {
-    setVisibleCount(12)
-  }, [query, segment])
-
-  useEffect(() => {
     const node = loadMoreRef.current
     if (!node) {
       return
@@ -127,8 +127,12 @@ export default function Vehicles() {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setVisibleCount((prev) => Math.min(prev + 8, filteredVehicles.length))
+        if (
+          entries[0]?.isIntersecting &&
+          hasNextPage &&
+          loadMoreStatus !== "loading"
+        ) {
+          void dispatch(fetchMoreVehiclesThunk())
         }
       },
       { rootMargin: "180px" }
@@ -136,23 +140,7 @@ export default function Vehicles() {
 
     observer.observe(node)
     return () => observer.disconnect()
-  }, [filteredVehicles.length])
-
-  const visibleVehicles = filteredVehicles.slice(0, visibleCount)
-
-  const groupedVehicles = useMemo(
-    () => [
-      {
-        title: "Live Vehicles",
-        items: visibleVehicles.filter((item) => item.status === "ACTIVE"),
-      },
-      {
-        title: "Inactive Vehicles",
-        items: visibleVehicles.filter((item) => item.status !== "ACTIVE"),
-      },
-    ],
-    [visibleVehicles]
-  )
+  }, [dispatch, hasNextPage, loadMoreStatus])
 
   const refreshVehicles = () => {
     void dispatch(fetchVehiclesThunk())
@@ -245,7 +233,7 @@ export default function Vehicles() {
     }
   }
 
-  const hasMore = visibleVehicles.length < filteredVehicles.length
+  const hasMore = hasNextPage
 
   return (
     <div className="space-y-3 pb-20">
@@ -325,89 +313,77 @@ export default function Vehicles() {
       ) : null}
 
       {status !== "loading" && status !== "failed" ? (
-        <section className="space-y-3">
-          {groupedVehicles.map((group) =>
-            group.items.length > 0 ? (
-              <div key={group.title} className="space-y-2">
-                <p className="sticky top-[132px] z-10 inline-flex rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
-                  {group.title}
-                </p>
+        <section className="space-y-2">
+          {filteredVehicles.map((vehicle) => {
+            const siteName =
+              typeof vehicle.site === "string"
+                ? vehicle.site
+                : (vehicle.site?.name ?? "Unallocated")
+            const driverName = vehicle.driver?.name ?? "Unassigned"
 
-                <div className="space-y-2">
-                  {group.items.map((vehicle) => {
-                    const siteName =
-                      typeof vehicle.site === "string"
-                        ? vehicle.site
-                        : (vehicle.site?.name ?? "Unallocated")
-                    const driverName = vehicle.driver?.name ?? "Unassigned"
+            return (
+              <OpsCard key={vehicle._id}>
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-base leading-tight font-semibold tracking-tight text-foreground">
+                        {vehicle.registrationNumber}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {vehicle.name} • {vehicle.type}
+                      </p>
+                    </div>
 
-                    return (
-                      <OpsCard key={vehicle._id}>
-                        <div className="space-y-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className="text-base leading-tight font-semibold tracking-tight text-foreground">
-                                {vehicle.registrationNumber}
-                              </p>
-                              <p className="mt-0.5 text-xs text-muted-foreground">
-                                {vehicle.name} • {vehicle.type}
-                              </p>
-                            </div>
+                    <div className="flex items-center gap-1">
+                      <OpsStatusPill status={vehicle.status} />
+                    </div>
+                  </div>
 
-                            <div className="flex items-center gap-1">
-                              <OpsStatusPill status={vehicle.status} />
-                            </div>
-                          </div>
+                  <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                    <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
+                      Driver: {driverName}
+                    </span>
+                    <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
+                      Site: {siteName}
+                    </span>
+                  </div>
 
-                          <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-                            <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
-                              Driver: {driverName}
-                            </span>
-                            <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
-                              Site: {siteName}
-                            </span>
-                          </div>
+                  <div className="flex items-center justify-between">
+                    {vehicle.document ? (
+                      <a
+                        href={vehicle.document}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-primary"
+                      >
+                        <ExternalLink className="size-3" />
+                        Document
+                      </a>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        No document
+                      </span>
+                    )}
 
-                          <div className="flex items-center justify-between">
-                            {vehicle.document ? (
-                              <a
-                                href={vehicle.document}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-xs font-medium text-primary"
-                              >
-                                <ExternalLink className="size-3" />
-                                Document
-                              </a>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">
-                                No document
-                              </span>
-                            )}
-
-                            <div className="flex items-center gap-1.5">
-                              <Button
-                                variant="outline"
-                                size="xs"
-                                onClick={() => openEditDialog(vehicle)}
-                              >
-                                <Pencil className="size-3.5" />
-                                Edit
-                              </Button>
-                              <Button variant="outline" size="xs">
-                                <Phone className="size-3.5" />
-                                Call
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </OpsCard>
-                    )
-                  })}
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        onClick={() => openEditDialog(vehicle)}
+                      >
+                        <Pencil className="size-3.5" />
+                        Edit
+                      </Button>
+                      <Button variant="outline" size="xs">
+                        <Phone className="size-3.5" />
+                        Call
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ) : null
-          )}
+              </OpsCard>
+            )
+          })}
 
           <div ref={loadMoreRef} className="py-2 text-center">
             {hasMore ? (

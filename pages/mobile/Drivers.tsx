@@ -24,7 +24,10 @@ import {
   updateDriver,
   uploadDriverLicence,
 } from "~/features/drivers/api"
-import { fetchDriversThunk } from "~/features/drivers/driversSlice"
+import {
+  fetchDriversThunk,
+  fetchMoreDriversThunk,
+} from "~/features/drivers/driversSlice"
 import { getDriverDialogFormConfig } from "~/schemas/driver-dialog-form-config"
 import type {
   CreateDriverRequest,
@@ -55,6 +58,8 @@ export default function Drivers() {
   const dispatch = useAppDispatch()
   const {
     items: drivers,
+    hasNextPage,
+    loadMoreStatus,
     status,
     error,
   } = useAppSelector((state) => state.drivers)
@@ -68,7 +73,6 @@ export default function Drivers() {
   const [query, setQuery] = useState("")
   const [segment, setSegment] = useState<DriverSegment>("all")
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
-  const [visibleCount, setVisibleCount] = useState(12)
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
@@ -115,10 +119,6 @@ export default function Drivers() {
   }, [drivers, query, segment])
 
   useEffect(() => {
-    setVisibleCount(12)
-  }, [query, segment])
-
-  useEffect(() => {
     const node = loadMoreRef.current
     if (!node) {
       return
@@ -126,8 +126,12 @@ export default function Drivers() {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setVisibleCount((prev) => Math.min(prev + 8, filteredDrivers.length))
+        if (
+          entries[0]?.isIntersecting &&
+          hasNextPage &&
+          loadMoreStatus !== "loading"
+        ) {
+          void dispatch(fetchMoreDriversThunk())
         }
       },
       { rootMargin: "180px" }
@@ -135,22 +139,20 @@ export default function Drivers() {
 
     observer.observe(node)
     return () => observer.disconnect()
-  }, [filteredDrivers.length])
-
-  const visibleDrivers = filteredDrivers.slice(0, visibleCount)
+  }, [dispatch, hasNextPage, loadMoreStatus])
 
   const groupedDrivers = useMemo(
     () => [
       {
         title: "Active",
-        items: visibleDrivers.filter((item) => item.status === "ACTIVE"),
+        items: filteredDrivers.filter((item) => item.status === "ACTIVE"),
       },
       {
         title: "Inactive",
-        items: visibleDrivers.filter((item) => item.status !== "ACTIVE"),
+        items: filteredDrivers.filter((item) => item.status !== "ACTIVE"),
       },
     ],
-    [visibleDrivers]
+    [filteredDrivers]
   )
 
   const refreshDrivers = () => {
@@ -240,7 +242,7 @@ export default function Drivers() {
     }
   }
 
-  const hasMore = visibleDrivers.length < filteredDrivers.length
+  const hasMore = hasNextPage
 
   return (
     <div className="space-y-3 pb-20">

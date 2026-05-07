@@ -20,7 +20,10 @@ import {
   GenericDialogFooter,
 } from "~/components/ui/generic-dialog"
 import { createSite, updateSite } from "~/features/sites/api"
-import { fetchSitesThunk } from "~/features/sites/sitesSlice"
+import {
+  fetchSitesThunk,
+  fetchMoreSitesThunk,
+} from "~/features/sites/sitesSlice"
 import type {
   CreateSiteRequest,
   Site,
@@ -49,6 +52,8 @@ export default function Sites() {
   const dispatch = useAppDispatch()
   const {
     items: sites,
+    hasNextPage,
+    loadMoreStatus,
     status: sitesStatus,
     error: listError,
   } = useAppSelector((state) => state.sites)
@@ -63,7 +68,6 @@ export default function Sites() {
   const [query, setQuery] = useState("")
   const [segment, setSegment] = useState<SiteSegment>("all")
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
-  const [visibleCount, setVisibleCount] = useState(10)
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
@@ -106,10 +110,6 @@ export default function Sites() {
   }, [query, segment, sites])
 
   useEffect(() => {
-    setVisibleCount(10)
-  }, [query, segment])
-
-  useEffect(() => {
     const node = loadMoreRef.current
     if (!node) {
       return
@@ -117,8 +117,12 @@ export default function Sites() {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setVisibleCount((prev) => Math.min(prev + 8, filteredSites.length))
+        if (
+          entries[0]?.isIntersecting &&
+          hasNextPage &&
+          loadMoreStatus !== "loading"
+        ) {
+          void dispatch(fetchMoreSitesThunk())
         }
       },
       { rootMargin: "180px" }
@@ -126,23 +130,7 @@ export default function Sites() {
 
     observer.observe(node)
     return () => observer.disconnect()
-  }, [filteredSites.length])
-
-  const visibleSites = filteredSites.slice(0, visibleCount)
-
-  const groupedSites = useMemo(
-    () => [
-      {
-        title: "Operational",
-        items: visibleSites.filter((item) => item.status === "ACTIVE"),
-      },
-      {
-        title: "Paused",
-        items: visibleSites.filter((item) => item.status !== "ACTIVE"),
-      },
-    ],
-    [visibleSites]
-  )
+  }, [dispatch, hasNextPage, loadMoreStatus])
 
   const refreshSites = () => {
     void dispatch(fetchSitesThunk())
@@ -224,7 +212,7 @@ export default function Sites() {
     }
   }
 
-  const hasMore = visibleSites.length < filteredSites.length
+  const hasMore = hasNextPage
 
   return (
     <div className="space-y-3 pb-20">
@@ -302,83 +290,64 @@ export default function Sites() {
       ) : null}
 
       {sitesStatus !== "loading" && !listError ? (
-        <section className="space-y-3">
-          {groupedSites.map((group) =>
-            group.items.length > 0 ? (
-              <div key={group.title} className="space-y-2">
-                <p className="sticky top-[132px] z-10 inline-flex rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
-                  {group.title}
-                </p>
+        <section className="space-y-2">
+          {filteredSites.map((site) => (
+            <OpsCard key={site.id}>
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm leading-tight font-semibold text-foreground">
+                      {site.name}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {site.location}
+                    </p>
+                  </div>
 
-                <div className="space-y-2">
-                  {group.items.map((site) => {
-                    return (
-                      <OpsCard key={site.id}>
-                        <div className="space-y-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className="text-sm leading-tight font-semibold text-foreground">
-                                {site.name}
-                              </p>
-                              <p className="mt-0.5 text-xs text-muted-foreground">
-                                {site.location}
-                              </p>
-                            </div>
+                  <OpsStatusPill status={site.status} />
+                </div>
 
-                            <OpsStatusPill status={site.status} />
-                          </div>
+                <div className="rounded-xl bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                  <p>
+                    Contact:{" "}
+                    <span className="text-foreground">
+                      {site.contactPerson}
+                    </span>
+                  </p>
+                  <p className="mt-0.5">
+                    Mobile:{" "}
+                    <span className="text-foreground">{site.mobileNumber}</span>
+                  </p>
+                  <p className="mt-0.5 truncate">
+                    Email: <span className="text-foreground">{site.email}</span>
+                  </p>
+                </div>
 
-                          <div className="rounded-xl bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
-                            <p>
-                              Contact:{" "}
-                              <span className="text-foreground">
-                                {site.contactPerson}
-                              </span>
-                            </p>
-                            <p className="mt-0.5">
-                              Mobile:{" "}
-                              <span className="text-foreground">
-                                {site.mobileNumber}
-                              </span>
-                            </p>
-                            <p className="mt-0.5 truncate">
-                              Email:{" "}
-                              <span className="text-foreground">
-                                {site.email}
-                              </span>
-                            </p>
-                          </div>
-
-                          <div className="flex items-center justify-end gap-2">
-                            <div className="flex items-center gap-1.5">
-                              <Button
-                                variant="outline"
-                                size="xs"
-                                onClick={() => {
-                                  window.location.href = `tel:${site.mobileNumber}`
-                                }}
-                              >
-                                <Phone className="size-3.5" />
-                                Call
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="xs"
-                                onClick={() => openEditDialog(site)}
-                              >
-                                <Pencil className="size-3.5" />
-                                Edit
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </OpsCard>
-                    )
-                  })}
+                <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      onClick={() => {
+                        window.location.href = `tel:${site.mobileNumber}`
+                      }}
+                    >
+                      <Phone className="size-3.5" />
+                      Call
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      onClick={() => openEditDialog(site)}
+                    >
+                      <Pencil className="size-3.5" />
+                      Edit
+                    </Button>
+                  </div>
                 </div>
               </div>
-            ) : null
-          )}
+            </OpsCard>
+          ))}
 
           <div ref={loadMoreRef} className="py-2 text-center">
             {hasMore ? (
