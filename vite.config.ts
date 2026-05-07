@@ -40,4 +40,10 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
+  preview: {
+    allowedHosts: ["vehicleinformation.apcrda.org"],
+  },
+  server: {
+    allowedHosts: ["vehicleinformation.apcrda.org"],
+  },
 })
