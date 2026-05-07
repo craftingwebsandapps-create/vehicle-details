@@ -160,7 +160,7 @@ export function OpsActionSheet({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="top-auto right-0 bottom-0 left-0 max-w-none translate-x-0 translate-y-0 rounded-t-2xl rounded-b-none border-x-0 border-b-0 p-0"
+        className="inset-x-0 top-auto bottom-0 max-w-none translate-x-0 translate-y-0 rounded-t-2xl rounded-b-none border-x-0 border-b-0 p-0 sm:max-w-none"
       >
         <DialogHeader className="px-4 pt-4 pb-2">
           <DialogTitle className="text-sm font-semibold">{title}</DialogTitle>
@@ -197,7 +197,8 @@ export function OpsFloatingFilterButton({ onClick }: { onClick: () => void }) {
       type="button"
       size="icon"
       onClick={onClick}
-      className="fixed right-4 bottom-24 z-30 size-11 rounded-full shadow-lg"
+      className="fixed bottom-24 z-30 size-11 rounded-full shadow-lg"
+      style={{ right: "max(1rem, calc((100vw - 30rem) / 2 + 1rem))" }}
       aria-label="Open filters"
     >
       <Filter className="size-4" />

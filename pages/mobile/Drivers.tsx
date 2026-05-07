@@ -65,7 +65,6 @@ export default function Drivers() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formDefaults, setFormDefaults] =
     useState<DriverFormValues>(initialFormState)
-
   const [query, setQuery] = useState("")
   const [segment, setSegment] = useState<DriverSegment>("all")
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
@@ -325,7 +324,7 @@ export default function Drivers() {
           {groupedDrivers.map((group) =>
             group.items.length > 0 ? (
               <div key={group.title} className="space-y-2">
-                <p className="sticky top-[132px] z-10 inline-flex rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
+                <p className="sticky top-33 z-10 inline-flex rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
                   {group.title}
                 </p>
 
@@ -423,7 +422,9 @@ export default function Drivers() {
                 Loading more drivers...
               </p>
             ) : (
-              <p className="text-xs text-muted-foreground">End of list</p>
+              <p className="text-xs text-muted-foreground">
+                End of driver list
+              </p>
             )}
           </div>
         </section>
