@@ -1,15 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import {
-  ExternalLink,
-  Fuel,
-  MapPinned,
-  MoreHorizontal,
-  Navigation,
-  Pencil,
-  Phone,
-  UserPlus,
-} from "lucide-react"
+import { ExternalLink, Fuel, Pencil, Phone } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAppDispatch, useAppSelector } from "~/app/hooks"
@@ -80,11 +71,9 @@ export default function Vehicles() {
   const [query, setQuery] = useState("")
   const [segment, setSegment] = useState<VehicleSegment>("all")
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
-  const [actionVehicle, setActionVehicle] = useState<Vehicle | null>(null)
   const [visibleCount, setVisibleCount] = useState(12)
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
-  const longPressTimeoutRef = useRef<number | null>(null)
 
   const vehicleFormConfig = useMemo(
     () => getVehicleDialogFormConfig(dialogMode === "edit", sites),
@@ -189,19 +178,6 @@ export default function Vehicles() {
       site: typeof vehicle.site === "string" ? vehicle.site : vehicle.site._id,
     })
     setIsVehicleDialogOpen(true)
-  }
-
-  const startLongPress = (vehicle: Vehicle) => {
-    longPressTimeoutRef.current = window.setTimeout(() => {
-      setActionVehicle(vehicle)
-    }, 500)
-  }
-
-  const clearLongPress = () => {
-    if (longPressTimeoutRef.current !== null) {
-      window.clearTimeout(longPressTimeoutRef.current)
-      longPressTimeoutRef.current = null
-    }
   }
 
   const handleSubmitVehicle = async (values: VehicleFormValues) => {
@@ -367,12 +343,7 @@ export default function Vehicles() {
 
                     return (
                       <OpsCard key={vehicle._id}>
-                        <div
-                          className="space-y-3"
-                          onPointerDown={() => startLongPress(vehicle)}
-                          onPointerUp={clearLongPress}
-                          onPointerLeave={clearLongPress}
-                        >
+                        <div className="space-y-3">
                           <div className="flex items-start justify-between gap-2">
                             <div>
                               <p className="text-base leading-tight font-semibold tracking-tight text-foreground">
@@ -385,13 +356,6 @@ export default function Vehicles() {
 
                             <div className="flex items-center gap-1">
                               <OpsStatusPill status={vehicle.status} />
-                              <Button
-                                variant="ghost"
-                                size="icon-xs"
-                                onClick={() => setActionVehicle(vehicle)}
-                              >
-                                <MoreHorizontal className="size-3.5" />
-                              </Button>
                             </div>
                           </div>
 
@@ -422,17 +386,17 @@ export default function Vehicles() {
                             )}
 
                             <div className="flex items-center gap-1.5">
+                              <Button
+                                variant="outline"
+                                size="xs"
+                                onClick={() => openEditDialog(vehicle)}
+                              >
+                                <Pencil className="size-3.5" />
+                                Edit
+                              </Button>
                               <Button variant="outline" size="xs">
                                 <Phone className="size-3.5" />
                                 Call
-                              </Button>
-                              <Button variant="outline" size="xs">
-                                <UserPlus className="size-3.5" />
-                                Assign
-                              </Button>
-                              <Button variant="outline" size="xs">
-                                <Navigation className="size-3.5" />
-                                Track
                               </Button>
                             </div>
                           </div>
@@ -469,56 +433,6 @@ export default function Vehicles() {
           icon: Fuel,
           onClick: () => setSegment(item.value),
         }))}
-      />
-
-      <OpsActionSheet
-        open={Boolean(actionVehicle)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setActionVehicle(null)
-          }
-        }}
-        title={
-          actionVehicle
-            ? `${actionVehicle.registrationNumber} actions`
-            : "Vehicle actions"
-        }
-        actions={
-          actionVehicle
-            ? [
-                {
-                  key: "track",
-                  label: "Track live vehicle",
-                  icon: Navigation,
-                  onClick: () => {
-                    toast.message("Opening live tracking")
-                  },
-                },
-                {
-                  key: "assign",
-                  label: "Assign driver",
-                  icon: UserPlus,
-                  onClick: () => {
-                    toast.message("Opening assignment flow")
-                  },
-                },
-                {
-                  key: "site",
-                  label: "View site details",
-                  icon: MapPinned,
-                  onClick: () => {
-                    toast.message("Opening site details")
-                  },
-                },
-                {
-                  key: "edit",
-                  label: "Edit vehicle",
-                  icon: Pencil,
-                  onClick: () => openEditDialog(actionVehicle),
-                },
-              ]
-            : []
-        }
       />
     </div>
   )

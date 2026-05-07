@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { Layers, MoreHorizontal, Pencil, Phone } from "lucide-react"
+import { Layers, Pencil, Phone } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAppDispatch, useAppSelector } from "~/app/hooks"
@@ -63,11 +63,9 @@ export default function Sites() {
   const [query, setQuery] = useState("")
   const [segment, setSegment] = useState<SiteSegment>("all")
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
-  const [actionSite, setActionSite] = useState<Site | null>(null)
   const [visibleCount, setVisibleCount] = useState(10)
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
-  const longPressTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => {
     void dispatch(fetchSitesThunk())
@@ -170,19 +168,6 @@ export default function Sites() {
       status: site.status,
     })
     setIsSiteDialogOpen(true)
-  }
-
-  const startLongPress = (site: Site) => {
-    longPressTimeoutRef.current = window.setTimeout(() => {
-      setActionSite(site)
-    }, 500)
-  }
-
-  const clearLongPress = () => {
-    if (longPressTimeoutRef.current !== null) {
-      window.clearTimeout(longPressTimeoutRef.current)
-      longPressTimeoutRef.current = null
-    }
   }
 
   const handleSubmitSite = async (values: CreateSiteRequest) => {
@@ -329,12 +314,7 @@ export default function Sites() {
                   {group.items.map((site) => {
                     return (
                       <OpsCard key={site.id}>
-                        <div
-                          className="space-y-3"
-                          onPointerDown={() => startLongPress(site)}
-                          onPointerUp={clearLongPress}
-                          onPointerLeave={clearLongPress}
-                        >
+                        <div className="space-y-3">
                           <div className="flex items-start justify-between gap-2">
                             <div>
                               <p className="text-sm leading-tight font-semibold text-foreground">
@@ -345,16 +325,7 @@ export default function Sites() {
                               </p>
                             </div>
 
-                            <div className="flex items-center gap-1">
-                              <OpsStatusPill status={site.status} />
-                              <Button
-                                variant="ghost"
-                                size="icon-xs"
-                                onClick={() => setActionSite(site)}
-                              >
-                                <MoreHorizontal className="size-3.5" />
-                              </Button>
-                            </div>
+                            <OpsStatusPill status={site.status} />
                           </div>
 
                           <div className="rounded-xl bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
@@ -433,36 +404,6 @@ export default function Sites() {
           icon: Layers,
           onClick: () => setSegment(item.value),
         }))}
-      />
-
-      <OpsActionSheet
-        open={Boolean(actionSite)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setActionSite(null)
-          }
-        }}
-        title={actionSite ? `${actionSite.name} actions` : "Site actions"}
-        actions={
-          actionSite
-            ? [
-                {
-                  key: "contact",
-                  label: "Call site contact",
-                  icon: Phone,
-                  onClick: () => {
-                    window.location.href = `tel:${actionSite.mobileNumber}`
-                  },
-                },
-                {
-                  key: "edit",
-                  label: "Edit site",
-                  icon: Pencil,
-                  onClick: () => openEditDialog(actionSite),
-                },
-              ]
-            : []
-        }
       />
     </div>
   )

@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import {
-  CarFront,
-  Clock3,
-  ExternalLink,
-  FileBadge2,
-  MoreHorizontal,
-  Pencil,
-  Phone,
-} from "lucide-react"
+import { Clock3, ExternalLink, Pencil, Phone } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAppDispatch, useAppSelector } from "~/app/hooks"
@@ -77,11 +69,9 @@ export default function Drivers() {
   const [query, setQuery] = useState("")
   const [segment, setSegment] = useState<DriverSegment>("all")
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
-  const [actionDriver, setActionDriver] = useState<Driver | null>(null)
   const [visibleCount, setVisibleCount] = useState(12)
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
-  const longPressTimeoutRef = useRef<number | null>(null)
 
   const driverFormConfig = useMemo(
     () => getDriverDialogFormConfig(dialogMode === "edit"),
@@ -188,19 +178,6 @@ export default function Drivers() {
       status: driver.status,
     })
     setIsDriverDialogOpen(true)
-  }
-
-  const startLongPress = (driver: Driver) => {
-    longPressTimeoutRef.current = window.setTimeout(() => {
-      setActionDriver(driver)
-    }, 500)
-  }
-
-  const clearLongPress = () => {
-    if (longPressTimeoutRef.current !== null) {
-      window.clearTimeout(longPressTimeoutRef.current)
-      longPressTimeoutRef.current = null
-    }
   }
 
   const handleSubmitDriver = async (values: DriverFormValues) => {
@@ -362,12 +339,7 @@ export default function Drivers() {
 
                     return (
                       <OpsCard key={driver.id}>
-                        <div
-                          className="space-y-3"
-                          onPointerDown={() => startLongPress(driver)}
-                          onPointerUp={clearLongPress}
-                          onPointerLeave={clearLongPress}
-                        >
+                        <div className="space-y-3">
                           <div className="flex items-start gap-2.5">
                             <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-semibold text-primary">
                               {initial}
@@ -384,26 +356,12 @@ export default function Drivers() {
                                   </p>
                                 </div>
 
-                                <div className="flex items-center gap-1">
-                                  <OpsStatusPill status={driver.status} />
-                                  <Button
-                                    variant="ghost"
-                                    size="icon-xs"
-                                    onClick={() => setActionDriver(driver)}
-                                  >
-                                    <MoreHorizontal className="size-3.5" />
-                                  </Button>
-                                </div>
+                                <OpsStatusPill status={driver.status} />
                               </div>
 
-                              <div className="mt-2 grid grid-cols-3 gap-1.5 text-[11px]">
+                              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
                                 <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
-                                  Shift 08-18
-                                </span>
-                                <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
-                                  {driver.licenceUrl
-                                    ? "Licence valid"
-                                    : "Licence pending"}
+                                  Licence: {driver.licenceNumber}
                                 </span>
                                 <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
                                   {assignedVehicle}
@@ -483,58 +441,6 @@ export default function Drivers() {
           icon: Clock3,
           onClick: () => setSegment(item.value),
         }))}
-      />
-
-      <OpsActionSheet
-        open={Boolean(actionDriver)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setActionDriver(null)
-          }
-        }}
-        title={actionDriver ? `${actionDriver.name} actions` : "Driver actions"}
-        actions={
-          actionDriver
-            ? [
-                {
-                  key: "call",
-                  label: "Call driver",
-                  icon: Phone,
-                  onClick: () => {
-                    window.location.href = `tel:${actionDriver.mobileNumber}`
-                  },
-                },
-                {
-                  key: "assign",
-                  label: "Assign vehicle",
-                  icon: CarFront,
-                  onClick: () => {
-                    toast.message("Open assignment workflow")
-                  },
-                },
-                {
-                  key: "licence",
-                  label: "Licence details",
-                  icon: FileBadge2,
-                  onClick: () => {
-                    if (actionDriver.licenceUrl) {
-                      window.open(
-                        actionDriver.licenceUrl,
-                        "_blank",
-                        "noreferrer"
-                      )
-                    }
-                  },
-                },
-                {
-                  key: "edit",
-                  label: "Edit profile",
-                  icon: Pencil,
-                  onClick: () => openEditDialog(actionDriver),
-                },
-              ]
-            : []
-        }
       />
     </div>
   )
