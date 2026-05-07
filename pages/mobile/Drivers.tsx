@@ -141,20 +141,6 @@ export default function Drivers() {
     return () => observer.disconnect()
   }, [dispatch, hasNextPage, loadMoreStatus])
 
-  const groupedDrivers = useMemo(
-    () => [
-      {
-        title: "Active",
-        items: filteredDrivers.filter((item) => item.status === "ACTIVE"),
-      },
-      {
-        title: "Inactive",
-        items: filteredDrivers.filter((item) => item.status !== "ACTIVE"),
-      },
-    ],
-    [filteredDrivers]
-  )
-
   const refreshDrivers = () => {
     void dispatch(fetchDriversThunk())
     toast.success("Driver list refreshed", { position: "top-center" })
@@ -322,101 +308,89 @@ export default function Drivers() {
       ) : null}
 
       {status !== "loading" && status !== "failed" ? (
-        <section className="space-y-3">
-          {groupedDrivers.map((group) =>
-            group.items.length > 0 ? (
-              <div key={group.title} className="space-y-2">
-                <p className="sticky top-33 z-10 inline-flex rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
-                  {group.title}
-                </p>
+        <section className="space-y-2">
+          {filteredDrivers.map((driver) => {
+            const initial = driver.name.charAt(0).toUpperCase()
+            const assignedVehicle =
+              driver.vehicle?.registrationNumber ??
+              driver.vehicle?.name ??
+              "Unassigned"
 
-                <div className="space-y-2">
-                  {group.items.map((driver) => {
-                    const initial = driver.name.charAt(0).toUpperCase()
-                    const assignedVehicle =
-                      driver.vehicle?.registrationNumber ??
-                      driver.vehicle?.name ??
-                      "Unassigned"
+            return (
+              <OpsCard key={driver.id}>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-2.5">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-semibold text-primary">
+                      {initial}
+                    </span>
 
-                    return (
-                      <OpsCard key={driver.id}>
-                        <div className="space-y-3">
-                          <div className="flex items-start gap-2.5">
-                            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-semibold text-primary">
-                              {initial}
-                            </span>
-
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-start justify-between gap-2">
-                                <div>
-                                  <p className="text-sm leading-tight font-semibold text-foreground">
-                                    {driver.name}
-                                  </p>
-                                  <p className="mt-0.5 text-xs text-muted-foreground">
-                                    {driver.mobileNumber}
-                                  </p>
-                                </div>
-
-                                <OpsStatusPill status={driver.status} />
-                              </div>
-
-                              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
-                                <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
-                                  Licence: {driver.licenceNumber}
-                                </span>
-                                <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
-                                  {assignedVehicle}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            {driver.licenceUrl ? (
-                              <a
-                                href={driver.licenceUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-xs font-medium text-primary"
-                              >
-                                <ExternalLink className="size-3" />
-                                View licence
-                              </a>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">
-                                No licence file
-                              </span>
-                            )}
-
-                            <div className="flex items-center gap-1.5">
-                              <Button
-                                variant="outline"
-                                size="xs"
-                                onClick={() => {
-                                  window.location.href = `tel:${driver.mobileNumber}`
-                                }}
-                              >
-                                <Phone className="size-3.5" />
-                                Call
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="xs"
-                                onClick={() => openEditDialog(driver)}
-                              >
-                                <Pencil className="size-3.5" />
-                                Edit
-                              </Button>
-                            </div>
-                          </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm leading-tight font-semibold text-foreground">
+                            {driver.name}
+                          </p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {driver.mobileNumber}
+                          </p>
                         </div>
-                      </OpsCard>
-                    )
-                  })}
+
+                        <OpsStatusPill status={driver.status} />
+                      </div>
+
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+                        <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
+                          Licence: {driver.licenceNumber}
+                        </span>
+                        <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
+                          {assignedVehicle}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    {driver.licenceUrl ? (
+                      <a
+                        href={driver.licenceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-primary"
+                      >
+                        <ExternalLink className="size-3" />
+                        View licence
+                      </a>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        No licence file
+                      </span>
+                    )}
+
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        onClick={() => {
+                          window.location.href = `tel:${driver.mobileNumber}`
+                        }}
+                      >
+                        <Phone className="size-3.5" />
+                        Call
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        onClick={() => openEditDialog(driver)}
+                      >
+                        <Pencil className="size-3.5" />
+                        Edit
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ) : null
-          )}
+              </OpsCard>
+            )
+          })}
 
           <div ref={loadMoreRef} className="py-2 text-center">
             {hasMore ? (
