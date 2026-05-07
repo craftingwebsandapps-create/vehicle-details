@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { FileUploadField } from "~/components/form/FileUploadField"
 import type { DriverFormValues } from "~/types/driver"
 import type { FormConfig } from "~/types/form-builder"
 
@@ -15,9 +16,14 @@ const getDriverDialogSchema = (isEditMode: boolean) =>
       .string()
       .trim()
       .min(3, "Licence number must be at least 3 characters"),
-    licenceUrl: isEditMode
-      ? z.union([z.string().trim(), z.instanceof(File), z.null()]).optional()
-      : z.instanceof(File, { message: "Licence file is required" }),
+    licenceUrl: z
+      .union([z.string().trim().min(1), z.instanceof(File)])
+      .refine(
+        (v) => v instanceof File || (typeof v === "string" && v.length > 0),
+        {
+          message: "Licence file is required",
+        }
+      ),
     mobileNumber: z
       .string()
       .trim()
@@ -84,17 +90,20 @@ export const getDriverDialogFormConfig = (
       grid: { colSpan: 12 },
     },
     {
-      type: "file",
+      type: "text",
       name: "licenceUrl",
-      label: isEditMode ? "Licence file (optional)" : "Licence file",
-      description: "Choose file or use camera to capture licence",
-      validation: {
-        required: isEditMode ? false : "Licence file is required",
-      },
-      props: {
-        accept: "image/*,application/pdf",
-      },
+      hidden: true,
       grid: { colSpan: 12 },
+      render: ({ form }) => (
+        <FileUploadField
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          form={form as any}
+          name="licenceUrl"
+          label="Licence file"
+          uploadTitle="Upload licence file"
+          required={true}
+        />
+      ),
     },
   ],
 })
