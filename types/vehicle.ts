@@ -65,3 +65,37 @@ export type VehicleListResponse = {
     meta: VehicleMeta
   }
 }
+
+export type VehicleUpsertRequest = {
+  name: string
+  type: string
+  registrationNumber: string
+  document: string
+  status: string
+  site: string
+}
+
+export type CreateVehicleRequest = VehicleUpsertRequest
+
+export type UpdateVehicleRequest = VehicleUpsertRequest
+
+export type VehicleFormValues = {
+  name: string
+  type: string
+  registrationNumber: string
+  document: string | File | null
+  status: string
+  site: string
+}
+
+export type UploadSingleFileResponse = {
+  success: boolean
+  message: string
+  data?: {
+    filename: string
+    originalName: string
+    mimeType: string
+    size: number
+    url: string
+  }
+}

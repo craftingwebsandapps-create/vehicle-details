@@ -157,6 +157,44 @@ class ApiClient {
       body: JSON.stringify(body),
     })
   }
+
+  postWithAuth<T>(
+    path: string,
+    body: unknown,
+    accessToken?: string,
+    options?: RequestOptions
+  ) {
+    return this.post<T>(path, body, {
+      ...options,
+      headers: {
+        ...(options?.headers ?? {}),
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+    })
+  }
+
+  put<T>(path: string, body: unknown, options?: RequestOptions) {
+    return this.request<T>(path, {
+      ...options,
+      method: "PUT",
+      body: JSON.stringify(body),
+    })
+  }
+
+  putWithAuth<T>(
+    path: string,
+    body: unknown,
+    accessToken?: string,
+    options?: RequestOptions
+  ) {
+    return this.put<T>(path, body, {
+      ...options,
+      headers: {
+        ...(options?.headers ?? {}),
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+    })
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL)
