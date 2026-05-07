@@ -259,20 +259,14 @@ export default function Drivers() {
                       Verified
                     </span>
                   </div>
-                  <div className="mt-3 grid grid-cols-1 gap-1 text-xs text-muted-foreground sm:grid-cols-2">
-                    <p>
-                      Contractor:{" "}
-                      <span className="text-foreground">
-                        {driver.contractor?.name ?? "-"}
-                      </span>
-                    </p>
+                  <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-muted-foreground sm:grid-cols-2">
                     <p>
                       Site:{" "}
                       <span className="text-foreground">
                         {driver.site?.name ?? "-"}
                       </span>
                     </p>
-                    <p className="sm:col-span-2">
+                    <p>
                       Vehicle:{" "}
                       <span className="text-foreground">
                         {driver.vehicle?.registrationNumber ??
@@ -280,22 +274,30 @@ export default function Drivers() {
                           "-"}
                       </span>
                     </p>
+                    <p className="sm:col-span-2">
+                      Contractor:{" "}
+                      <span className="text-foreground">
+                        {driver.contractor?.name ?? "-"}
+                      </span>
+                    </p>
                   </div>
-                  {driver.licenceUrl ? (
-                    <div className="mt-4">
-                      <a
-                        href={driver.licenceUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 text-xs font-medium text-primary hover:underline"
-                      >
-                        <ExternalLink className="size-3.5" />
-                        View licence document
-                      </a>
-                    </div>
-                  ) : null}
 
-                  <div className="mt-4 flex justify-end">
+                  <div className="mt-4 flex justify-between gap-4">
+                    {driver.licenceUrl ? (
+                      <div className="mt-4">
+                        <a
+                          href={driver.licenceUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 text-xs font-medium text-primary hover:underline"
+                        >
+                          <ExternalLink className="size-3.5" />
+                          View licence document
+                        </a>
+                      </div>
+                    ) : (
+                      <div />
+                    )}
                     <Button
                       variant="outline"
                       size="sm"

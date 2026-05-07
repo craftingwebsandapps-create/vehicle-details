@@ -291,29 +291,31 @@ export default function Vehicles() {
                       </span>
                     </p>
                   </div>
-                  {vehicle.document ? (
-                    <div className="mt-4">
-                      <a
-                        href={vehicle.document}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 text-xs font-medium text-primary hover:underline"
-                      >
-                        <ExternalLink className="size-3.5" />
-                        View vehicle document
-                      </a>
-                    </div>
-                  ) : null}
+                  <div className="flex justify-between gap-4 pt-4">
+                    {vehicle.document ? (
+                      <div className="flex items-end">
+                        <a
+                          href={vehicle.document}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 text-xs font-medium text-primary hover:underline"
+                        >
+                          <ExternalLink className="size-3.5" />
+                          View vehicle document
+                        </a>
+                      </div>
+                    ) : null}
 
-                  <div className="mt-4 flex justify-end">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openEditDialog(vehicle)}
-                    >
-                      <Pencil className="size-4" />
-                      Edit
-                    </Button>
+                    <div className="flex justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditDialog(vehicle)}
+                      >
+                        <Pencil className="size-4" />
+                        Edit
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

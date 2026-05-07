@@ -269,31 +269,36 @@ export default function Sites() {
                   </span>
                 </div>
 
-                <div className="mt-4 grid grid-cols-1 gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-                  <p>
-                    Contact:{" "}
-                    <span className="text-foreground">
-                      {site.contactPerson}
-                    </span>
-                  </p>
-                  <p>
-                    Mobile:{" "}
-                    <span className="text-foreground">{site.mobileNumber}</span>
-                  </p>
-                  <p className="sm:col-span-2">
-                    Email: <span className="text-foreground">{site.email}</span>
-                  </p>
-                </div>
+                <div className="mt-4 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                  <div className="space-y-2 text-muted-foreground">
+                    <p>
+                      Contact:{" "}
+                      <span className="text-foreground">
+                        {site.contactPerson}
+                      </span>
+                    </p>
+                    <p>
+                      Mobile:{" "}
+                      <span className="text-foreground">
+                        {site.mobileNumber}
+                      </span>
+                    </p>
+                    <p className="sm:col-span-2">
+                      Email:{" "}
+                      <span className="text-foreground">{site.email}</span>
+                    </p>
+                  </div>
 
-                <div className="mt-4 flex justify-end">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openEditDialog(site)}
-                  >
-                    <Pencil className="size-4" />
-                    Edit
-                  </Button>
+                  <div className="mt-4 flex items-end justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEditDialog(site)}
+                    >
+                      <Pencil className="size-4" />
+                      Edit
+                    </Button>
+                  </div>
                 </div>
               </article>
             ))
