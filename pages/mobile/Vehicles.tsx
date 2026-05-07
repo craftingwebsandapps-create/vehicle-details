@@ -1,29 +1,46 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
-import { ExternalLink, Pencil, Plus, TrendingUp, Truck } from "lucide-react"
+import {
+  ExternalLink,
+  Fuel,
+  MapPinned,
+  MoreHorizontal,
+  Navigation,
+  Pencil,
+  Phone,
+  UserPlus,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { useAppDispatch, useAppSelector } from "~/app/hooks"
+import {
+  OpsActionSheet,
+  OpsCard,
+  OpsEmptyState,
+  OpsFloatingFilterButton,
+  OpsListHeader,
+  OpsListSkeleton,
+  OpsStatusPill,
+} from "~/components/mobile/ops/OpsListPrimitives"
 import { FormBuilder } from "~/components/form"
 import { Button } from "~/components/ui/button"
-import { Skeleton } from "~/components/ui/skeleton"
 import {
   GenericDialog,
   GenericDialogFooter,
 } from "~/components/ui/generic-dialog"
+import { fetchSitesThunk } from "~/features/sites/sitesSlice"
 import {
   createVehicle,
   updateVehicle,
   uploadVehicleDocument,
 } from "~/features/vehicles/api"
 import { fetchVehiclesThunk } from "~/features/vehicles/vehiclesSlice"
-import { fetchSitesThunk } from "~/features/sites/sitesSlice"
 import { getVehicleDialogFormConfig } from "~/schemas/vehicle-dialog-form-config"
 import type {
   CreateVehicleRequest,
+  UpdateVehicleRequest,
   Vehicle,
   VehicleFormValues,
-  UpdateVehicleRequest,
 } from "~/types/vehicle"
 
 const initialFormState: VehicleFormValues = {
@@ -34,6 +51,15 @@ const initialFormState: VehicleFormValues = {
   status: "ACTIVE",
   site: "",
 }
+
+type VehicleSegment = "all" | "active" | "inactive" | "assigned"
+
+const VEHICLE_SEGMENTS: Array<{ label: string; value: VehicleSegment }> = [
+  { label: "All", value: "all" },
+  { label: "Active", value: "active" },
+  { label: "Inactive", value: "inactive" },
+  { label: "Assigned", value: "assigned" },
+]
 
 export default function Vehicles() {
   const dispatch = useAppDispatch()
@@ -51,6 +77,15 @@ export default function Vehicles() {
   const [formDefaults, setFormDefaults] =
     useState<VehicleFormValues>(initialFormState)
 
+  const [query, setQuery] = useState("")
+  const [segment, setSegment] = useState<VehicleSegment>("all")
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
+  const [actionVehicle, setActionVehicle] = useState<Vehicle | null>(null)
+  const [visibleCount, setVisibleCount] = useState(12)
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const longPressTimeoutRef = useRef<number | null>(null)
+
   const vehicleFormConfig = useMemo(
     () => getVehicleDialogFormConfig(dialogMode === "edit", sites),
     [dialogMode, sites]
@@ -60,6 +95,80 @@ export default function Vehicles() {
     void dispatch(fetchVehiclesThunk())
     void dispatch(fetchSitesThunk())
   }, [dispatch])
+
+  const filteredVehicles = useMemo(() => {
+    const term = query.trim().toLowerCase()
+
+    return vehicles.filter((vehicle) => {
+      const siteName =
+        typeof vehicle.site === "string"
+          ? vehicle.site
+          : (vehicle.site?.name ?? "")
+
+      const matchesSegment =
+        segment === "all"
+          ? true
+          : segment === "active"
+            ? vehicle.status === "ACTIVE"
+            : segment === "inactive"
+              ? vehicle.status === "INACTIVE"
+              : Boolean(vehicle.driver?.name)
+
+      const matchesSearch =
+        term.length === 0
+          ? true
+          : [vehicle.registrationNumber, vehicle.name, vehicle.type, siteName]
+              .join(" ")
+              .toLowerCase()
+              .includes(term)
+
+      return matchesSegment && matchesSearch
+    })
+  }, [vehicles, query, segment])
+
+  useEffect(() => {
+    setVisibleCount(12)
+  }, [query, segment])
+
+  useEffect(() => {
+    const node = loadMoreRef.current
+    if (!node) {
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + 8, filteredVehicles.length))
+        }
+      },
+      { rootMargin: "180px" }
+    )
+
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [filteredVehicles.length])
+
+  const visibleVehicles = filteredVehicles.slice(0, visibleCount)
+
+  const groupedVehicles = useMemo(
+    () => [
+      {
+        title: "Live fleet",
+        items: visibleVehicles.filter((item) => item.status === "ACTIVE"),
+      },
+      {
+        title: "Inactive fleet",
+        items: visibleVehicles.filter((item) => item.status !== "ACTIVE"),
+      },
+    ],
+    [visibleVehicles]
+  )
+
+  const refreshVehicles = () => {
+    void dispatch(fetchVehiclesThunk())
+    toast.success("Vehicle list refreshed", { position: "top-center" })
+  }
 
   const openCreateDialog = () => {
     setDialogMode("create")
@@ -80,6 +189,19 @@ export default function Vehicles() {
       site: typeof vehicle.site === "string" ? vehicle.site : vehicle.site._id,
     })
     setIsVehicleDialogOpen(true)
+  }
+
+  const startLongPress = (vehicle: Vehicle) => {
+    longPressTimeoutRef.current = window.setTimeout(() => {
+      setActionVehicle(vehicle)
+    }, 500)
+  }
+
+  const clearLongPress = () => {
+    if (longPressTimeoutRef.current !== null) {
+      window.clearTimeout(longPressTimeoutRef.current)
+      longPressTimeoutRef.current = null
+    }
   }
 
   const handleSubmitVehicle = async (values: VehicleFormValues) => {
@@ -132,36 +254,38 @@ export default function Vehicles() {
       setIsVehicleDialogOpen(false)
       setEditingVehicleId(null)
       setDialogMode("create")
-    } catch (error) {
+    } catch (submitError) {
       if (dialogMode === "edit") {
         toast.error("Unable to update vehicle")
       } else {
         toast.error("Unable to create vehicle")
       }
 
-      if (error instanceof Error) {
-        toast.error(error.message)
+      if (submitError instanceof Error) {
+        toast.error(submitError.message)
       }
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <section className="flex items-end justify-between gap-3">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">Vehicles</p>
-          <h2 className="mt-1 font-heading text-2xl font-semibold text-foreground">
-            Manage your vehicle fleet
-          </h2>
-        </div>
+  const hasMore = visibleVehicles.length < filteredVehicles.length
 
-        <Button size="sm" onClick={openCreateDialog}>
-          <Plus className="size-4" />
-          Create Vehicle
-        </Button>
-      </section>
+  return (
+    <div className="space-y-3 pb-20">
+      <OpsListHeader
+        title="Vehicles"
+        totalLabel={`${filteredVehicles.length} in view`}
+        searchValue={query}
+        onSearchChange={setQuery}
+        searchPlaceholder="Search reg no, type, site"
+        createLabel="Create"
+        onCreate={openCreateDialog}
+        onRefresh={refreshVehicles}
+        segments={VEHICLE_SEGMENTS}
+        activeSegment={segment}
+        onSegmentChange={setSegment}
+      />
 
       <GenericDialog
         open={isVehicleDialogOpen}
@@ -169,8 +293,8 @@ export default function Vehicles() {
         title={dialogMode === "edit" ? "Edit Vehicle" : "Create Vehicle"}
         description={
           dialogMode === "edit"
-            ? "Update vehicle details and optionally replace document."
-            : "Add a new vehicle and upload registration document."
+            ? "Update vehicle details and registration document."
+            : "Add vehicle and attach registration file."
         }
         maxWidth="lg"
         footer={
@@ -207,122 +331,195 @@ export default function Vehicles() {
         />
       </GenericDialog>
 
-      {status === "loading" ? (
-        <section className="space-y-3" aria-label="Loading vehicles">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <article
-              key={`vehicle-skeleton-${index}`}
-              className="rounded-[26px] border border-border/60 bg-background p-5 shadow-sm"
-            >
-              <div className="flex items-center gap-4">
-                <Skeleton className="size-12 rounded-2xl" />
-                <div className="min-w-0 flex-1 space-y-2">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-5 w-40" />
-                </div>
-              </div>
-
-              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <Skeleton className="h-10 rounded-xl" />
-                <Skeleton className="h-10 rounded-xl" />
-                <Skeleton className="h-10 rounded-xl" />
-              </div>
-            </article>
-          ))}
-        </section>
-      ) : null}
+      {status === "loading" ? <OpsListSkeleton /> : null}
 
       {status === "failed" ? (
-        <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <p className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </p>
       ) : null}
 
-      {status !== "loading" && status !== "failed" && vehicles.length === 0 ? (
-        <p className="rounded-xl border border-border/60 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-          No vehicles found.
-        </p>
+      {status !== "loading" &&
+      status !== "failed" &&
+      filteredVehicles.length === 0 ? (
+        <OpsEmptyState
+          title="No matching vehicles"
+          subtitle="Try another filter or search term."
+        />
       ) : null}
 
       {status !== "loading" && status !== "failed" ? (
         <section className="space-y-3">
-          {vehicles.map((vehicle) => (
-            <article
-              key={vehicle._id}
-              className="rounded-[26px] border border-border/60 bg-background p-5 shadow-sm"
-            >
-              <div className="flex items-start gap-4">
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <Truck className="size-5" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-foreground">
-                        {vehicle.name}
-                      </p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {vehicle.registrationNumber}
-                      </p>
-                    </div>
-                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                      {vehicle.status}
-                    </span>
-                  </div>
-                  <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
-                    <span className="inline-flex items-center gap-2">
-                      <TrendingUp className="size-4 text-primary" />
-                      {vehicle.type}
-                    </span>
-                  </div>
-                  <div className="mt-3 grid grid-cols-1 gap-1 text-xs text-muted-foreground sm:grid-cols-2">
-                    <p>
-                      Site:{" "}
-                      <span className="text-foreground">
-                        {typeof vehicle.site === "string"
-                          ? vehicle.site
-                          : (vehicle.site?.name ?? "-")}
-                      </span>
-                    </p>
-                    <p>
-                      Driver:{" "}
-                      <span className="text-foreground">
-                        {vehicle.driver?.name ?? "-"}
-                      </span>
-                    </p>
-                  </div>
-                  <div className="flex justify-between gap-4 pt-4">
-                    {vehicle.document ? (
-                      <div className="flex items-end">
-                        <a
-                          href={vehicle.document}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-2 text-xs font-medium text-primary hover:underline"
-                        >
-                          <ExternalLink className="size-3.5" />
-                          View vehicle document
-                        </a>
-                      </div>
-                    ) : null}
+          {groupedVehicles.map((group) =>
+            group.items.length > 0 ? (
+              <div key={group.title} className="space-y-2">
+                <p className="sticky top-[132px] z-10 inline-flex rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
+                  {group.title}
+                </p>
 
-                    <div className="flex justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditDialog(vehicle)}
-                      >
-                        <Pencil className="size-4" />
-                        Edit
-                      </Button>
-                    </div>
-                  </div>
+                <div className="space-y-2">
+                  {group.items.map((vehicle) => {
+                    const siteName =
+                      typeof vehicle.site === "string"
+                        ? vehicle.site
+                        : (vehicle.site?.name ?? "Unallocated")
+                    const driverName = vehicle.driver?.name ?? "Unassigned"
+
+                    return (
+                      <OpsCard key={vehicle._id}>
+                        <div
+                          className="space-y-3"
+                          onPointerDown={() => startLongPress(vehicle)}
+                          onPointerUp={clearLongPress}
+                          onPointerLeave={clearLongPress}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-base leading-tight font-semibold tracking-tight text-foreground">
+                                {vehicle.registrationNumber}
+                              </p>
+                              <p className="mt-0.5 text-xs text-muted-foreground">
+                                {vehicle.name} • {vehicle.type}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center gap-1">
+                              <OpsStatusPill status={vehicle.status} />
+                              <Button
+                                variant="ghost"
+                                size="icon-xs"
+                                onClick={() => setActionVehicle(vehicle)}
+                              >
+                                <MoreHorizontal className="size-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                            <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
+                              Driver: {driverName}
+                            </span>
+                            <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
+                              Site: {siteName}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            {vehicle.document ? (
+                              <a
+                                href={vehicle.document}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-xs font-medium text-primary"
+                              >
+                                <ExternalLink className="size-3" />
+                                Document
+                              </a>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                No document
+                              </span>
+                            )}
+
+                            <div className="flex items-center gap-1.5">
+                              <Button variant="outline" size="xs">
+                                <Phone className="size-3.5" />
+                                Call
+                              </Button>
+                              <Button variant="outline" size="xs">
+                                <UserPlus className="size-3.5" />
+                                Assign
+                              </Button>
+                              <Button variant="outline" size="xs">
+                                <Navigation className="size-3.5" />
+                                Track
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </OpsCard>
+                    )
+                  })}
                 </div>
               </div>
-            </article>
-          ))}
+            ) : null
+          )}
+
+          <div ref={loadMoreRef} className="py-2 text-center">
+            {hasMore ? (
+              <p className="text-xs text-muted-foreground">
+                Loading more vehicles...
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">End of fleet list</p>
+            )}
+          </div>
         </section>
       ) : null}
+
+      <OpsFloatingFilterButton onClick={() => setIsFilterSheetOpen(true)} />
+
+      <OpsActionSheet
+        open={isFilterSheetOpen}
+        onOpenChange={setIsFilterSheetOpen}
+        title="Vehicle Filters"
+        actions={VEHICLE_SEGMENTS.map((item) => ({
+          key: item.value,
+          label: `${item.label}${segment === item.value ? " • selected" : ""}`,
+          icon: Fuel,
+          onClick: () => setSegment(item.value),
+        }))}
+      />
+
+      <OpsActionSheet
+        open={Boolean(actionVehicle)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setActionVehicle(null)
+          }
+        }}
+        title={
+          actionVehicle
+            ? `${actionVehicle.registrationNumber} actions`
+            : "Vehicle actions"
+        }
+        actions={
+          actionVehicle
+            ? [
+                {
+                  key: "track",
+                  label: "Track live vehicle",
+                  icon: Navigation,
+                  onClick: () => {
+                    toast.message("Opening live tracking")
+                  },
+                },
+                {
+                  key: "assign",
+                  label: "Assign driver",
+                  icon: UserPlus,
+                  onClick: () => {
+                    toast.message("Opening assignment flow")
+                  },
+                },
+                {
+                  key: "site",
+                  label: "View site details",
+                  icon: MapPinned,
+                  onClick: () => {
+                    toast.message("Opening site details")
+                  },
+                },
+                {
+                  key: "edit",
+                  label: "Edit vehicle",
+                  icon: Pencil,
+                  onClick: () => openEditDialog(actionVehicle),
+                },
+              ]
+            : []
+        }
+      />
     </div>
   )
 }

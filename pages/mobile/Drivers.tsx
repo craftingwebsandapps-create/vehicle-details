@@ -1,16 +1,26 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
-  BadgeCheck,
+  CarFront,
   Clock3,
   ExternalLink,
+  FileBadge2,
+  MoreHorizontal,
   Pencil,
-  Plus,
-  UserRound,
+  Phone,
 } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAppDispatch, useAppSelector } from "~/app/hooks"
+import {
+  OpsActionSheet,
+  OpsCard,
+  OpsEmptyState,
+  OpsFloatingFilterButton,
+  OpsListHeader,
+  OpsListSkeleton,
+  OpsStatusPill,
+} from "~/components/mobile/ops/OpsListPrimitives"
 import { FormBuilder } from "~/components/form"
 import { Button } from "~/components/ui/button"
 import {
@@ -40,6 +50,15 @@ const initialFormState: DriverFormValues = {
   status: "ACTIVE",
 }
 
+type DriverSegment = "all" | "active" | "inactive" | "assigned"
+
+const DRIVER_SEGMENTS: Array<{ label: string; value: DriverSegment }> = [
+  { label: "All", value: "all" },
+  { label: "Active", value: "active" },
+  { label: "Inactive", value: "inactive" },
+  { label: "Assigned", value: "assigned" },
+]
+
 export default function Drivers() {
   const dispatch = useAppDispatch()
   const {
@@ -55,6 +74,15 @@ export default function Drivers() {
   const [formDefaults, setFormDefaults] =
     useState<DriverFormValues>(initialFormState)
 
+  const [query, setQuery] = useState("")
+  const [segment, setSegment] = useState<DriverSegment>("all")
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
+  const [actionDriver, setActionDriver] = useState<Driver | null>(null)
+  const [visibleCount, setVisibleCount] = useState(12)
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const longPressTimeoutRef = useRef<number | null>(null)
+
   const driverFormConfig = useMemo(
     () => getDriverDialogFormConfig(dialogMode === "edit"),
     [dialogMode]
@@ -63,6 +91,83 @@ export default function Drivers() {
   useEffect(() => {
     void dispatch(fetchDriversThunk())
   }, [dispatch])
+
+  const filteredDrivers = useMemo(() => {
+    const term = query.trim().toLowerCase()
+
+    return drivers.filter((driver) => {
+      const matchesSegment =
+        segment === "all"
+          ? true
+          : segment === "active"
+            ? driver.status === "ACTIVE"
+            : segment === "inactive"
+              ? driver.status === "INACTIVE"
+              : Boolean(
+                  driver.vehicle?.id || driver.vehicle?.registrationNumber
+                )
+
+      const matchesSearch =
+        term.length === 0
+          ? true
+          : [
+              driver.name,
+              driver.mobileNumber,
+              driver.licenceNumber,
+              driver.vehicle?.registrationNumber,
+              driver.site?.name,
+            ]
+              .join(" ")
+              .toLowerCase()
+              .includes(term)
+
+      return matchesSegment && matchesSearch
+    })
+  }, [drivers, query, segment])
+
+  useEffect(() => {
+    setVisibleCount(12)
+  }, [query, segment])
+
+  useEffect(() => {
+    const node = loadMoreRef.current
+    if (!node) {
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + 8, filteredDrivers.length))
+        }
+      },
+      { rootMargin: "180px" }
+    )
+
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [filteredDrivers.length])
+
+  const visibleDrivers = filteredDrivers.slice(0, visibleCount)
+
+  const groupedDrivers = useMemo(
+    () => [
+      {
+        title: "Active",
+        items: visibleDrivers.filter((item) => item.status === "ACTIVE"),
+      },
+      {
+        title: "Inactive",
+        items: visibleDrivers.filter((item) => item.status !== "ACTIVE"),
+      },
+    ],
+    [visibleDrivers]
+  )
+
+  const refreshDrivers = () => {
+    void dispatch(fetchDriversThunk())
+    toast.success("Driver list refreshed", { position: "top-center" })
+  }
 
   const openCreateDialog = () => {
     setDialogMode("create")
@@ -83,6 +188,19 @@ export default function Drivers() {
       status: driver.status,
     })
     setIsDriverDialogOpen(true)
+  }
+
+  const startLongPress = (driver: Driver) => {
+    longPressTimeoutRef.current = window.setTimeout(() => {
+      setActionDriver(driver)
+    }, 500)
+  }
+
+  const clearLongPress = () => {
+    if (longPressTimeoutRef.current !== null) {
+      window.clearTimeout(longPressTimeoutRef.current)
+      longPressTimeoutRef.current = null
+    }
   }
 
   const handleSubmitDriver = async (values: DriverFormValues) => {
@@ -131,36 +249,38 @@ export default function Drivers() {
       setIsDriverDialogOpen(false)
       setEditingDriverId(null)
       setDialogMode("create")
-    } catch (error) {
+    } catch (submitError) {
       if (dialogMode === "edit") {
         toast.error("Unable to update driver")
       } else {
         toast.error("Unable to create driver")
       }
 
-      if (error instanceof Error) {
-        toast.error(error.message)
+      if (submitError instanceof Error) {
+        toast.error(submitError.message)
       }
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <section className="flex items-end justify-between gap-3">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">Drivers</p>
-          <h2 className="mt-1 font-heading text-2xl font-semibold text-foreground">
-            Keep driver availability and compliance visible.
-          </h2>
-        </div>
+  const hasMore = visibleDrivers.length < filteredDrivers.length
 
-        <Button size="sm" onClick={openCreateDialog}>
-          <Plus className="size-4" />
-          Create Driver
-        </Button>
-      </section>
+  return (
+    <div className="space-y-3 pb-20">
+      <OpsListHeader
+        title="Drivers"
+        totalLabel={`${filteredDrivers.length} in view`}
+        searchValue={query}
+        onSearchChange={setQuery}
+        searchPlaceholder="Search name, mobile, vehicle"
+        createLabel="Create"
+        onCreate={openCreateDialog}
+        onRefresh={refreshDrivers}
+        segments={DRIVER_SEGMENTS}
+        activeSegment={segment}
+        onSegmentChange={setSegment}
+      />
 
       <GenericDialog
         open={isDriverDialogOpen}
@@ -168,7 +288,7 @@ export default function Drivers() {
         title={dialogMode === "edit" ? "Edit Driver" : "Create Driver"}
         description={
           dialogMode === "edit"
-            ? "Update driver details and optionally replace licence file."
+            ? "Update profile, assignment, and licence details."
             : "Add a new driver and upload licence file."
         }
         maxWidth="lg"
@@ -206,113 +326,216 @@ export default function Drivers() {
         />
       </GenericDialog>
 
-      {status === "loading" ? (
-        <p className="rounded-xl border border-border/60 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-          Loading drivers...
-        </p>
-      ) : null}
+      {status === "loading" ? <OpsListSkeleton /> : null}
 
       {status === "failed" ? (
-        <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <p className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </p>
       ) : null}
 
-      {status !== "loading" && status !== "failed" && drivers.length === 0 ? (
-        <p className="rounded-xl border border-border/60 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-          No drivers found.
-        </p>
+      {status !== "loading" &&
+      status !== "failed" &&
+      filteredDrivers.length === 0 ? (
+        <OpsEmptyState
+          title="No matching drivers"
+          subtitle="Try a different search or change filters."
+        />
       ) : null}
 
       {status !== "loading" && status !== "failed" ? (
         <section className="space-y-3">
-          {drivers.map((driver) => (
-            <article
-              key={driver.id}
-              className="rounded-[26px] border border-border/60 bg-background p-5 shadow-sm"
-            >
-              <div className="flex items-start gap-4">
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <UserRound className="size-5" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-foreground">
-                        {driver.name}
-                      </p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {driver.licenceNumber}
-                      </p>
-                    </div>
-                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                      {driver.status}
-                    </span>
-                  </div>
-                  <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
-                    <span className="inline-flex items-center gap-2">
-                      <Clock3 className="size-4 text-primary" />
-                      {driver.mobileNumber}
-                    </span>
-                    <span className="inline-flex items-center gap-2">
-                      <BadgeCheck className="size-4 text-primary" />
-                      Verified
-                    </span>
-                  </div>
-                  <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-muted-foreground sm:grid-cols-2">
-                    <p>
-                      Site:{" "}
-                      <span className="text-foreground">
-                        {driver.site?.name ?? "-"}
-                      </span>
-                    </p>
-                    <p>
-                      Vehicle:{" "}
-                      <span className="text-foreground">
-                        {driver.vehicle?.registrationNumber ??
-                          driver.vehicle?.name ??
-                          "-"}
-                      </span>
-                    </p>
-                    <p className="sm:col-span-2">
-                      Contractor:{" "}
-                      <span className="text-foreground">
-                        {driver.contractor?.name ?? "-"}
-                      </span>
-                    </p>
-                  </div>
+          {groupedDrivers.map((group) =>
+            group.items.length > 0 ? (
+              <div key={group.title} className="space-y-2">
+                <p className="sticky top-[132px] z-10 inline-flex rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
+                  {group.title}
+                </p>
 
-                  <div className="mt-4 flex justify-between gap-4">
-                    {driver.licenceUrl ? (
-                      <div className="mt-4">
-                        <a
-                          href={driver.licenceUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-2 text-xs font-medium text-primary hover:underline"
+                <div className="space-y-2">
+                  {group.items.map((driver) => {
+                    const initial = driver.name.charAt(0).toUpperCase()
+                    const assignedVehicle =
+                      driver.vehicle?.registrationNumber ??
+                      driver.vehicle?.name ??
+                      "Unassigned"
+
+                    return (
+                      <OpsCard key={driver.id}>
+                        <div
+                          className="space-y-3"
+                          onPointerDown={() => startLongPress(driver)}
+                          onPointerUp={clearLongPress}
+                          onPointerLeave={clearLongPress}
                         >
-                          <ExternalLink className="size-3.5" />
-                          View licence document
-                        </a>
-                      </div>
-                    ) : (
-                      <div />
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openEditDialog(driver)}
-                    >
-                      <Pencil className="size-4" />
-                      Edit
-                    </Button>
-                  </div>
+                          <div className="flex items-start gap-2.5">
+                            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-semibold text-primary">
+                              {initial}
+                            </span>
+
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <p className="text-sm leading-tight font-semibold text-foreground">
+                                    {driver.name}
+                                  </p>
+                                  <p className="mt-0.5 text-xs text-muted-foreground">
+                                    {driver.mobileNumber}
+                                  </p>
+                                </div>
+
+                                <div className="flex items-center gap-1">
+                                  <OpsStatusPill status={driver.status} />
+                                  <Button
+                                    variant="ghost"
+                                    size="icon-xs"
+                                    onClick={() => setActionDriver(driver)}
+                                  >
+                                    <MoreHorizontal className="size-3.5" />
+                                  </Button>
+                                </div>
+                              </div>
+
+                              <div className="mt-2 grid grid-cols-3 gap-1.5 text-[11px]">
+                                <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
+                                  Shift 08-18
+                                </span>
+                                <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
+                                  {driver.licenceUrl
+                                    ? "Licence valid"
+                                    : "Licence pending"}
+                                </span>
+                                <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
+                                  {assignedVehicle}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            {driver.licenceUrl ? (
+                              <a
+                                href={driver.licenceUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-xs font-medium text-primary"
+                              >
+                                <ExternalLink className="size-3" />
+                                View licence
+                              </a>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                No licence file
+                              </span>
+                            )}
+
+                            <div className="flex items-center gap-1.5">
+                              <Button
+                                variant="outline"
+                                size="xs"
+                                onClick={() => {
+                                  window.location.href = `tel:${driver.mobileNumber}`
+                                }}
+                              >
+                                <Phone className="size-3.5" />
+                                Call
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="xs"
+                                onClick={() => openEditDialog(driver)}
+                              >
+                                <Pencil className="size-3.5" />
+                                Edit
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </OpsCard>
+                    )
+                  })}
                 </div>
               </div>
-            </article>
-          ))}
+            ) : null
+          )}
+
+          <div ref={loadMoreRef} className="py-2 text-center">
+            {hasMore ? (
+              <p className="text-xs text-muted-foreground">
+                Loading more drivers...
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">End of list</p>
+            )}
+          </div>
         </section>
       ) : null}
+
+      <OpsFloatingFilterButton onClick={() => setIsFilterSheetOpen(true)} />
+
+      <OpsActionSheet
+        open={isFilterSheetOpen}
+        onOpenChange={setIsFilterSheetOpen}
+        title="Driver Filters"
+        actions={DRIVER_SEGMENTS.map((item) => ({
+          key: item.value,
+          label: `${item.label}${segment === item.value ? " • selected" : ""}`,
+          icon: Clock3,
+          onClick: () => setSegment(item.value),
+        }))}
+      />
+
+      <OpsActionSheet
+        open={Boolean(actionDriver)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setActionDriver(null)
+          }
+        }}
+        title={actionDriver ? `${actionDriver.name} actions` : "Driver actions"}
+        actions={
+          actionDriver
+            ? [
+                {
+                  key: "call",
+                  label: "Call driver",
+                  icon: Phone,
+                  onClick: () => {
+                    window.location.href = `tel:${actionDriver.mobileNumber}`
+                  },
+                },
+                {
+                  key: "assign",
+                  label: "Assign vehicle",
+                  icon: CarFront,
+                  onClick: () => {
+                    toast.message("Open assignment workflow")
+                  },
+                },
+                {
+                  key: "licence",
+                  label: "Licence details",
+                  icon: FileBadge2,
+                  onClick: () => {
+                    if (actionDriver.licenceUrl) {
+                      window.open(
+                        actionDriver.licenceUrl,
+                        "_blank",
+                        "noreferrer"
+                      )
+                    }
+                  },
+                },
+                {
+                  key: "edit",
+                  label: "Edit profile",
+                  icon: Pencil,
+                  onClick: () => openEditDialog(actionDriver),
+                },
+              ]
+            : []
+        }
+      />
     </div>
   )
 }

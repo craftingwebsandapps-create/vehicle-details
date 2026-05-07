@@ -1,22 +1,24 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
-import {
-  Building2,
-  MapPinned,
-  Pencil,
-  Plus,
-  RadioTower,
-  ShieldCheck,
-} from "lucide-react"
+import { Layers, MoreHorizontal, Pencil, Phone } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAppDispatch, useAppSelector } from "~/app/hooks"
+import {
+  OpsActionSheet,
+  OpsCard,
+  OpsEmptyState,
+  OpsFloatingFilterButton,
+  OpsListHeader,
+  OpsListSkeleton,
+  OpsStatusPill,
+} from "~/components/mobile/ops/OpsListPrimitives"
+import { FormBuilder } from "~/components/form"
 import { Button } from "~/components/ui/button"
 import {
   GenericDialog,
   GenericDialogFooter,
 } from "~/components/ui/generic-dialog"
-import { FormBuilder } from "~/components/form"
 import { createSite, updateSite } from "~/features/sites/api"
 import { fetchSitesThunk } from "~/features/sites/sitesSlice"
 import type {
@@ -26,11 +28,6 @@ import type {
 } from "~/features/sites/types"
 import { getSiteDialogFormConfig } from "~/schemas/site-dialog-form-config"
 
-const baseMetrics = [
-  { label: "Monitored zones", value: "28", icon: RadioTower },
-  { label: "Compliant hubs", value: "98%", icon: ShieldCheck },
-]
-
 const initialFormState: CreateSiteRequest = {
   name: "",
   contactPerson: "",
@@ -39,6 +36,14 @@ const initialFormState: CreateSiteRequest = {
   location: "",
   status: "ACTIVE",
 }
+
+type SiteSegment = "all" | "active" | "inactive"
+
+const SITE_SEGMENTS: Array<{ label: string; value: SiteSegment }> = [
+  { label: "All", value: "all" },
+  { label: "Active", value: "active" },
+  { label: "Inactive", value: "inactive" },
+]
 
 export default function Sites() {
   const dispatch = useAppDispatch()
@@ -55,26 +60,96 @@ export default function Sites() {
   const [formDefaults, setFormDefaults] =
     useState<CreateSiteRequest>(initialFormState)
 
+  const [query, setQuery] = useState("")
+  const [segment, setSegment] = useState<SiteSegment>("all")
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
+  const [actionSite, setActionSite] = useState<Site | null>(null)
+  const [visibleCount, setVisibleCount] = useState(10)
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const longPressTimeoutRef = useRef<number | null>(null)
+
   useEffect(() => {
     void dispatch(fetchSitesThunk())
   }, [dispatch])
-
-  const metrics = useMemo(
-    () => [
-      {
-        label: "Active sites",
-        value: String(sites.length),
-        icon: Building2,
-      },
-      ...baseMetrics,
-    ],
-    [sites.length]
-  )
 
   const siteFormConfig = useMemo(
     () => getSiteDialogFormConfig(dialogMode === "edit"),
     [dialogMode]
   )
+
+  const filteredSites = useMemo(() => {
+    const term = query.trim().toLowerCase()
+
+    return sites.filter((site) => {
+      const matchesSegment =
+        segment === "all"
+          ? true
+          : segment === "active"
+            ? site.status === "ACTIVE"
+            : site.status === "INACTIVE"
+
+      const matchesSearch =
+        term.length === 0
+          ? true
+          : [
+              site.name,
+              site.location,
+              site.contactPerson,
+              site.mobileNumber,
+              site.email,
+            ]
+              .join(" ")
+              .toLowerCase()
+              .includes(term)
+
+      return matchesSegment && matchesSearch
+    })
+  }, [query, segment, sites])
+
+  useEffect(() => {
+    setVisibleCount(10)
+  }, [query, segment])
+
+  useEffect(() => {
+    const node = loadMoreRef.current
+    if (!node) {
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + 8, filteredSites.length))
+        }
+      },
+      { rootMargin: "180px" }
+    )
+
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [filteredSites.length])
+
+  const visibleSites = filteredSites.slice(0, visibleCount)
+
+  const groupedSites = useMemo(
+    () => [
+      {
+        title: "Operational",
+        items: visibleSites.filter((item) => item.status === "ACTIVE"),
+      },
+      {
+        title: "Paused",
+        items: visibleSites.filter((item) => item.status !== "ACTIVE"),
+      },
+    ],
+    [visibleSites]
+  )
+
+  const refreshSites = () => {
+    void dispatch(fetchSitesThunk())
+    toast.success("Site list refreshed", { position: "top-center" })
+  }
 
   const openCreateDialog = () => {
     setDialogMode("create")
@@ -95,6 +170,19 @@ export default function Sites() {
       status: site.status,
     })
     setIsSiteDialogOpen(true)
+  }
+
+  const startLongPress = (site: Site) => {
+    longPressTimeoutRef.current = window.setTimeout(() => {
+      setActionSite(site)
+    }, 500)
+  }
+
+  const clearLongPress = () => {
+    if (longPressTimeoutRef.current !== null) {
+      window.clearTimeout(longPressTimeoutRef.current)
+      longPressTimeoutRef.current = null
+    }
   }
 
   const handleSubmitSite = async (values: CreateSiteRequest) => {
@@ -127,6 +215,7 @@ export default function Sites() {
         toast.success("Site updated successfully", { position: "top-center" })
       } else {
         await createSite(payload)
+        toast.success("Site created successfully", { position: "top-center" })
       }
 
       await dispatch(fetchSitesThunk())
@@ -135,36 +224,38 @@ export default function Sites() {
       setIsSiteDialogOpen(false)
       setEditingSiteId(null)
       setDialogMode("create")
-    } catch (error) {
+    } catch (submitError) {
       if (dialogMode === "edit") {
         toast.error("Unable to update site")
       } else {
         toast.error("Unable to create site")
       }
 
-      if (error instanceof Error) {
-        toast.error(error.message)
+      if (submitError instanceof Error) {
+        toast.error(submitError.message)
       }
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <section className="flex items-end justify-between gap-3">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">Sites</p>
-          <h2 className="mt-1 font-heading text-2xl font-semibold text-foreground">
-            Monitor operational hubs and dispatch points.
-          </h2>
-        </div>
+  const hasMore = visibleSites.length < filteredSites.length
 
-        <Button size="sm" onClick={openCreateDialog}>
-          <Plus className="size-4" />
-          Create Site
-        </Button>
-      </section>
+  return (
+    <div className="space-y-3 pb-20">
+      <OpsListHeader
+        title="Sites"
+        totalLabel={`${filteredSites.length} in view`}
+        searchValue={query}
+        onSearchChange={setQuery}
+        searchPlaceholder="Search site, location, contact"
+        createLabel="Create"
+        onCreate={openCreateDialog}
+        onRefresh={refreshSites}
+        segments={SITE_SEGMENTS}
+        activeSegment={segment}
+        onSegmentChange={setSegment}
+      />
 
       <GenericDialog
         open={isSiteDialogOpen}
@@ -172,8 +263,8 @@ export default function Sites() {
         title={dialogMode === "edit" ? "Edit Site" : "Create Site"}
         description={
           dialogMode === "edit"
-            ? "Update site details."
-            : "Add a new site to the operational hubs list."
+            ? "Update operational site details."
+            : "Add a new operational site."
         }
         maxWidth="lg"
         footer={
@@ -210,100 +301,169 @@ export default function Sites() {
         />
       </GenericDialog>
 
-      <section className="grid grid-cols-3 gap-3">
-        {metrics.map((metric) => {
-          const Icon = metric.icon
+      {sitesStatus === "loading" ? <OpsListSkeleton /> : null}
 
-          return (
-            <article
-              key={metric.label}
-              className="rounded-[24px] border border-border/60 bg-background p-4 shadow-sm"
-            >
-              <Icon className="size-5 text-primary" />
-              <p className="mt-4 text-xl font-semibold text-foreground">
-                {metric.value}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                {metric.label}
-              </p>
-            </article>
-          )
-        })}
-      </section>
+      {listError ? (
+        <p className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {listError}
+        </p>
+      ) : null}
 
-      <section className="space-y-3">
-        {sitesStatus === "loading" ? (
-          <p className="rounded-xl border border-border/60 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-            Loading sites...
-          </p>
-        ) : null}
+      {sitesStatus !== "loading" && !listError && filteredSites.length === 0 ? (
+        <OpsEmptyState
+          title="No matching sites"
+          subtitle="Update search terms or filter to continue."
+        />
+      ) : null}
 
-        {listError ? (
-          <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-            {listError}
-          </p>
-        ) : null}
+      {sitesStatus !== "loading" && !listError ? (
+        <section className="space-y-3">
+          {groupedSites.map((group) =>
+            group.items.length > 0 ? (
+              <div key={group.title} className="space-y-2">
+                <p className="sticky top-[132px] z-10 inline-flex rounded-full bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground">
+                  {group.title}
+                </p>
 
-        {sitesStatus !== "loading" && !listError && sites.length === 0 ? (
-          <p className="rounded-xl border border-border/60 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-            No sites found.
-          </p>
-        ) : null}
+                <div className="space-y-2">
+                  {group.items.map((site) => {
+                    return (
+                      <OpsCard key={site.id}>
+                        <div
+                          className="space-y-3"
+                          onPointerDown={() => startLongPress(site)}
+                          onPointerUp={clearLongPress}
+                          onPointerLeave={clearLongPress}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-sm leading-tight font-semibold text-foreground">
+                                {site.name}
+                              </p>
+                              <p className="mt-0.5 text-xs text-muted-foreground">
+                                {site.location}
+                              </p>
+                            </div>
 
-        {sitesStatus !== "loading" && !listError
-          ? sites.map((site) => (
-              <article
-                key={site.id}
-                className="rounded-[26px] border border-border/60 bg-background p-5 shadow-sm"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-foreground">{site.name}</p>
-                    <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPinned className="size-4" />
-                      {site.location}
-                    </p>
-                  </div>
-                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                    {site.status}
-                  </span>
+                            <div className="flex items-center gap-1">
+                              <OpsStatusPill status={site.status} />
+                              <Button
+                                variant="ghost"
+                                size="icon-xs"
+                                onClick={() => setActionSite(site)}
+                              >
+                                <MoreHorizontal className="size-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div className="rounded-xl bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                            <p>
+                              Contact:{" "}
+                              <span className="text-foreground">
+                                {site.contactPerson}
+                              </span>
+                            </p>
+                            <p className="mt-0.5">
+                              Mobile:{" "}
+                              <span className="text-foreground">
+                                {site.mobileNumber}
+                              </span>
+                            </p>
+                            <p className="mt-0.5 truncate">
+                              Email:{" "}
+                              <span className="text-foreground">
+                                {site.email}
+                              </span>
+                            </p>
+                          </div>
+
+                          <div className="flex items-center justify-end gap-2">
+                            <div className="flex items-center gap-1.5">
+                              <Button
+                                variant="outline"
+                                size="xs"
+                                onClick={() => {
+                                  window.location.href = `tel:${site.mobileNumber}`
+                                }}
+                              >
+                                <Phone className="size-3.5" />
+                                Call
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="xs"
+                                onClick={() => openEditDialog(site)}
+                              >
+                                <Pencil className="size-3.5" />
+                                Edit
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </OpsCard>
+                    )
+                  })}
                 </div>
+              </div>
+            ) : null
+          )}
 
-                <div className="mt-4 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                  <div className="space-y-2 text-muted-foreground">
-                    <p>
-                      Contact:{" "}
-                      <span className="text-foreground">
-                        {site.contactPerson}
-                      </span>
-                    </p>
-                    <p>
-                      Mobile:{" "}
-                      <span className="text-foreground">
-                        {site.mobileNumber}
-                      </span>
-                    </p>
-                    <p className="sm:col-span-2">
-                      Email:{" "}
-                      <span className="text-foreground">{site.email}</span>
-                    </p>
-                  </div>
+          <div ref={loadMoreRef} className="py-2 text-center">
+            {hasMore ? (
+              <p className="text-xs text-muted-foreground">
+                Loading more sites...
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">End of site list</p>
+            )}
+          </div>
+        </section>
+      ) : null}
 
-                  <div className="mt-4 flex items-end justify-end">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openEditDialog(site)}
-                    >
-                      <Pencil className="size-4" />
-                      Edit
-                    </Button>
-                  </div>
-                </div>
-              </article>
-            ))
-          : null}
-      </section>
+      <OpsFloatingFilterButton onClick={() => setIsFilterSheetOpen(true)} />
+
+      <OpsActionSheet
+        open={isFilterSheetOpen}
+        onOpenChange={setIsFilterSheetOpen}
+        title="Site Filters"
+        actions={SITE_SEGMENTS.map((item) => ({
+          key: item.value,
+          label: `${item.label}${segment === item.value ? " • selected" : ""}`,
+          icon: Layers,
+          onClick: () => setSegment(item.value),
+        }))}
+      />
+
+      <OpsActionSheet
+        open={Boolean(actionSite)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setActionSite(null)
+          }
+        }}
+        title={actionSite ? `${actionSite.name} actions` : "Site actions"}
+        actions={
+          actionSite
+            ? [
+                {
+                  key: "contact",
+                  label: "Call site contact",
+                  icon: Phone,
+                  onClick: () => {
+                    window.location.href = `tel:${actionSite.mobileNumber}`
+                  },
+                },
+                {
+                  key: "edit",
+                  label: "Edit site",
+                  icon: Pencil,
+                  onClick: () => openEditDialog(actionSite),
+                },
+              ]
+            : []
+        }
+      />
     </div>
   )
 }
