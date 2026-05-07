@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
-import type { FormEvent } from "react"
 
 import {
   Building2,
-  Loader2,
   MapPinned,
   Pencil,
   Plus,
@@ -23,22 +21,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog"
-import { Input } from "~/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select"
+import { FormBuilder } from "~/components/form"
 import { createSite, updateSite } from "~/features/sites/api"
 import { fetchSitesThunk } from "~/features/sites/sitesSlice"
 import type {
   CreateSiteRequest,
   Site,
-  SiteStatus,
   UpdateSiteRequest,
 } from "~/features/sites/types"
+import { getSiteDialogFormConfig } from "~/schemas/site-dialog-form-config"
 
 const baseMetrics = [
   { label: "Monitored zones", value: "28", icon: RadioTower },
@@ -66,8 +57,7 @@ export default function Sites() {
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create")
   const [editingSiteId, setEditingSiteId] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [formError, setFormError] = useState<string | null>(null)
-  const [formValues, setFormValues] =
+  const [formDefaults, setFormDefaults] =
     useState<CreateSiteRequest>(initialFormState)
 
   useEffect(() => {
@@ -86,29 +76,22 @@ export default function Sites() {
     [sites.length]
   )
 
-  const handleInputChange = (
-    key: keyof Omit<CreateSiteRequest, "status">,
-    value: string
-  ) => {
-    setFormValues((previous) => ({ ...previous, [key]: value }))
-  }
-
-  const handleStatusChange = (value: SiteStatus) => {
-    setFormValues((previous) => ({ ...previous, status: value }))
-  }
+  const siteFormConfig = useMemo(
+    () => getSiteDialogFormConfig(dialogMode === "edit"),
+    [dialogMode]
+  )
 
   const openCreateDialog = () => {
     setDialogMode("create")
     setEditingSiteId(null)
-    setFormValues(initialFormState)
-    setFormError(null)
+    setFormDefaults(initialFormState)
     setIsSiteDialogOpen(true)
   }
 
   const openEditDialog = (site: Site) => {
     setDialogMode("edit")
     setEditingSiteId(site.id)
-    setFormValues({
+    setFormDefaults({
       name: site.name,
       contactPerson: site.contactPerson,
       mobileNumber: site.mobileNumber,
@@ -116,35 +99,20 @@ export default function Sites() {
       location: site.location,
       status: site.status,
     })
-    setFormError(null)
     setIsSiteDialogOpen(true)
   }
 
-  const handleSubmitSite = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
+  const handleSubmitSite = async (values: CreateSiteRequest) => {
     const payload: CreateSiteRequest = {
-      name: formValues.name.trim(),
-      contactPerson: formValues.contactPerson.trim(),
-      mobileNumber: formValues.mobileNumber.trim(),
-      email: formValues.email.trim(),
-      location: formValues.location.trim(),
-      status: formValues.status,
-    }
-
-    if (
-      !payload.name ||
-      !payload.contactPerson ||
-      !payload.mobileNumber ||
-      !payload.email ||
-      !payload.location
-    ) {
-      setFormError("All fields are required")
-      return
+      name: values.name.trim(),
+      contactPerson: values.contactPerson.trim(),
+      mobileNumber: values.mobileNumber.trim(),
+      email: values.email.trim(),
+      location: values.location.trim(),
+      status: values.status,
     }
 
     setIsSubmitting(true)
-    setFormError(null)
 
     try {
       if (dialogMode === "edit") {
@@ -168,22 +136,20 @@ export default function Sites() {
 
       await dispatch(fetchSitesThunk())
 
-      setFormValues(initialFormState)
+      setFormDefaults(initialFormState)
       setIsSiteDialogOpen(false)
       setEditingSiteId(null)
       setDialogMode("create")
     } catch (error) {
       if (dialogMode === "edit") {
         toast.error("Unable to update site")
+      } else {
+        toast.error("Unable to create site")
       }
 
-      setFormError(
-        error instanceof Error
-          ? error.message
-          : dialogMode === "edit"
-            ? "Unable to update site"
-            : "Unable to create site"
-      )
+      if (error instanceof Error) {
+        toast.error(error.message)
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -219,86 +185,16 @@ export default function Sites() {
               </DialogDescription>
             </DialogHeader>
 
-            <form
-              id="create-site-form"
-              className="space-y-3"
+            <FormBuilder
+              key={`${dialogMode}-${editingSiteId ?? "new"}-${isSiteDialogOpen ? "open" : "closed"}`}
+              config={siteFormConfig}
+              defaultValues={formDefaults}
               onSubmit={handleSubmitSite}
-            >
-              <Input
-                disabled={isSubmitting || dialogMode === "edit"}
-                value={formValues.name}
-                placeholder="Site name"
-                onChange={(event) =>
-                  handleInputChange("name", event.target.value)
-                }
-              />
-              <Input
-                value={formValues.contactPerson}
-                placeholder="Contact person"
-                onChange={(event) =>
-                  handleInputChange("contactPerson", event.target.value)
-                }
-              />
-              <Input
-                value={formValues.mobileNumber}
-                placeholder="Mobile number"
-                onChange={(event) =>
-                  handleInputChange("mobileNumber", event.target.value)
-                }
-              />
-              <Input
-                type="email"
-                value={formValues.email}
-                placeholder="Email"
-                onChange={(event) =>
-                  handleInputChange("email", event.target.value)
-                }
-              />
-              <Input
-                value={formValues.location}
-                placeholder="Location"
-                onChange={(event) =>
-                  handleInputChange("location", event.target.value)
-                }
-              />
-              <Select
-                value={formValues.status ?? "ACTIVE"}
-                onValueChange={(value) =>
-                  handleStatusChange(value as SiteStatus)
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ACTIVE">ACTIVE</SelectItem>
-                  <SelectItem value="INACTIVE">INACTIVE</SelectItem>
-                </SelectContent>
-              </Select>
+              isSubmitting={isSubmitting}
+              className="space-y-4"
+            />
 
-              {formError ? (
-                <p className="text-xs text-destructive">{formError}</p>
-              ) : null}
-            </form>
-
-            <DialogFooter>
-              <Button
-                type="submit"
-                form="create-site-form"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    {dialogMode === "edit" ? "Updating..." : "Creating..."}
-                  </>
-                ) : dialogMode === "edit" ? (
-                  "Update"
-                ) : (
-                  "Create"
-                )}
-              </Button>
-            </DialogFooter>
+            <DialogFooter />
           </DialogContent>
         </Dialog>
       </section>

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { FieldValues, Path, UseFormReturn } from "react-hook-form"
-import type { ZodType } from "zod"
+import type { ZodType, ZodTypeAny } from "zod"
 
 export type FormFieldType =
   | "text"
@@ -108,6 +108,7 @@ export type FormConfig<TFormValues extends FieldValues = FieldValues> = {
   id: string
   title?: string
   description?: string
+  schema?: ZodTypeAny
   gridColumns?: number
   fields: BaseFieldConfig<TFormValues>[]
   arrays?: ArraySectionConfig<TFormValues>[]

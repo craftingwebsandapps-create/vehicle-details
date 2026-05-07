@@ -148,7 +148,10 @@ export function FormBuilder<TFormValues extends FieldValues>({
   persistenceKey,
   serverErrors,
 }: FormBuilderProps<TFormValues>) {
-  const schema = useMemo(() => createDynamicSchema(config), [config])
+  const schema = useMemo(
+    () => config.schema ?? createDynamicSchema(config),
+    [config]
+  )
   const resolvedDefaults = useMemo(
     () => buildDefaultValues(config, defaultValues),
     [config, defaultValues]
