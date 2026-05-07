@@ -9,14 +9,6 @@ const STATUS_OPTIONS = [
   { label: "INACTIVE", value: "INACTIVE" },
 ]
 
-const VEHICLE_TYPE_OPTIONS = [
-  { label: "Truck", value: "Truck" },
-  { label: "Van", value: "Van" },
-  { label: "Car", value: "Car" },
-  { label: "Motorcycle", value: "Motorcycle" },
-  { label: "Scooter", value: "Scooter" },
-]
-
 const getVehicleDialogSchema = (isEditMode: boolean) =>
   z.object({
     name: z
@@ -68,11 +60,10 @@ export const getVehicleDialogFormConfig = (
         grid: { colSpan: 12 },
       },
       {
-        type: "select",
+        type: "text",
         name: "type",
         label: "Vehicle type",
-        placeholder: "Select vehicle type",
-        options: VEHICLE_TYPE_OPTIONS,
+        placeholder: "Enter vehicle type",
         validation: {
           required: "Vehicle type is required",
         },

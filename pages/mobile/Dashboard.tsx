@@ -9,7 +9,7 @@ const quickActions = [
 const insightCards = [
   { label: "Active requests", value: "24", icon: ScanSearch },
   { label: "Verified records", value: "1.2K", icon: ShieldCheck },
-  { label: "Fleet movements", value: "48", icon: Truck },
+  { label: "Vehicle movements", value: "48", icon: Truck },
 ]
 
 export default function Dashboard() {

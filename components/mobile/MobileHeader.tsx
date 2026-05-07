@@ -23,7 +23,7 @@ export default function MobileHeader({
     }
 
     if (pathname.startsWith("/mobile/vehicles")) {
-      return { label: "Fleet", Icon: Truck }
+      return { label: "Vehicles", Icon: Truck }
     }
 
     if (pathname.startsWith("/mobile/drivers")) {

@@ -143,11 +143,11 @@ export default function Vehicles() {
   const groupedVehicles = useMemo(
     () => [
       {
-        title: "Live fleet",
+        title: "Live Vehicles",
         items: visibleVehicles.filter((item) => item.status === "ACTIVE"),
       },
       {
-        title: "Inactive fleet",
+        title: "Inactive Vehicles",
         items: visibleVehicles.filter((item) => item.status !== "ACTIVE"),
       },
     ],
@@ -415,7 +415,9 @@ export default function Vehicles() {
                 Loading more vehicles...
               </p>
             ) : (
-              <p className="text-xs text-muted-foreground">End of fleet list</p>
+              <p className="text-xs text-muted-foreground">
+                End of vehicle list
+              </p>
             )}
           </div>
         </section>
