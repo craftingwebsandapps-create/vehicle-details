@@ -15,16 +15,15 @@ const getDriverDialogSchema = (isEditMode: boolean) =>
       .string()
       .trim()
       .min(3, "Licence number must be at least 3 characters"),
-    licenceUrl: z.string().trim().optional().default(""),
+    licenceUrl: isEditMode
+      ? z.union([z.string().trim(), z.instanceof(File), z.null()]).optional()
+      : z.instanceof(File, { message: "Licence file is required" }),
     mobileNumber: z
       .string()
       .trim()
       .regex(/^\d{10}$/, "Mobile number must be 10 digits"),
     contractor: z.string().trim().optional().default(""),
     status: z.enum(["ACTIVE", "INACTIVE"]),
-    licenceFile: isEditMode
-      ? z.instanceof(File).nullable().optional().default(null)
-      : z.instanceof(File, { message: "Licence file is required" }),
   })
 
 export const getDriverDialogFormConfig = (
@@ -86,7 +85,7 @@ export const getDriverDialogFormConfig = (
     },
     {
       type: "file",
-      name: "licenceFile",
+      name: "licenceUrl",
       label: isEditMode ? "Licence file (optional)" : "Licence file",
       description: "Choose file or use camera to capture licence",
       validation: {
@@ -95,13 +94,9 @@ export const getDriverDialogFormConfig = (
       props: {
         accept: "image/*,application/pdf",
         capture: "environment",
+        cameraAndFile: true,
       },
       grid: { colSpan: 12 },
-    },
-    {
-      type: "hidden",
-      name: "licenceUrl",
-      defaultValue: "",
     },
   ],
 })

@@ -96,11 +96,10 @@ export type UpdateDriverRequest = DriverUpsertRequest
 export type DriverFormValues = {
   name: string
   licenceNumber: string
-  licenceUrl: string
+  licenceUrl: string | File | null
   mobileNumber: string
   contractor: string
   status: string
-  licenceFile: File | null
 }
 
 export type UploadSingleFileResponse = {

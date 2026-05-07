@@ -38,11 +38,10 @@ import type {
 const initialFormState: DriverFormValues = {
   name: "",
   licenceNumber: "",
-  licenceUrl: "",
+  licenceUrl: null,
   mobileNumber: "",
   contractor: "",
   status: "ACTIVE",
-  licenceFile: null,
 }
 
 export default function Drivers() {
@@ -86,7 +85,6 @@ export default function Drivers() {
       mobileNumber: driver.mobileNumber,
       contractor: driver.contractor?.id ?? "",
       status: driver.status,
-      licenceFile: null,
     })
     setIsDriverDialogOpen(true)
   }
@@ -95,10 +93,11 @@ export default function Drivers() {
     setIsSubmitting(true)
 
     try {
-      let licenceUrl = values.licenceUrl.trim()
+      let licenceUrl =
+        typeof values.licenceUrl === "string" ? values.licenceUrl.trim() : ""
 
-      if (values.licenceFile instanceof File) {
-        licenceUrl = await uploadDriverLicence(values.licenceFile)
+      if (values.licenceUrl instanceof File) {
+        licenceUrl = await uploadDriverLicence(values.licenceUrl)
       }
 
       if (!licenceUrl) {

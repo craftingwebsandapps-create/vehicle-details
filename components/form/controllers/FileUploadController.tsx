@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react"
+import type { ChangeEvent, ComponentProps } from "react"
 import type { FieldValues } from "react-hook-form"
 
 import {
@@ -18,34 +18,79 @@ export function FileUploadController<TFormValues extends FieldValues>({
   name,
   disabled,
 }: ControllerBaseProps<TFormValues>) {
-  const inputProps = (fieldConfig.props ?? {}) as Omit<
+  const rawInputProps = (fieldConfig.props ?? {}) as Record<string, unknown>
+  const cameraAndFile = rawInputProps.cameraAndFile === true
+
+  const inputProps = rawInputProps as Omit<
     ComponentProps<"input">,
     "type" | "onChange" | "disabled"
   >
+
+  const uploadAccept =
+    typeof rawInputProps.accept === "string"
+      ? rawInputProps.accept
+      : "image/*,application/pdf"
+  const cameraCapture: ComponentProps<"input">["capture"] =
+    rawInputProps.capture === "user" ||
+    rawInputProps.capture === "environment" ||
+    typeof rawInputProps.capture === "boolean"
+      ? rawInputProps.capture
+      : "environment"
 
   return (
     <FormField
       control={form.control}
       name={name as never}
-      render={({ field }) => (
-        <FormItem>
-          {fieldConfig.label ? (
-            <FormLabel>{fieldConfig.label}</FormLabel>
-          ) : null}
-          <FormControl>
-            <Input
-              type="file"
-              disabled={disabled}
-              {...inputProps}
-              onChange={(event) => {
-                const file = event.target.files?.[0] ?? null
-                field.onChange(file)
-              }}
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
+      render={({ field }) => {
+        const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
+          const file = event.target.files?.[0] ?? null
+          field.onChange(file)
+        }
+
+        return (
+          <FormItem>
+            {fieldConfig.label ? (
+              <FormLabel>{fieldConfig.label}</FormLabel>
+            ) : null}
+            {cameraAndFile ? (
+              <div className="space-y-2">
+                <FormControl>
+                  <Input
+                    type="file"
+                    disabled={disabled}
+                    accept="image/*"
+                    capture={cameraCapture}
+                    onChange={handleFileSelect}
+                  />
+                </FormControl>
+                <p className="text-xs text-muted-foreground">Use camera</p>
+
+                <FormControl>
+                  <Input
+                    type="file"
+                    disabled={disabled}
+                    accept={uploadAccept}
+                    onChange={handleFileSelect}
+                  />
+                </FormControl>
+                <p className="text-xs text-muted-foreground">
+                  Upload from files
+                </p>
+              </div>
+            ) : (
+              <FormControl>
+                <Input
+                  type="file"
+                  disabled={disabled}
+                  {...inputProps}
+                  onChange={handleFileSelect}
+                />
+              </FormControl>
+            )}
+            <FormMessage />
+          </FormItem>
+        )
+      }}
     />
   )
 }
