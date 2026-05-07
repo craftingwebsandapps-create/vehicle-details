@@ -93,8 +93,6 @@ export const getDriverDialogFormConfig = (
       },
       props: {
         accept: "image/*,application/pdf",
-        capture: "environment",
-        cameraAndFile: true,
       },
       grid: { colSpan: 12 },
     },

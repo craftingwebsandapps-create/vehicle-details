@@ -18,24 +18,10 @@ export function FileUploadController<TFormValues extends FieldValues>({
   name,
   disabled,
 }: ControllerBaseProps<TFormValues>) {
-  const rawInputProps = (fieldConfig.props ?? {}) as Record<string, unknown>
-  const cameraAndFile = rawInputProps.cameraAndFile === true
-
-  const inputProps = rawInputProps as Omit<
+  const inputProps = (fieldConfig.props ?? {}) as Omit<
     ComponentProps<"input">,
     "type" | "onChange" | "disabled"
   >
-
-  const uploadAccept =
-    typeof rawInputProps.accept === "string"
-      ? rawInputProps.accept
-      : "image/*,application/pdf"
-  const cameraCapture: ComponentProps<"input">["capture"] =
-    rawInputProps.capture === "user" ||
-    rawInputProps.capture === "environment" ||
-    typeof rawInputProps.capture === "boolean"
-      ? rawInputProps.capture
-      : "environment"
 
   return (
     <FormField
@@ -52,41 +38,14 @@ export function FileUploadController<TFormValues extends FieldValues>({
             {fieldConfig.label ? (
               <FormLabel>{fieldConfig.label}</FormLabel>
             ) : null}
-            {cameraAndFile ? (
-              <div className="space-y-2">
-                <FormControl>
-                  <Input
-                    type="file"
-                    disabled={disabled}
-                    accept="image/*"
-                    capture={cameraCapture}
-                    onChange={handleFileSelect}
-                  />
-                </FormControl>
-                <p className="text-xs text-muted-foreground">Use camera</p>
-
-                <FormControl>
-                  <Input
-                    type="file"
-                    disabled={disabled}
-                    accept={uploadAccept}
-                    onChange={handleFileSelect}
-                  />
-                </FormControl>
-                <p className="text-xs text-muted-foreground">
-                  Upload from files
-                </p>
-              </div>
-            ) : (
-              <FormControl>
-                <Input
-                  type="file"
-                  disabled={disabled}
-                  {...inputProps}
-                  onChange={handleFileSelect}
-                />
-              </FormControl>
-            )}
+            <FormControl>
+              <Input
+                type="file"
+                disabled={disabled}
+                {...inputProps}
+                onChange={handleFileSelect}
+              />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )
