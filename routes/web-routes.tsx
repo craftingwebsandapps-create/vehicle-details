@@ -1,18 +1,27 @@
+import { lazy, Suspense } from "react"
 import type { RouteObject } from "react-router"
 
 import WebLayout from "~/layouts/WebLayout"
-import About from "~/pages/web/About"
-import Contact from "~/pages/web/Contact"
-import Home from "~/pages/web/Home"
+import { PageLoader } from "~/components/ui/PageLoader"
+
+const About = lazy(() => import("~/pages/web/About"))
+const Contact = lazy(() => import("~/pages/web/Contact"))
+const Home = lazy(() => import("~/pages/web/Home"))
+
+const withSuspense = (Component: React.ComponentType) => (
+  <Suspense fallback={<PageLoader />}>
+    <Component />
+  </Suspense>
+)
 
 export const webRoutes: RouteObject[] = [
   {
     path: "web",
     Component: WebLayout,
     children: [
-      { index: true, Component: Home },
-      { path: "about", Component: About },
-      { path: "contact", Component: Contact },
+      { index: true, element: withSuspense(Home) },
+      { path: "about", element: withSuspense(About) },
+      { path: "contact", element: withSuspense(Contact) },
     ],
   },
 ]

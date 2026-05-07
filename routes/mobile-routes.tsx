@@ -1,34 +1,42 @@
+import { lazy, Suspense } from "react"
 import type { RouteObject } from "react-router"
 
 import MobileAuthLayout from "~/layouts/MobileAuthLayout"
 import MobileProtectedLayout from "~/layouts/MobileProtectedLayout"
-import Assignments from "~/pages/mobile/Assignments"
-import Dashboard from "~/pages/mobile/Dashboard"
-import Drivers from "~/pages/mobile/Drivers"
-import FormSystemDemo from "~/pages/mobile/FormSystemDemo"
-import Login from "~/pages/mobile/Login"
-import Sites from "~/pages/mobile/Sites"
-import Vehicles from "~/pages/mobile/Vehicles"
-
+import { PageLoader } from "~/components/ui/PageLoader"
 import { mobileProtectedLoader } from "~/routes/protected-route"
+
+const Assignments = lazy(() => import("~/pages/mobile/Assignments"))
+const Dashboard = lazy(() => import("~/pages/mobile/Dashboard"))
+const Drivers = lazy(() => import("~/pages/mobile/Drivers"))
+const FormSystemDemo = lazy(() => import("~/pages/mobile/FormSystemDemo"))
+const Login = lazy(() => import("~/pages/mobile/Login"))
+const Sites = lazy(() => import("~/pages/mobile/Sites"))
+const Vehicles = lazy(() => import("~/pages/mobile/Vehicles"))
+
+const withSuspense = (Component: React.ComponentType) => (
+  <Suspense fallback={<PageLoader />}>
+    <Component />
+  </Suspense>
+)
 
 export const mobileRoutes: RouteObject[] = [
   {
     path: "mobile/login",
     Component: MobileAuthLayout,
-    children: [{ index: true, Component: Login }],
+    children: [{ index: true, element: withSuspense(Login) }],
   },
   {
     path: "mobile",
     loader: mobileProtectedLoader,
     Component: MobileProtectedLayout,
     children: [
-      { path: "dashboard", Component: Dashboard },
-      { path: "sites", Component: Sites },
-      { path: "vehicles", Component: Vehicles },
-      { path: "drivers", Component: Drivers },
-      { path: "assignments", Component: Assignments },
-      { path: "forms", Component: FormSystemDemo },
+      { path: "dashboard", element: withSuspense(Dashboard) },
+      { path: "sites", element: withSuspense(Sites) },
+      { path: "vehicles", element: withSuspense(Vehicles) },
+      { path: "drivers", element: withSuspense(Drivers) },
+      { path: "assignments", element: withSuspense(Assignments) },
+      { path: "forms", element: withSuspense(FormSystemDemo) },
     ],
   },
 ]

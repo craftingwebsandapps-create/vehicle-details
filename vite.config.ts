@@ -2,13 +2,16 @@ import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
 import { VitePWA } from "vite-plugin-pwa"
 import { defineConfig } from "vite"
-import tsconfigPaths from "vite-tsconfig-paths"
+import { visualizer } from "rollup-plugin-visualizer"
 
 export default defineConfig({
   plugins: [
     tailwindcss(),
     react(),
-    tsconfigPaths(),
+    visualizer({
+      open: true,
+      gzipSize: true,
+    }),
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "apple-touch-icon.png"],
@@ -34,4 +37,7 @@ export default defineConfig({
       },
     }),
   ],
+  resolve: {
+    tsconfigPaths: true,
+  },
 })
