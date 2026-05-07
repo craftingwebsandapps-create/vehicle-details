@@ -147,7 +147,7 @@ export default function Dashboard() {
           <section className="rounded-[28px] bg-primary p-5 text-primary-foreground shadow-[0_18px_48px_-28px_rgba(234,88,12,0.5)]">
             <p className="text-sm opacity-80">This week</p>
             <p className="mt-1 text-4xl font-semibold">
-              {data.recentAssignmentsThisWeek}
+              {data.recentAssignmentsThisWeek ?? 0}
             </p>
             <p className="mt-1 text-sm opacity-90">
               {data.recentAssignmentsThisWeek === 1
@@ -157,14 +157,14 @@ export default function Dashboard() {
             <div className="mt-4 flex gap-4 border-t border-white/20 pt-4 text-sm">
               <span className="opacity-80">
                 <span className="font-semibold text-white">
-                  {data.unassignedDrivers}
+                  {data.unassignedDrivers ?? 0}
                 </span>{" "}
                 unassigned {data.unassignedDrivers === 1 ? "driver" : "drivers"}
               </span>
               <span className="opacity-20">·</span>
               <span className="opacity-80">
                 <span className="font-semibold text-white">
-                  {data.unassignedVehicles}
+                  {data.unassignedVehicles ?? 0}
                 </span>{" "}
                 unassigned{" "}
                 {data.unassignedVehicles === 1 ? "vehicle" : "vehicles"}
@@ -176,33 +176,33 @@ export default function Dashboard() {
           <section className="grid grid-cols-2 gap-3">
             <StatCard
               label="Drivers"
-              total={data.drivers.total}
-              active={data.drivers.active}
-              inactive={data.drivers.inactive}
+              total={data.drivers?.total ?? 0}
+              active={data.drivers?.active ?? 0}
+              inactive={data.drivers?.inactive ?? 0}
               icon={Users}
               accentClass="bg-blue-100 text-blue-600"
             />
             <StatCard
               label="Vehicles"
-              total={data.vehicles.total}
-              active={data.vehicles.active}
-              inactive={data.vehicles.inactive}
+              total={data.vehicles?.total ?? 0}
+              active={data.vehicles?.active ?? 0}
+              inactive={data.vehicles?.inactive ?? 0}
               icon={Car}
               accentClass="bg-amber-100 text-amber-600"
             />
             <StatCard
               label="Sites"
-              total={data.sites.total}
-              active={data.sites.active}
-              inactive={data.sites.inactive}
+              total={data.sites?.total ?? 0}
+              active={data.sites?.active ?? 0}
+              inactive={data.sites?.inactive ?? 0}
               icon={MapPin}
               accentClass="bg-emerald-100 text-emerald-600"
             />
             <StatCard
               label="Assignments"
-              total={data.assignments.total}
-              active={data.assignments.active}
-              inactive={data.assignments.inactive}
+              total={data.assignments?.total ?? 0}
+              active={data.assignments?.active ?? 0}
+              inactive={data.assignments?.inactive ?? 0}
               icon={ClipboardList}
               accentClass="bg-violet-100 text-violet-600"
             />
@@ -216,12 +216,12 @@ export default function Dashboard() {
             <div className="space-y-4">
               <UtilizationBar
                 label="Driver utilization"
-                percent={data.utilization.driverUtilizationPercent}
+                percent={data.utilization?.driverUtilizationPercent ?? 0}
                 colorClass="bg-blue-500"
               />
               <UtilizationBar
                 label="Vehicle utilization"
-                percent={data.utilization.vehicleUtilizationPercent}
+                percent={data.utilization?.vehicleUtilizationPercent ?? 0}
                 colorClass="bg-amber-500"
               />
             </div>
@@ -239,10 +239,10 @@ export default function Dashboard() {
                 </span>
               </div>
               <p className="text-3xl font-semibold text-foreground">
-                {data.workTypes.total}
+                {data.workTypes?.total ?? 0}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {data.workTypes.active} active
+                {data.workTypes?.active ?? 0} active
               </p>
             </article>
 
@@ -256,10 +256,10 @@ export default function Dashboard() {
                 </span>
               </div>
               <p className="text-3xl font-semibold text-foreground">
-                {data.contractors.total}
+                {data.contractors?.total ?? 0}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {data.contractors.active} active
+                {data.contractors?.active ?? 0} active
               </p>
             </article>
           </section>
