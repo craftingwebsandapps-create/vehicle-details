@@ -6,15 +6,11 @@ import { toast } from "sonner"
 import { useAppDispatch, useAppSelector } from "~/app/hooks"
 import { FormBuilder } from "~/components/form"
 import { Button } from "~/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "~/components/ui/dialog"
 import { Skeleton } from "~/components/ui/skeleton"
+import {
+  GenericDialog,
+  GenericDialogFooter,
+} from "~/components/ui/generic-dialog"
 import {
   createVehicle,
   updateVehicle,
@@ -161,40 +157,55 @@ export default function Vehicles() {
           </h2>
         </div>
 
-        <Dialog
-          open={isVehicleDialogOpen}
-          onOpenChange={setIsVehicleDialogOpen}
-        >
-          <DialogTrigger asChild>
-            <Button size="sm" onClick={openCreateDialog}>
-              <Plus className="size-4" />
-              Create Vehicle
-            </Button>
-          </DialogTrigger>
-
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {dialogMode === "edit" ? "Edit Vehicle" : "Create Vehicle"}
-              </DialogTitle>
-              <DialogDescription>
-                {dialogMode === "edit"
-                  ? "Update vehicle details and optionally replace document."
-                  : "Add a new vehicle and upload registration document."}
-              </DialogDescription>
-            </DialogHeader>
-
-            <FormBuilder
-              key={`${dialogMode}-${editingVehicleId ?? "new"}-${isVehicleDialogOpen ? "open" : "closed"}`}
-              config={vehicleFormConfig}
-              defaultValues={formDefaults}
-              onSubmit={handleSubmitVehicle}
-              isSubmitting={isSubmitting}
-              className="space-y-4"
-            />
-          </DialogContent>
-        </Dialog>
+        <Button size="sm" onClick={openCreateDialog}>
+          <Plus className="size-4" />
+          Create Vehicle
+        </Button>
       </section>
+
+      <GenericDialog
+        open={isVehicleDialogOpen}
+        onOpenChange={setIsVehicleDialogOpen}
+        title={dialogMode === "edit" ? "Edit Vehicle" : "Create Vehicle"}
+        description={
+          dialogMode === "edit"
+            ? "Update vehicle details and optionally replace document."
+            : "Add a new vehicle and upload registration document."
+        }
+        maxWidth="lg"
+        footer={
+          <GenericDialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsVehicleDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="vehicle-dialog-form"
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? "Submitting..."
+                : dialogMode === "edit"
+                  ? "Update"
+                  : "Create"}
+            </Button>
+          </GenericDialogFooter>
+        }
+      >
+        <FormBuilder
+          key={`${dialogMode}-${editingVehicleId ?? "new"}-${isVehicleDialogOpen ? "open" : "closed"}`}
+          config={vehicleFormConfig}
+          defaultValues={formDefaults}
+          onSubmit={handleSubmitVehicle}
+          isSubmitting={isSubmitting}
+          className="space-y-4 px-1"
+          hideButtons
+        />
+      </GenericDialog>
 
       {status === "loading" ? (
         <section className="space-y-3" aria-label="Loading vehicles">

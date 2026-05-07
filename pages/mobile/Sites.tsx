@@ -13,14 +13,9 @@ import { toast } from "sonner"
 import { useAppDispatch, useAppSelector } from "~/app/hooks"
 import { Button } from "~/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "~/components/ui/dialog"
+  GenericDialog,
+  GenericDialogFooter,
+} from "~/components/ui/generic-dialog"
 import { FormBuilder } from "~/components/form"
 import { createSite, updateSite } from "~/features/sites/api"
 import { fetchSitesThunk } from "~/features/sites/sitesSlice"
@@ -165,39 +160,55 @@ export default function Sites() {
           </h2>
         </div>
 
-        <Dialog open={isSiteDialogOpen} onOpenChange={setIsSiteDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" onClick={openCreateDialog}>
-              <Plus className="size-4" />
-              Create Site
-            </Button>
-          </DialogTrigger>
-
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {dialogMode === "edit" ? "Edit Site" : "Create Site"}
-              </DialogTitle>
-              <DialogDescription>
-                {dialogMode === "edit"
-                  ? "Update site details."
-                  : "Add a new site to the operational hubs list."}
-              </DialogDescription>
-            </DialogHeader>
-
-            <FormBuilder
-              key={`${dialogMode}-${editingSiteId ?? "new"}-${isSiteDialogOpen ? "open" : "closed"}`}
-              config={siteFormConfig}
-              defaultValues={formDefaults}
-              onSubmit={handleSubmitSite}
-              isSubmitting={isSubmitting}
-              className="space-y-4"
-            />
-
-            <DialogFooter />
-          </DialogContent>
-        </Dialog>
+        <Button size="sm" onClick={openCreateDialog}>
+          <Plus className="size-4" />
+          Create Site
+        </Button>
       </section>
+
+      <GenericDialog
+        open={isSiteDialogOpen}
+        onOpenChange={setIsSiteDialogOpen}
+        title={dialogMode === "edit" ? "Edit Site" : "Create Site"}
+        description={
+          dialogMode === "edit"
+            ? "Update site details."
+            : "Add a new site to the operational hubs list."
+        }
+        maxWidth="lg"
+        footer={
+          <GenericDialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsSiteDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="site-dialog-form"
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? "Submitting..."
+                : dialogMode === "edit"
+                  ? "Update"
+                  : "Create"}
+            </Button>
+          </GenericDialogFooter>
+        }
+      >
+        <FormBuilder
+          key={`${dialogMode}-${editingSiteId ?? "new"}-${isSiteDialogOpen ? "open" : "closed"}`}
+          config={siteFormConfig}
+          defaultValues={formDefaults}
+          onSubmit={handleSubmitSite}
+          isSubmitting={isSubmitting}
+          className="space-y-4 px-1"
+          hideButtons
+        />
+      </GenericDialog>
 
       <section className="grid grid-cols-3 gap-3">
         {metrics.map((metric) => {

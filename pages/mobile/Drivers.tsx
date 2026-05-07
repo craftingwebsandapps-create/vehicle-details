@@ -14,13 +14,9 @@ import { useAppDispatch, useAppSelector } from "~/app/hooks"
 import { FormBuilder } from "~/components/form"
 import { Button } from "~/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "~/components/ui/dialog"
+  GenericDialog,
+  GenericDialogFooter,
+} from "~/components/ui/generic-dialog"
 import {
   createDriver,
   updateDriver,
@@ -160,37 +156,55 @@ export default function Drivers() {
           </h2>
         </div>
 
-        <Dialog open={isDriverDialogOpen} onOpenChange={setIsDriverDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" onClick={openCreateDialog}>
-              <Plus className="size-4" />
-              Create Driver
-            </Button>
-          </DialogTrigger>
-
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {dialogMode === "edit" ? "Edit Driver" : "Create Driver"}
-              </DialogTitle>
-              <DialogDescription>
-                {dialogMode === "edit"
-                  ? "Update driver details and optionally replace licence file."
-                  : "Add a new driver and upload licence file."}
-              </DialogDescription>
-            </DialogHeader>
-
-            <FormBuilder
-              key={`${dialogMode}-${editingDriverId ?? "new"}-${isDriverDialogOpen ? "open" : "closed"}`}
-              config={driverFormConfig}
-              defaultValues={formDefaults}
-              onSubmit={handleSubmitDriver}
-              isSubmitting={isSubmitting}
-              className="space-y-4"
-            />
-          </DialogContent>
-        </Dialog>
+        <Button size="sm" onClick={openCreateDialog}>
+          <Plus className="size-4" />
+          Create Driver
+        </Button>
       </section>
+
+      <GenericDialog
+        open={isDriverDialogOpen}
+        onOpenChange={setIsDriverDialogOpen}
+        title={dialogMode === "edit" ? "Edit Driver" : "Create Driver"}
+        description={
+          dialogMode === "edit"
+            ? "Update driver details and optionally replace licence file."
+            : "Add a new driver and upload licence file."
+        }
+        maxWidth="lg"
+        footer={
+          <GenericDialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDriverDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="driver-dialog-form"
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? "Submitting..."
+                : dialogMode === "edit"
+                  ? "Update"
+                  : "Create"}
+            </Button>
+          </GenericDialogFooter>
+        }
+      >
+        <FormBuilder
+          key={`${dialogMode}-${editingDriverId ?? "new"}-${isDriverDialogOpen ? "open" : "closed"}`}
+          config={driverFormConfig}
+          defaultValues={formDefaults}
+          onSubmit={handleSubmitDriver}
+          isSubmitting={isSubmitting}
+          className="space-y-4 px-1"
+          hideButtons
+        />
+      </GenericDialog>
 
       {status === "loading" ? (
         <p className="rounded-xl border border-border/60 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">

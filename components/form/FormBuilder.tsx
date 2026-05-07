@@ -147,6 +147,7 @@ export function FormBuilder<TFormValues extends FieldValues>({
   role,
   persistenceKey,
   serverErrors,
+  hideButtons = false,
 }: FormBuilderProps<TFormValues>) {
   const schema = useMemo(
     () => config.schema ?? createDynamicSchema(config),
@@ -176,6 +177,7 @@ export function FormBuilder<TFormValues extends FieldValues>({
   return (
     <Form {...form}>
       <form
+        id={config.id}
         onSubmit={form.handleSubmit(async (values) => {
           await onSubmit(values as TFormValues)
         })}
@@ -245,21 +247,25 @@ export function FormBuilder<TFormValues extends FieldValues>({
           />
         ))}
 
-        <div className="flex items-center justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              form.reset(resolvedDefaults)
-              onReset?.()
-            }}
-          >
-            {config.resetLabel ?? "Reset"}
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Submitting..." : (config.submitLabel ?? "Submit")}
-          </Button>
-        </div>
+        {!hideButtons ? (
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                form.reset(resolvedDefaults)
+                onReset?.()
+              }}
+            >
+              {config.resetLabel ?? "Reset"}
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting
+                ? "Submitting..."
+                : (config.submitLabel ?? "Submit")}
+            </Button>
+          </div>
+        ) : null}
       </form>
     </Form>
   )

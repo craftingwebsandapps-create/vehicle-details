@@ -133,4 +133,9 @@ export type FormBuilderProps<TFormValues extends FieldValues = FieldValues> = {
   role?: string
   persistenceKey?: string
   serverErrors?: Record<string, string>
+  /**
+   * Hide the built-in submit/reset buttons (useful when using GenericDialog footer)
+   * @default false
+   */
+  hideButtons?: boolean
 }
