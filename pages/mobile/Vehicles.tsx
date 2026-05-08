@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { useAppDispatch, useAppSelector } from "~/app/hooks"
 import {
   OpsActionSheet,
+  OpsApprovalPill,
   OpsCard,
   OpsEmptyState,
   OpsFloatingFilterButton,
@@ -397,6 +398,7 @@ export default function Vehicles() {
 
                     <div className="flex items-center gap-1">
                       <OpsStatusPill status={vehicle.status} />
+                      <OpsApprovalPill status={vehicle.approvalStatus} />
                     </div>
                   </div>
 

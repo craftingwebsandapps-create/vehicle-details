@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { useAppDispatch, useAppSelector } from "~/app/hooks"
 import {
   OpsActionSheet,
+  OpsApprovalPill,
   OpsCard,
   OpsEmptyState,
   OpsFloatingFilterButton,
@@ -392,7 +393,10 @@ export default function Drivers() {
                           </p>
                         </div>
 
-                        <OpsStatusPill status={driver.status} />
+                        <div className="flex items-center gap-1">
+                          <OpsStatusPill status={driver.status} />
+                          <OpsApprovalPill status={driver.approvalStatus} />
+                        </div>
                       </div>
 
                       <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">

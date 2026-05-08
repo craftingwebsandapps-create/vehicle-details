@@ -163,6 +163,42 @@ export function OpsStatusPill({
   )
 }
 
+export function OpsApprovalPill({
+  status,
+}: {
+  status: "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | string | undefined
+}) {
+  if (!status) return null
+
+  const config =
+    status === "APPROVED"
+      ? {
+          label: "Approved",
+          dot: "bg-emerald-500",
+          pill: "bg-emerald-500/10 text-emerald-700",
+        }
+      : status === "REJECTED"
+        ? {
+            label: "Rejected",
+            dot: "bg-red-500",
+            pill: "bg-red-500/10 text-red-700",
+          }
+        : {
+            label: "Pending",
+            dot: "bg-amber-500",
+            pill: "bg-amber-500/10 text-amber-700",
+          }
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${config.pill}`}
+    >
+      <span className={`size-1.5 rounded-full ${config.dot}`} />
+      {config.label}
+    </span>
+  )
+}
+
 type OpsAction = {
   key: string
   label: string
