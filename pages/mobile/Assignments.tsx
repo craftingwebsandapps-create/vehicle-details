@@ -18,6 +18,7 @@ import {
   GenericDialogBody,
   GenericDialogFooter,
 } from "~/components/ui/generic-dialog"
+import { SearchableSelect } from "~/components/ui/searchable-select"
 import {
   changeAssignmentDriver,
   createAssignment,
@@ -27,8 +28,10 @@ import {
   fetchAssignmentsThunk,
   fetchMoreAssignmentsThunk,
 } from "~/features/assignments/assignmentsSlice"
-import { fetchDriversThunk } from "~/features/drivers/driversSlice"
-import { fetchVehiclesThunk } from "~/features/vehicles/vehiclesSlice"
+import { listAvailableDrivers } from "~/features/drivers/api"
+import { listAvailableVehicles } from "~/features/vehicles/api"
+import type { Driver } from "~/types/driver"
+import type { Vehicle } from "~/types/vehicle"
 
 type AssignmentSegment = "all" | "assigned" | "unassigned"
 
@@ -48,9 +51,11 @@ export default function Assignments() {
     status,
     error,
   } = useAppSelector((state) => state.assignments)
-  const drivers = useAppSelector((state) => state.drivers.items)
-  const vehicles = useAppSelector((state) => state.vehicles.items)
 
+  const [dialogDrivers, setDialogDrivers] = useState<Driver[]>([])
+  const [dialogVehicles, setDialogVehicles] = useState<Vehicle[]>([])
+  const [dialogDriversLoading, setDialogDriversLoading] = useState(false)
+  const [dialogVehiclesLoading, setDialogVehiclesLoading] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isChangeOpen, setIsChangeOpen] = useState(false)
   const [selectedAssignmentId, setSelectedAssignmentId] = useState("")
@@ -70,20 +75,20 @@ export default function Assignments() {
 
   const driverOptions = useMemo(
     () =>
-      drivers.map((driver) => ({
+      dialogDrivers.map((driver) => ({
         id: driver.id,
         label: `${driver.name} (${driver.licenceNumber})`,
       })),
-    [drivers]
+    [dialogDrivers]
   )
 
   const vehicleOptions = useMemo(
     () =>
-      vehicles.map((vehicle) => ({
+      dialogVehicles.map((vehicle) => ({
         id: vehicle._id,
         label: `${vehicle.registrationNumber} (${vehicle.name})`,
       })),
-    [vehicles]
+    [dialogVehicles]
   )
 
   const filteredAssignments = useMemo(() => {
@@ -116,8 +121,6 @@ export default function Assignments() {
 
   useEffect(() => {
     void dispatch(fetchAssignmentsThunk())
-    void dispatch(fetchDriversThunk())
-    void dispatch(fetchVehiclesThunk())
   }, [dispatch])
 
   useEffect(() => {
@@ -145,11 +148,7 @@ export default function Assignments() {
   }, [dispatch, hasNextPage, loadMoreStatus])
 
   const refreshAll = async () => {
-    await Promise.all([
-      dispatch(fetchAssignmentsThunk()),
-      dispatch(fetchDriversThunk()),
-      dispatch(fetchVehiclesThunk()),
-    ])
+    await dispatch(fetchAssignmentsThunk())
   }
 
   const handleRefresh = () => {
@@ -183,9 +182,19 @@ export default function Assignments() {
   }
 
   const openChangeDriverDialog = (assignmentId: string) => {
+    setDialogDrivers([])
     setSelectedAssignmentId(assignmentId)
     setChangeDriverId("")
     setIsChangeOpen(true)
+    void listAvailableDrivers()
+      .then(setDialogDrivers)
+      .catch((err: unknown) => {
+        toast.error(
+          err instanceof Error
+            ? err.message
+            : "Unable to load available drivers"
+        )
+      })
   }
 
   const handleChangeDriver = async () => {
@@ -255,7 +264,29 @@ export default function Assignments() {
         onSearchChange={setQuery}
         searchPlaceholder="Search vehicle, driver, mobile"
         createLabel="Create"
-        onCreate={() => setIsCreateOpen(true)}
+        onCreate={() => {
+          setDialogDrivers([])
+          setDialogVehicles([])
+          setDialogDriversLoading(true)
+          setDialogVehiclesLoading(true)
+          void listAvailableDrivers()
+            .then(setDialogDrivers)
+            .catch((err: unknown) => {
+              toast.error(
+                err instanceof Error ? err.message : "Unable to load drivers"
+              )
+            })
+            .finally(() => setDialogDriversLoading(false))
+          void listAvailableVehicles()
+            .then(setDialogVehicles)
+            .catch((err: unknown) => {
+              toast.error(
+                err instanceof Error ? err.message : "Unable to load vehicles"
+              )
+            })
+            .finally(() => setDialogVehiclesLoading(false))
+          setIsCreateOpen(true)
+        }}
         onRefresh={handleRefresh}
         segments={ASSIGNMENT_SEGMENTS}
         activeSegment={segment}
@@ -287,37 +318,23 @@ export default function Assignments() {
         }
       >
         <GenericDialogBody className="space-y-3 px-1 py-1">
-          <label className="block text-xs text-muted-foreground">
-            Driver
-            <select
-              value={createDriverId}
-              onChange={(event) => setCreateDriverId(event.target.value)}
-              className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option value="">Select driver</option>
-              {driverOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SearchableSelect
+            label="Driver"
+            options={driverOptions}
+            value={createDriverId}
+            onChange={setCreateDriverId}
+            placeholder="Select driver"
+            loading={dialogDriversLoading}
+          />
 
-          <label className="block text-xs text-muted-foreground">
-            Vehicle
-            <select
-              value={createVehicleId}
-              onChange={(event) => setCreateVehicleId(event.target.value)}
-              className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option value="">Select vehicle</option>
-              {vehicleOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SearchableSelect
+            label="Vehicle"
+            options={vehicleOptions}
+            value={createVehicleId}
+            onChange={setCreateVehicleId}
+            placeholder="Select vehicle"
+            loading={dialogVehiclesLoading}
+          />
         </GenericDialogBody>
       </GenericDialog>
 
@@ -348,25 +365,56 @@ export default function Assignments() {
         }
       >
         <GenericDialogBody className="space-y-3 px-1 py-1">
-          <p className="rounded-xl bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
-            Assignment ID: {selectedAssignmentId}
-          </p>
+          {(() => {
+            const asgn = assignments.find((a) => a.id === selectedAssignmentId)
+            if (!asgn) return null
+            return (
+              <div className="space-y-2 rounded-xl border border-border bg-muted/40 px-3 py-3">
+                <p className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                  Current Assignment
+                </p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                  <span className="text-muted-foreground">Vehicle</span>
+                  <span className="text-right font-medium">
+                    {asgn.vehicle.registrationNumber}
+                  </span>
+                  <span className="text-muted-foreground">Type</span>
+                  <span className="text-right font-medium">
+                    {asgn.vehicle.name} · {asgn.vehicle.type}
+                  </span>
+                  <span className="text-muted-foreground">Current Driver</span>
+                  <span className="text-right font-medium">
+                    {asgn.driver.name}
+                  </span>
+                  <span className="text-muted-foreground">Mobile</span>
+                  <span className="text-right font-medium">
+                    {asgn.driver.mobileNumber}
+                  </span>
+                  <span className="text-muted-foreground">Licence</span>
+                  <span className="text-right font-medium">
+                    {asgn.driver.licenceNumber}
+                  </span>
+                  {asgn.assignedAt && (
+                    <>
+                      <span className="text-muted-foreground">Assigned</span>
+                      <span className="text-right font-medium">
+                        {new Date(asgn.assignedAt).toLocaleDateString()}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            )
+          })()}
 
-          <label className="block text-xs text-muted-foreground">
-            New Driver
-            <select
-              value={changeDriverId}
-              onChange={(event) => setChangeDriverId(event.target.value)}
-              className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option value="">Select driver</option>
-              {driverOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SearchableSelect
+            label="New Driver"
+            options={driverOptions}
+            value={changeDriverId}
+            onChange={setChangeDriverId}
+            placeholder="Select driver"
+            loading={dialogDriversLoading}
+          />
         </GenericDialogBody>
       </GenericDialog>
 

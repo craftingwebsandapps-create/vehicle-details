@@ -94,6 +94,31 @@ export const toDriver = (entity: DriverApiEntity): Driver => ({
   updatedAt: entity.updatedAt,
 })
 
+type SimpleDriverListResponse = {
+  success: boolean
+  message: string
+  data: DriverApiEntity[] | { data: DriverApiEntity[] }
+}
+
+export const listAvailableDrivers = async (): Promise<Driver[]> => {
+  const accessToken = getAuthToken()
+
+  const response = await apiClient.getWithAuth<SimpleDriverListResponse>(
+    `${CONTRACTOR_V1_PREFIX}/drivers/available`,
+    accessToken
+  )
+
+  if (!response.success) {
+    throw new Error(response.message || "Unable to fetch available drivers")
+  }
+
+  const entities = Array.isArray(response.data)
+    ? response.data
+    : (response.data as { data: DriverApiEntity[] }).data
+
+  return entities.map(toDriver)
+}
+
 export const listDrivers = async (
   params: { page?: number; limit?: number } = {}
 ) => {

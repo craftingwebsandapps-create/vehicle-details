@@ -27,6 +27,31 @@ const getAuthToken = () => {
   return accessToken
 }
 
+type SimpleVehicleListResponse = {
+  success: boolean
+  message: string
+  data: Vehicle[] | { data: Vehicle[] }
+}
+
+export const listAvailableVehicles = async (): Promise<Vehicle[]> => {
+  const token = getAuthToken()
+
+  const response = await apiClient.getWithAuth<SimpleVehicleListResponse>(
+    `${CONTRACTOR_V1_PREFIX}/vehicles/available`,
+    token
+  )
+
+  if (!response.success) {
+    throw new Error(response.message || "Unable to fetch available vehicles")
+  }
+
+  const entities = Array.isArray(response.data)
+    ? response.data
+    : (response.data as { data: Vehicle[] }).data
+
+  return entities
+}
+
 export const listVehicles = async (params?: {
   page?: number
   limit?: number
