@@ -54,10 +54,10 @@ const SITE_APPROVAL_FILTERS: Array<{
   label: string
   value: SiteApprovalFilter
 }> = [
-  { label: "Approval: All", value: "all" },
-  { label: "Approval: Pending", value: "PENDING_APPROVAL" },
-  { label: "Approval: Approved", value: "APPROVED" },
-  { label: "Approval: Rejected", value: "REJECTED" },
+  { label: "All", value: "all" },
+  { label: "Pending", value: "PENDING_APPROVAL" },
+  { label: "Approved", value: "APPROVED" },
+  { label: "Rejected", value: "REJECTED" },
 ]
 
 export default function Sites() {
@@ -226,7 +226,12 @@ export default function Sites() {
         toast.success("Site submitted for approval", { position: "top-center" })
       }
 
-      await dispatch(fetchSitesThunk())
+      await dispatch(
+        fetchSitesThunk({
+          status: serverStatusFilter,
+          approvalStatus: serverApprovalFilter,
+        })
+      )
 
       setFormDefaults(initialFormState)
       setIsSiteDialogOpen(false)
@@ -263,6 +268,9 @@ export default function Sites() {
         segments={SITE_SEGMENTS}
         activeSegment={segment}
         onSegmentChange={setSegment}
+        approvalSegments={SITE_APPROVAL_FILTERS}
+        activeApprovalSegment={approvalFilter}
+        onApprovalSegmentChange={setApprovalFilter}
       />
 
       <GenericDialog

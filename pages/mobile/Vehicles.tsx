@@ -61,10 +61,10 @@ const VEHICLE_APPROVAL_FILTERS: Array<{
   label: string
   value: VehicleApprovalFilter
 }> = [
-  { label: "Approval: All", value: "all" },
-  { label: "Approval: Pending", value: "PENDING_APPROVAL" },
-  { label: "Approval: Approved", value: "APPROVED" },
-  { label: "Approval: Rejected", value: "REJECTED" },
+  { label: "All", value: "all" },
+  { label: "Pending", value: "PENDING_APPROVAL" },
+  { label: "Approved", value: "APPROVED" },
+  { label: "Rejected", value: "REJECTED" },
 ]
 
 export default function Vehicles() {
@@ -86,6 +86,7 @@ export default function Vehicles() {
     useState<VehicleFormValues>(initialFormState)
 
   const [query, setQuery] = useState("")
+  const [debouncedQuery, setDebouncedQuery] = useState("")
   const [segment, setSegment] = useState<VehicleSegment>("all")
   const [approvalFilter, setApprovalFilter] =
     useState<VehicleApprovalFilter>("all")
@@ -108,13 +109,22 @@ export default function Vehicles() {
     approvalFilter === "all" ? undefined : approvalFilter
 
   useEffect(() => {
+    const handle = window.setTimeout(() => {
+      setDebouncedQuery(query.trim())
+    }, 300)
+
+    return () => window.clearTimeout(handle)
+  }, [query])
+
+  useEffect(() => {
     void dispatch(
       fetchVehiclesThunk({
         status: serverStatusFilter,
         approvalStatus: serverApprovalFilter,
+        search: debouncedQuery || undefined,
       })
     )
-  }, [dispatch, serverStatusFilter, serverApprovalFilter])
+  }, [dispatch, serverStatusFilter, serverApprovalFilter, debouncedQuery])
 
   useEffect(() => {
     void dispatch(
@@ -180,6 +190,7 @@ export default function Vehicles() {
       fetchVehiclesThunk({
         status: serverStatusFilter,
         approvalStatus: serverApprovalFilter,
+        search: debouncedQuery || undefined,
       })
     )
     toast.success("Vehicle list refreshed", { position: "top-center" })
@@ -253,7 +264,13 @@ export default function Vehicles() {
         })
       }
 
-      await dispatch(fetchVehiclesThunk())
+      await dispatch(
+        fetchVehiclesThunk({
+          status: serverStatusFilter,
+          approvalStatus: serverApprovalFilter,
+          search: debouncedQuery || undefined,
+        })
+      )
 
       setFormDefaults(initialFormState)
       setIsVehicleDialogOpen(false)
@@ -290,6 +307,9 @@ export default function Vehicles() {
         segments={VEHICLE_SEGMENTS}
         activeSegment={segment}
         onSegmentChange={setSegment}
+        approvalSegments={VEHICLE_APPROVAL_FILTERS}
+        activeApprovalSegment={approvalFilter}
+        onApprovalSegmentChange={setApprovalFilter}
       />
 
       <GenericDialog

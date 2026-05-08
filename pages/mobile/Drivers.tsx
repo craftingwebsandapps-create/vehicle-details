@@ -60,10 +60,10 @@ const DRIVER_APPROVAL_FILTERS: Array<{
   label: string
   value: DriverApprovalFilter
 }> = [
-  { label: "Approval: All", value: "all" },
-  { label: "Approval: Pending", value: "PENDING_APPROVAL" },
-  { label: "Approval: Approved", value: "APPROVED" },
-  { label: "Approval: Rejected", value: "REJECTED" },
+  { label: "All", value: "all" },
+  { label: "Pending", value: "PENDING_APPROVAL" },
+  { label: "Approved", value: "APPROVED" },
+  { label: "Rejected", value: "REJECTED" },
 ]
 
 export default function Drivers() {
@@ -83,6 +83,7 @@ export default function Drivers() {
   const [formDefaults, setFormDefaults] =
     useState<DriverFormValues>(initialFormState)
   const [query, setQuery] = useState("")
+  const [debouncedQuery, setDebouncedQuery] = useState("")
   const [segment, setSegment] = useState<DriverSegment>("all")
   const [approvalFilter, setApprovalFilter] =
     useState<DriverApprovalFilter>("all")
@@ -105,13 +106,22 @@ export default function Drivers() {
     approvalFilter === "all" ? undefined : approvalFilter
 
   useEffect(() => {
+    const handle = window.setTimeout(() => {
+      setDebouncedQuery(query.trim())
+    }, 300)
+
+    return () => window.clearTimeout(handle)
+  }, [query])
+
+  useEffect(() => {
     void dispatch(
       fetchDriversThunk({
         status: serverStatusFilter,
         approvalStatus: serverApprovalFilter,
+        search: debouncedQuery || undefined,
       })
     )
-  }, [dispatch, serverStatusFilter, serverApprovalFilter])
+  }, [dispatch, serverStatusFilter, serverApprovalFilter, debouncedQuery])
 
   const filteredDrivers = useMemo(() => {
     const term = query.trim().toLowerCase()
@@ -174,6 +184,7 @@ export default function Drivers() {
       fetchDriversThunk({
         status: serverStatusFilter,
         approvalStatus: serverApprovalFilter,
+        search: debouncedQuery || undefined,
       })
     )
     toast.success("Driver list refreshed", { position: "top-center" })
@@ -244,7 +255,13 @@ export default function Drivers() {
         })
       }
 
-      await dispatch(fetchDriversThunk())
+      await dispatch(
+        fetchDriversThunk({
+          status: serverStatusFilter,
+          approvalStatus: serverApprovalFilter,
+          search: debouncedQuery || undefined,
+        })
+      )
 
       setFormDefaults(initialFormState)
       setIsDriverDialogOpen(false)
@@ -281,6 +298,9 @@ export default function Drivers() {
         segments={DRIVER_SEGMENTS}
         activeSegment={segment}
         onSegmentChange={setSegment}
+        approvalSegments={DRIVER_APPROVAL_FILTERS}
+        activeApprovalSegment={approvalFilter}
+        onApprovalSegmentChange={setApprovalFilter}
       />
 
       <GenericDialog

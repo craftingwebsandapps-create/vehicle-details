@@ -18,7 +18,7 @@ type SegmentOption<T extends string> = {
   value: T
 }
 
-type OpsListHeaderProps<T extends string> = {
+type OpsListHeaderProps<T extends string, A extends string = string> = {
   title: string
   totalLabel: string
   searchValue: string
@@ -30,9 +30,12 @@ type OpsListHeaderProps<T extends string> = {
   segments: SegmentOption<T>[]
   activeSegment: T
   onSegmentChange: (value: T) => void
+  approvalSegments?: SegmentOption<A>[]
+  activeApprovalSegment?: A
+  onApprovalSegmentChange?: (value: A) => void
 }
 
-export function OpsListHeader<T extends string>({
+export function OpsListHeader<T extends string, A extends string = string>({
   title,
   totalLabel,
   searchValue,
@@ -44,7 +47,10 @@ export function OpsListHeader<T extends string>({
   segments,
   activeSegment,
   onSegmentChange,
-}: OpsListHeaderProps<T>) {
+  approvalSegments,
+  activeApprovalSegment,
+  onApprovalSegmentChange,
+}: OpsListHeaderProps<T, A>) {
   return (
     <section className="sticky top-0 z-20 -mx-4 space-y-2 border-b border-border/70 bg-background/95 px-4 pt-2 pb-2 backdrop-blur supports-backdrop-filter:bg-background/90">
       <div className="flex items-center justify-between gap-2">
@@ -81,7 +87,7 @@ export function OpsListHeader<T extends string>({
         className="h-9 rounded-xl"
       />
 
-      <div className="-mx-1 flex items-center gap-1 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex items-center gap-1">
         {segments.map((segment) => (
           <button
             key={segment.value}
@@ -89,14 +95,35 @@ export function OpsListHeader<T extends string>({
             onClick={() => onSegmentChange(segment.value)}
             className={
               activeSegment === segment.value
-                ? "rounded-full bg-foreground px-3 py-1.5 text-xs font-medium text-background"
-                : "rounded-full border border-border/70 bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground"
+                ? "flex-1 rounded-full bg-foreground py-1.5 text-center text-xs font-medium whitespace-nowrap text-background"
+                : "flex-1 rounded-full border border-border/70 bg-background py-1.5 text-center text-xs font-medium whitespace-nowrap text-muted-foreground"
             }
           >
             {segment.label}
           </button>
         ))}
       </div>
+
+      {approvalSegments &&
+        approvalSegments.length > 0 &&
+        onApprovalSegmentChange && (
+          <div className="flex items-center gap-1">
+            {approvalSegments.map((seg) => (
+              <button
+                key={seg.value}
+                type="button"
+                onClick={() => onApprovalSegmentChange(seg.value)}
+                className={
+                  activeApprovalSegment === seg.value
+                    ? "flex-1 rounded-full bg-foreground py-1.5 text-center text-xs font-medium whitespace-nowrap text-background"
+                    : "flex-1 rounded-full border border-border/70 bg-background py-1.5 text-center text-xs font-medium whitespace-nowrap text-muted-foreground"
+                }
+              >
+                {seg.label}
+              </button>
+            ))}
+          </div>
+        )}
     </section>
   )
 }
