@@ -18,6 +18,8 @@ type DriverApiResponse = {
   data?: DriverApiEntity
 }
 
+const CONTRACTOR_V1_PREFIX = "/v1/contractor"
+
 const getAuthToken = () => {
   const accessToken = getAccessToken()
 
@@ -102,7 +104,7 @@ export const listDrivers = async (
   query.set("limit", String(params.limit ?? 10))
 
   const response = await apiClient.getWithAuth<DriverListResponse>(
-    `/drivers?${query.toString()}`,
+    `${CONTRACTOR_V1_PREFIX}/drivers?${query.toString()}`,
     accessToken
   )
 
@@ -122,7 +124,7 @@ export const createDriver = async (
   const accessToken = getAuthToken()
 
   const response = await apiClient.post<DriverApiResponse>(
-    "/drivers",
+    `${CONTRACTOR_V1_PREFIX}/drivers`,
     payload,
     {
       headers: {
@@ -149,7 +151,7 @@ export const updateDriver = async (
   }
 
   const response = await apiClient.request<DriverApiResponse>(
-    `/drivers/${driverId}`,
+    `${CONTRACTOR_V1_PREFIX}/drivers/${driverId}`,
     {
       method: "PUT",
       body: JSON.stringify(payload),

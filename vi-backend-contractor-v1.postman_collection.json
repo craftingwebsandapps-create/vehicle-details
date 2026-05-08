@@ -1,0 +1,502 @@
+{
+  "info": {
+    "name": "VI Backend (Contractor v1)",
+    "description": "Contractor-only API collection for vi-backend.\n\nVariables:\n- {{baseUrl}} default: http://localhost:4000\n- {{accessToken}} set automatically after login\n- {{refreshToken}} set automatically after login\n\nAuth:\n- All `/api/v1/contractor/*` endpoints require a JWT for a contractor user.\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "siteId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "driverId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "vehicleId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "assignmentId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /api/auth/login (contractor admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', json.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', json.data.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"contractor.admin@apcrda.com\",\n  \"password\": \"Admin@1234\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "POST /api/auth/refresh",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/refresh"
+          }
+        },
+        {
+          "name": "GET /api/auth/me",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contractor v1",
+      "item": [
+        {
+          "name": "Drivers",
+          "item": [
+            {
+              "name": "GET /api/v1/contractor/drivers",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/contractor/drivers?page=1&limit=10",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "contractor", "drivers"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET /api/v1/contractor/drivers/available",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/contractor/drivers/available?page=1&limit=10",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "contractor", "drivers", "available"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "POST /api/v1/contractor/drivers",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"New Driver\",\n  \"licenceNumber\": \"AP092024009999\",\n  \"licenceUrl\": \"https://docs.example.com/licences/new-driver.pdf\",\n  \"mobileNumber\": \"9871119999\",\n  \"status\": \"ACTIVE\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/contractor/drivers"
+              }
+            },
+            {
+              "name": "GET /api/v1/contractor/drivers/:id",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/contractor/drivers/{{driverId}}"
+              }
+            },
+            {
+              "name": "PUT /api/v1/contractor/drivers/:id",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Driver\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/contractor/drivers/{{driverId}}"
+              }
+            },
+            {
+              "name": "DELETE /api/v1/contractor/drivers/:id",
+              "request": {
+                "method": "DELETE",
+                "url": "{{baseUrl}}/api/v1/contractor/drivers/{{driverId}}"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sites",
+          "item": [
+            {
+              "name": "GET /api/v1/contractor/sites",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/contractor/sites?page=1&limit=10",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "contractor", "sites"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "POST /api/v1/contractor/sites",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"New Site\",\n  \"contactPerson\": \"Ravi\",\n  \"mobileNumber\": \"9876543210\",\n  \"email\": \"new.site@example.com\",\n  \"location\": \"Amaravati\",\n  \"status\": \"ACTIVE\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/contractor/sites"
+              }
+            },
+            {
+              "name": "GET /api/v1/contractor/sites/:id",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/contractor/sites/{{siteId}}"
+              }
+            },
+            {
+              "name": "PUT /api/v1/contractor/sites/:id",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"location\": \"Updated Location\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/contractor/sites/{{siteId}}"
+              }
+            },
+            {
+              "name": "DELETE /api/v1/contractor/sites/:id",
+              "request": {
+                "method": "DELETE",
+                "url": "{{baseUrl}}/api/v1/contractor/sites/{{siteId}}"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Vehicles",
+          "item": [
+            {
+              "name": "GET /api/v1/contractor/vehicles",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/contractor/vehicles?page=1&limit=10",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "contractor", "vehicles"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET /api/v1/contractor/vehicles/site/:siteId",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/contractor/vehicles/site/{{siteId}}?page=1&limit=10",
+                  "host": ["{{baseUrl}}"],
+                  "path": [
+                    "api",
+                    "v1",
+                    "contractor",
+                    "vehicles",
+                    "site",
+                    "{{siteId}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "POST /api/v1/contractor/vehicles",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"New Vehicle\",\n  \"site\": \"{{siteId}}\",\n  \"type\": \"Tipper\",\n  \"registrationNumber\": \"TS09TT9999\",\n  \"document\": \"https://docs.example.com/vehicles/ts09tt9999.pdf\",\n  \"status\": \"ACTIVE\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/contractor/vehicles"
+              }
+            },
+            {
+              "name": "GET /api/v1/contractor/vehicles/:id",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/contractor/vehicles/{{vehicleId}}"
+              }
+            },
+            {
+              "name": "PUT /api/v1/contractor/vehicles/:id",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Vehicle\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/contractor/vehicles/{{vehicleId}}"
+              }
+            },
+            {
+              "name": "DELETE /api/v1/contractor/vehicles/:id",
+              "request": {
+                "method": "DELETE",
+                "url": "{{baseUrl}}/api/v1/contractor/vehicles/{{vehicleId}}"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assignments",
+          "item": [
+            {
+              "name": "GET /api/v1/contractor/assignments",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/contractor/assignments?page=1&limit=10",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "contractor", "assignments"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET /api/v1/contractor/assignments/history",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/contractor/assignments/history?page=1&limit=10",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "contractor", "assignments", "history"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "POST /api/v1/contractor/assignments",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"driver\": \"{{driverId}}\",\n  \"vehicle\": \"{{vehicleId}}\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/contractor/assignments"
+              }
+            },
+            {
+              "name": "GET /api/v1/contractor/assignments/:id",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/contractor/assignments/{{assignmentId}}"
+              }
+            },
+            {
+              "name": "PUT /api/v1/contractor/assignments/:id/change-driver",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"driver\": \"{{driverId}}\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/contractor/assignments/{{assignmentId}}/change-driver"
+              }
+            },
+            {
+              "name": "DELETE /api/v1/contractor/assignments/:id/unassign",
+              "request": {
+                "method": "DELETE",
+                "url": "{{baseUrl}}/api/v1/contractor/assignments/{{assignmentId}}/unassign"
+              }
+            },
+            {
+              "name": "GET /api/v1/contractor/assignments/driver/:driverId/current",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/contractor/assignments/driver/{{driverId}}/current"
+              }
+            },
+            {
+              "name": "GET /api/v1/contractor/assignments/vehicle/:vehicleId/current",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/contractor/assignments/vehicle/{{vehicleId}}/current"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

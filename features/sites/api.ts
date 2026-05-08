@@ -35,6 +35,8 @@ type ListSitesApiResponse = BaseSiteApiResponse<{
 
 type CreateOrUpdateSiteApiResponse = BaseSiteApiResponse<SiteApiEntity>
 
+const CONTRACTOR_V1_PREFIX = "/v1/contractor"
+
 const getAuthToken = () => {
   const accessToken = getAccessToken()
 
@@ -78,7 +80,9 @@ export const listSites = async (params: ListSitesParams = {}) => {
     query.set("status", params.status)
   }
 
-  const path = query.toString() ? `/sites?${query.toString()}` : "/sites"
+  const path = query.toString()
+    ? `${CONTRACTOR_V1_PREFIX}/sites?${query.toString()}`
+    : `${CONTRACTOR_V1_PREFIX}/sites`
   const response = await apiClient.getWithAuth<ListSitesApiResponse>(
     path,
     accessToken
@@ -98,7 +102,7 @@ export const createSite = async (payload: CreateSiteRequest): Promise<Site> => {
   const accessToken = getAuthToken()
 
   const response = await apiClient.post<CreateOrUpdateSiteApiResponse>(
-    "/sites",
+    `${CONTRACTOR_V1_PREFIX}/sites`,
     payload,
     {
       headers: {
@@ -125,7 +129,7 @@ export const updateSite = async (
   }
 
   const response = await apiClient.request<CreateOrUpdateSiteApiResponse>(
-    `/sites/${siteId}`,
+    `${CONTRACTOR_V1_PREFIX}/sites/${siteId}`,
     {
       method: "PUT",
       body: JSON.stringify(payload),

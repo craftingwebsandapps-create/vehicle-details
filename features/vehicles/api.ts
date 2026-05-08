@@ -15,6 +15,8 @@ type VehicleApiResponse = {
   data?: Vehicle
 }
 
+const CONTRACTOR_V1_PREFIX = "/v1/contractor"
+
 const getAuthToken = () => {
   const accessToken = getAccessToken()
 
@@ -35,7 +37,9 @@ export const listVehicles = async (params?: {
   if (params?.limit) query.set("limit", String(params.limit))
 
   const queryString = query.toString()
-  const url = queryString ? `/vehicles?${queryString}` : "/vehicles"
+  const url = queryString
+    ? `${CONTRACTOR_V1_PREFIX}/vehicles?${queryString}`
+    : `${CONTRACTOR_V1_PREFIX}/vehicles`
 
   const response = await apiClient.getWithAuth<VehicleListResponse>(url, token)
 
@@ -52,7 +56,7 @@ export const createVehicle = async (
   const accessToken = getAuthToken()
 
   const response = await apiClient.post<VehicleApiResponse>(
-    "/vehicles",
+    `${CONTRACTOR_V1_PREFIX}/vehicles`,
     payload,
     {
       headers: {
@@ -79,7 +83,7 @@ export const updateVehicle = async (
   }
 
   const response = await apiClient.request<VehicleApiResponse>(
-    `/vehicles/${id}`,
+    `${CONTRACTOR_V1_PREFIX}/vehicles/${id}`,
     {
       method: "PUT",
       body: JSON.stringify(payload),
