@@ -4,5 +4,8 @@ import type { DashboardApiResponse } from "~/types/dashboard"
 export async function fetchDashboard(
   token: string
 ): Promise<DashboardApiResponse> {
-  return apiClient.getWithAuth<DashboardApiResponse>("/dashboard", token)
+  return apiClient.getWithAuth<DashboardApiResponse>(
+    "/v1/contractor/dashboard/summary",
+    token
+  )
 }
