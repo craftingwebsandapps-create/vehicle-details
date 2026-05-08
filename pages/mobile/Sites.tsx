@@ -26,6 +26,7 @@ import {
 } from "~/features/sites/sitesSlice"
 import type {
   CreateSiteRequest,
+  SiteApprovalStatus,
   Site,
   UpdateSiteRequest,
 } from "~/features/sites/types"
@@ -41,11 +42,22 @@ const initialFormState: CreateSiteRequest = {
 }
 
 type SiteSegment = "all" | "active" | "inactive"
+type SiteApprovalFilter = "all" | SiteApprovalStatus
 
 const SITE_SEGMENTS: Array<{ label: string; value: SiteSegment }> = [
   { label: "All", value: "all" },
   { label: "Active", value: "active" },
   { label: "Inactive", value: "inactive" },
+]
+
+const SITE_APPROVAL_FILTERS: Array<{
+  label: string
+  value: SiteApprovalFilter
+}> = [
+  { label: "Approval: All", value: "all" },
+  { label: "Approval: Pending", value: "PENDING_APPROVAL" },
+  { label: "Approval: Approved", value: "APPROVED" },
+  { label: "Approval: Rejected", value: "REJECTED" },
 ]
 
 export default function Sites() {
@@ -67,13 +79,29 @@ export default function Sites() {
 
   const [query, setQuery] = useState("")
   const [segment, setSegment] = useState<SiteSegment>("all")
+  const [approvalFilter, setApprovalFilter] =
+    useState<SiteApprovalFilter>("all")
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
+  const serverStatusFilter =
+    segment === "active"
+      ? "ACTIVE"
+      : segment === "inactive"
+        ? "INACTIVE"
+        : undefined
+  const serverApprovalFilter =
+    approvalFilter === "all" ? undefined : approvalFilter
+
   useEffect(() => {
-    void dispatch(fetchSitesThunk())
-  }, [dispatch])
+    void dispatch(
+      fetchSitesThunk({
+        status: serverStatusFilter,
+        approvalStatus: serverApprovalFilter,
+      })
+    )
+  }, [dispatch, serverStatusFilter, serverApprovalFilter])
 
   const siteFormConfig = useMemo(
     () => getSiteDialogFormConfig(dialogMode === "edit"),
@@ -133,7 +161,12 @@ export default function Sites() {
   }, [dispatch, hasNextPage, loadMoreStatus])
 
   const refreshSites = () => {
-    void dispatch(fetchSitesThunk())
+    void dispatch(
+      fetchSitesThunk({
+        status: serverStatusFilter,
+        approvalStatus: serverApprovalFilter,
+      })
+    )
     toast.success("Site list refreshed", { position: "top-center" })
   }
 
@@ -369,12 +402,20 @@ export default function Sites() {
         open={isFilterSheetOpen}
         onOpenChange={setIsFilterSheetOpen}
         title="Site Filters"
-        actions={SITE_SEGMENTS.map((item) => ({
-          key: item.value,
-          label: `${item.label}${segment === item.value ? " • selected" : ""}`,
-          icon: Layers,
-          onClick: () => setSegment(item.value),
-        }))}
+        actions={[
+          ...SITE_SEGMENTS.map((item) => ({
+            key: `segment-${item.value}`,
+            label: `${item.label}${segment === item.value ? " • selected" : ""}`,
+            icon: Layers,
+            onClick: () => setSegment(item.value),
+          })),
+          ...SITE_APPROVAL_FILTERS.map((item) => ({
+            key: `approval-${item.value}`,
+            label: `${item.label}${approvalFilter === item.value ? " • selected" : ""}`,
+            icon: Layers,
+            onClick: () => setApprovalFilter(item.value),
+          })),
+        ]}
       />
     </div>
   )

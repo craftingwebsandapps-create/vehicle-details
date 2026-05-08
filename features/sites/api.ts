@@ -80,6 +80,10 @@ export const listSites = async (params: ListSitesParams = {}) => {
     query.set("status", params.status)
   }
 
+  if (params.approvalStatus) {
+    query.set("approvalStatus", params.approvalStatus)
+  }
+
   const path = query.toString()
     ? `${CONTRACTOR_V1_PREFIX}/sites?${query.toString()}`
     : `${CONTRACTOR_V1_PREFIX}/sites`

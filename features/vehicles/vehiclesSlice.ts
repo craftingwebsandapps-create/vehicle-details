@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 
 import { listVehicles } from "~/features/vehicles/api"
-import type { Vehicle } from "~/types/vehicle"
+import type { ListVehiclesParams, Vehicle } from "~/types/vehicle"
 
 const PAGE_SIZE = 20
 
@@ -9,6 +9,7 @@ type VehiclesState = {
   items: Vehicle[]
   currentPage: number
   hasNextPage: boolean
+  currentFilters: Omit<ListVehiclesParams, "page" | "limit">
   status: "idle" | "loading" | "succeeded" | "failed"
   loadMoreStatus: "idle" | "loading" | "succeeded" | "failed"
   error: string | null
@@ -18,6 +19,7 @@ const initialState: VehiclesState = {
   items: [],
   currentPage: 0,
   hasNextPage: false,
+  currentFilters: {},
   status: "idle",
   loadMoreStatus: "idle",
   error: null,
@@ -25,10 +27,18 @@ const initialState: VehiclesState = {
 
 export const fetchVehiclesThunk = createAsyncThunk(
   "vehicles/fetchFirst",
-  async (_, { rejectWithValue }) => {
+  async (
+    filters: Omit<ListVehiclesParams, "page" | "limit"> | undefined,
+    { rejectWithValue }
+  ) => {
     try {
-      const response = await listVehicles({ page: 1, limit: PAGE_SIZE })
-      return response
+      const appliedFilters = filters ?? {}
+      const response = await listVehicles({
+        page: 1,
+        limit: PAGE_SIZE,
+        ...appliedFilters,
+      })
+      return { response, filters: appliedFilters }
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : "Unable to fetch vehicles"
@@ -43,7 +53,11 @@ export const fetchMoreVehiclesThunk = createAsyncThunk(
     try {
       const state = getState() as { vehicles: VehiclesState }
       const nextPage = state.vehicles.currentPage + 1
-      const response = await listVehicles({ page: nextPage, limit: PAGE_SIZE })
+      const response = await listVehicles({
+        page: nextPage,
+        limit: PAGE_SIZE,
+        ...state.vehicles.currentFilters,
+      })
       return response
     } catch (error) {
       return rejectWithValue(
@@ -65,10 +79,12 @@ const vehiclesSlice = createSlice({
       })
       .addCase(fetchVehiclesThunk.fulfilled, (state, action) => {
         state.status = "succeeded"
-        state.items = action.payload.data.data
-        state.currentPage = action.payload.data.meta.page
+        state.items = action.payload.response.data.data
+        state.currentFilters = action.payload.filters
+        state.currentPage = action.payload.response.data.meta.page
         state.hasNextPage =
-          action.payload.data.meta.page < action.payload.data.meta.totalPages
+          action.payload.response.data.meta.page <
+          action.payload.response.data.meta.totalPages
       })
       .addCase(fetchVehiclesThunk.rejected, (state, action) => {
         state.status = "failed"

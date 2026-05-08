@@ -1,4 +1,5 @@
 export type DriverStatus = "ACTIVE" | "INACTIVE"
+export type ApprovalStatus = "PENDING_APPROVAL" | "APPROVED" | "REJECTED"
 
 export type Driver = {
   id: string
@@ -6,6 +7,7 @@ export type Driver = {
   licenceNumber: string
   mobileNumber: string
   status: DriverStatus
+  approvalStatus?: ApprovalStatus
   licenceUrl?: string
   contractor?: {
     id: string
@@ -65,6 +67,7 @@ export type DriverApiEntity = {
   licenceNumber: string
   mobileNumber: string
   status: DriverStatus
+  approvalStatus?: ApprovalStatus
   licenceUrl?: string
   contractor?: string | DriverContractorApiEntity
   site?: string | DriverSiteApiEntity
@@ -80,6 +83,17 @@ export type DriverListResponse = {
     data: DriverApiEntity[]
     meta: DriverMeta
   }
+}
+
+export type ListDriversParams = {
+  page?: number
+  limit?: number
+  search?: string
+  name?: string
+  licenceNumber?: string
+  mobileNumber?: string
+  status?: DriverStatus
+  approvalStatus?: ApprovalStatus
 }
 
 export type DriverBaseRequest = {

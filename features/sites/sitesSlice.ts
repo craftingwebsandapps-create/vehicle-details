@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 
 import { listSites } from "~/features/sites/api"
-import type { Site } from "~/features/sites/types"
+import type { ListSitesParams, Site } from "~/features/sites/types"
 
 const PAGE_SIZE = 20
 
@@ -9,6 +9,7 @@ type SitesState = {
   items: Site[]
   currentPage: number
   hasNextPage: boolean
+  currentFilters: Omit<ListSitesParams, "page" | "limit">
   status: "idle" | "loading" | "succeeded" | "failed"
   loadMoreStatus: "idle" | "loading" | "succeeded" | "failed"
   error: string | null
@@ -18,6 +19,7 @@ const initialState: SitesState = {
   items: [],
   currentPage: 0,
   hasNextPage: false,
+  currentFilters: {},
   status: "idle",
   loadMoreStatus: "idle",
   error: null,
@@ -25,9 +27,21 @@ const initialState: SitesState = {
 
 export const fetchSitesThunk = createAsyncThunk(
   "sites/fetchFirst",
-  async (_, { rejectWithValue }) => {
+  async (
+    filters: Omit<ListSitesParams, "page" | "limit"> | undefined,
+    { rejectWithValue }
+  ) => {
     try {
-      return await listSites({ page: 1, limit: PAGE_SIZE })
+      const appliedFilters = filters ?? {}
+      const response = await listSites({
+        page: 1,
+        limit: PAGE_SIZE,
+        ...appliedFilters,
+      })
+      return {
+        ...response,
+        filters: appliedFilters,
+      }
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : "Unable to fetch sites"
@@ -42,7 +56,11 @@ export const fetchMoreSitesThunk = createAsyncThunk(
     try {
       const state = getState() as { sites: SitesState }
       const nextPage = state.sites.currentPage + 1
-      return await listSites({ page: nextPage, limit: PAGE_SIZE })
+      return await listSites({
+        page: nextPage,
+        limit: PAGE_SIZE,
+        ...state.sites.currentFilters,
+      })
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : "Unable to fetch sites"
@@ -64,6 +82,7 @@ const sitesSlice = createSlice({
       .addCase(fetchSitesThunk.fulfilled, (state, action) => {
         state.status = "succeeded"
         state.items = action.payload.items
+        state.currentFilters = action.payload.filters
         state.currentPage = action.payload.meta.page
         state.hasNextPage =
           action.payload.meta.page < action.payload.meta.totalPages

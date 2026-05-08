@@ -3,6 +3,7 @@ import { apiClient } from "~/services/api-client"
 import { API_BASE_URL } from "~/utils/constants"
 import type {
   CreateVehicleRequest,
+  ListVehiclesParams,
   UpdateVehicleRequest,
   UploadSingleFileResponse,
   Vehicle,
@@ -72,16 +73,9 @@ export const listAvailableVehicles = async (params?: {
   }
 }
 
-export const listVehicles = async (params?: {
-  page?: number
-  limit?: number
-  search?: string
-  name?: string
-  site?: string
-  type?: string
-  registrationNumber?: string
-  status?: string
-}): Promise<VehicleListResponse> => {
+export const listVehicles = async (
+  params?: ListVehiclesParams
+): Promise<VehicleListResponse> => {
   const token = getAuthToken()
   const query = new URLSearchParams()
   if (params?.page) query.set("page", String(params.page))
@@ -94,6 +88,9 @@ export const listVehicles = async (params?: {
     query.set("registrationNumber", params.registrationNumber)
   }
   if (params?.status) query.set("status", params.status)
+  if (params?.approvalStatus) {
+    query.set("approvalStatus", params.approvalStatus)
+  }
 
   const queryString = query.toString()
   const url = queryString

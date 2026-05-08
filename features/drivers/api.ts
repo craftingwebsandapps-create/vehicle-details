@@ -7,6 +7,7 @@ import type {
   Driver,
   DriverApiEntity,
   DriverListResponse,
+  ListDriversParams,
   DriverMeta,
   UpdateDriverRequest,
   UploadSingleFileResponse,
@@ -55,6 +56,7 @@ export const toDriver = (entity: DriverApiEntity): Driver => ({
   licenceNumber: entity.licenceNumber,
   mobileNumber: entity.mobileNumber,
   status: entity.status,
+  approvalStatus: entity.approvalStatus,
   licenceUrl: entity.licenceUrl,
   contractor: (() => {
     const contractorRef = normalizeEntityRef(entity.contractor)
@@ -141,17 +143,7 @@ export const listAvailableDrivers = async (params?: {
   }
 }
 
-export const listDrivers = async (
-  params: {
-    page?: number
-    limit?: number
-    search?: string
-    name?: string
-    licenceNumber?: string
-    mobileNumber?: string
-    status?: string
-  } = {}
-) => {
+export const listDrivers = async (params: ListDriversParams = {}) => {
   const accessToken = getAuthToken()
   const query = new URLSearchParams()
 
@@ -162,6 +154,9 @@ export const listDrivers = async (
   if (params.licenceNumber) query.set("licenceNumber", params.licenceNumber)
   if (params.mobileNumber) query.set("mobileNumber", params.mobileNumber)
   if (params.status) query.set("status", params.status)
+  if (params.approvalStatus) {
+    query.set("approvalStatus", params.approvalStatus)
+  }
 
   const response = await apiClient.getWithAuth<DriverListResponse>(
     `${CONTRACTOR_V1_PREFIX}/drivers?${query.toString()}`,

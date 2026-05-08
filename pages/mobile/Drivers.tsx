@@ -30,6 +30,7 @@ import {
 } from "~/features/drivers/driversSlice"
 import { getDriverDialogFormConfig } from "~/schemas/driver-dialog-form-config"
 import type {
+  ApprovalStatus,
   CreateDriverRequest,
   Driver,
   DriverFormValues,
@@ -46,12 +47,23 @@ const initialFormState: DriverFormValues = {
 }
 
 type DriverSegment = "all" | "active" | "inactive" | "assigned"
+type DriverApprovalFilter = "all" | ApprovalStatus
 
 const DRIVER_SEGMENTS: Array<{ label: string; value: DriverSegment }> = [
   { label: "All", value: "all" },
   { label: "Active", value: "active" },
   { label: "Inactive", value: "inactive" },
   { label: "Assigned", value: "assigned" },
+]
+
+const DRIVER_APPROVAL_FILTERS: Array<{
+  label: string
+  value: DriverApprovalFilter
+}> = [
+  { label: "Approval: All", value: "all" },
+  { label: "Approval: Pending", value: "PENDING_APPROVAL" },
+  { label: "Approval: Approved", value: "APPROVED" },
+  { label: "Approval: Rejected", value: "REJECTED" },
 ]
 
 export default function Drivers() {
@@ -72,6 +84,8 @@ export default function Drivers() {
     useState<DriverFormValues>(initialFormState)
   const [query, setQuery] = useState("")
   const [segment, setSegment] = useState<DriverSegment>("all")
+  const [approvalFilter, setApprovalFilter] =
+    useState<DriverApprovalFilter>("all")
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
@@ -81,9 +95,23 @@ export default function Drivers() {
     [dialogMode]
   )
 
+  const serverStatusFilter =
+    segment === "active"
+      ? "ACTIVE"
+      : segment === "inactive"
+        ? "INACTIVE"
+        : undefined
+  const serverApprovalFilter =
+    approvalFilter === "all" ? undefined : approvalFilter
+
   useEffect(() => {
-    void dispatch(fetchDriversThunk())
-  }, [dispatch])
+    void dispatch(
+      fetchDriversThunk({
+        status: serverStatusFilter,
+        approvalStatus: serverApprovalFilter,
+      })
+    )
+  }, [dispatch, serverStatusFilter, serverApprovalFilter])
 
   const filteredDrivers = useMemo(() => {
     const term = query.trim().toLowerCase()
@@ -142,7 +170,12 @@ export default function Drivers() {
   }, [dispatch, hasNextPage, loadMoreStatus])
 
   const refreshDrivers = () => {
-    void dispatch(fetchDriversThunk())
+    void dispatch(
+      fetchDriversThunk({
+        status: serverStatusFilter,
+        approvalStatus: serverApprovalFilter,
+      })
+    )
     toast.success("Driver list refreshed", { position: "top-center" })
   }
 
@@ -416,12 +449,20 @@ export default function Drivers() {
         open={isFilterSheetOpen}
         onOpenChange={setIsFilterSheetOpen}
         title="Driver Filters"
-        actions={DRIVER_SEGMENTS.map((item) => ({
-          key: item.value,
-          label: `${item.label}${segment === item.value ? " • selected" : ""}`,
-          icon: Clock3,
-          onClick: () => setSegment(item.value),
-        }))}
+        actions={[
+          ...DRIVER_SEGMENTS.map((item) => ({
+            key: `segment-${item.value}`,
+            label: `${item.label}${segment === item.value ? " • selected" : ""}`,
+            icon: Clock3,
+            onClick: () => setSegment(item.value),
+          })),
+          ...DRIVER_APPROVAL_FILTERS.map((item) => ({
+            key: `approval-${item.value}`,
+            label: `${item.label}${approvalFilter === item.value ? " • selected" : ""}`,
+            icon: Clock3,
+            onClick: () => setApprovalFilter(item.value),
+          })),
+        ]}
       />
     </div>
   )

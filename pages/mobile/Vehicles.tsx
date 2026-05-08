@@ -31,6 +31,7 @@ import {
 } from "~/features/vehicles/vehiclesSlice"
 import { getVehicleDialogFormConfig } from "~/schemas/vehicle-dialog-form-config"
 import type {
+  ApprovalStatus,
   CreateVehicleRequest,
   UpdateVehicleRequest,
   Vehicle,
@@ -47,12 +48,23 @@ const initialFormState: VehicleFormValues = {
 }
 
 type VehicleSegment = "all" | "active" | "inactive" | "assigned"
+type VehicleApprovalFilter = "all" | ApprovalStatus
 
 const VEHICLE_SEGMENTS: Array<{ label: string; value: VehicleSegment }> = [
   { label: "All", value: "all" },
   { label: "Active", value: "active" },
   { label: "Inactive", value: "inactive" },
   { label: "Assigned", value: "assigned" },
+]
+
+const VEHICLE_APPROVAL_FILTERS: Array<{
+  label: string
+  value: VehicleApprovalFilter
+}> = [
+  { label: "Approval: All", value: "all" },
+  { label: "Approval: Pending", value: "PENDING_APPROVAL" },
+  { label: "Approval: Approved", value: "APPROVED" },
+  { label: "Approval: Rejected", value: "REJECTED" },
 ]
 
 export default function Vehicles() {
@@ -75,6 +87,8 @@ export default function Vehicles() {
 
   const [query, setQuery] = useState("")
   const [segment, setSegment] = useState<VehicleSegment>("all")
+  const [approvalFilter, setApprovalFilter] =
+    useState<VehicleApprovalFilter>("all")
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
@@ -84,9 +98,28 @@ export default function Vehicles() {
     [dialogMode, sites]
   )
 
+  const serverStatusFilter =
+    segment === "active"
+      ? "ACTIVE"
+      : segment === "inactive"
+        ? "INACTIVE"
+        : undefined
+  const serverApprovalFilter =
+    approvalFilter === "all" ? undefined : approvalFilter
+
   useEffect(() => {
-    void dispatch(fetchVehiclesThunk())
-    void dispatch(fetchSitesThunk())
+    void dispatch(
+      fetchVehiclesThunk({
+        status: serverStatusFilter,
+        approvalStatus: serverApprovalFilter,
+      })
+    )
+  }, [dispatch, serverStatusFilter, serverApprovalFilter])
+
+  useEffect(() => {
+    void dispatch(
+      fetchSitesThunk({ status: "ACTIVE", approvalStatus: "APPROVED" })
+    )
   }, [dispatch])
 
   const filteredVehicles = useMemo(() => {
@@ -143,7 +176,12 @@ export default function Vehicles() {
   }, [dispatch, hasNextPage, loadMoreStatus])
 
   const refreshVehicles = () => {
-    void dispatch(fetchVehiclesThunk())
+    void dispatch(
+      fetchVehiclesThunk({
+        status: serverStatusFilter,
+        approvalStatus: serverApprovalFilter,
+      })
+    )
     toast.success("Vehicle list refreshed", { position: "top-center" })
   }
 
@@ -163,7 +201,10 @@ export default function Vehicles() {
       registrationNumber: vehicle.registrationNumber,
       document: vehicle.document ?? "",
       status: vehicle.status,
-      site: typeof vehicle.site === "string" ? vehicle.site : vehicle.site._id,
+      site:
+        typeof vehicle.site === "string"
+          ? vehicle.site
+          : (vehicle.site?._id ?? ""),
     })
     setIsVehicleDialogOpen(true)
   }
@@ -405,12 +446,20 @@ export default function Vehicles() {
         open={isFilterSheetOpen}
         onOpenChange={setIsFilterSheetOpen}
         title="Vehicle Filters"
-        actions={VEHICLE_SEGMENTS.map((item) => ({
-          key: item.value,
-          label: `${item.label}${segment === item.value ? " • selected" : ""}`,
-          icon: Fuel,
-          onClick: () => setSegment(item.value),
-        }))}
+        actions={[
+          ...VEHICLE_SEGMENTS.map((item) => ({
+            key: `segment-${item.value}`,
+            label: `${item.label}${segment === item.value ? " • selected" : ""}`,
+            icon: Fuel,
+            onClick: () => setSegment(item.value),
+          })),
+          ...VEHICLE_APPROVAL_FILTERS.map((item) => ({
+            key: `approval-${item.value}`,
+            label: `${item.label}${approvalFilter === item.value ? " • selected" : ""}`,
+            icon: Fuel,
+            onClick: () => setApprovalFilter(item.value),
+          })),
+        ]}
       />
     </div>
   )

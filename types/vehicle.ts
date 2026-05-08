@@ -1,4 +1,5 @@
 export type VehicleStatus = "ACTIVE" | "INACTIVE"
+export type ApprovalStatus = "PENDING_APPROVAL" | "APPROVED" | "REJECTED"
 
 export type Contractor = {
   _id: string
@@ -11,43 +12,58 @@ export type Contractor = {
   updatedAt: string
 }
 
-export type Site = {
+/** Embedded site shape returned by vehicle aggregation lookups */
+export type EmbeddedSite = {
   _id: string
   name: string
-  contractor: string
-  contactPerson: string
-  mobileNumber: string
-  email: string
-  location: string
+  location?: string
   status: string
-  createdAt: string
-  updatedAt: string
+  approvalStatus?: ApprovalStatus
 }
 
-export type Driver = {
+/** Full site document (used in standalone site responses) */
+export type Site = EmbeddedSite & {
+  contractor?: string
+  contactPerson?: string
+  mobileNumber?: string
+  email?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+/** Embedded driver shape returned by vehicle aggregation (from active assignment lookup) */
+export type EmbeddedDriver = {
   _id: string
   name: string
-  licenceNumber: string
-  licenceUrl: string
-  mobileNumber: string
-  contractor: string
+  licenceNumber?: string
+  licenceUrl?: string
+  mobileNumber?: string
   status: string
-  createdAt: string
-  updatedAt: string
+}
+
+/** Full driver document (used in standalone driver responses) */
+export type Driver = EmbeddedDriver & {
+  contractor?: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export type Vehicle = {
   _id: string
   name: string
-  contractor: Contractor
   type: string
   registrationNumber: string
-  document: string
+  document?: string | null
   status: VehicleStatus
-  site: Site
-  driver: Driver
-  createdAt: string
-  updatedAt: string
+  approvalStatus?: ApprovalStatus
+  /** Populated via aggregation lookup; null when not assigned */
+  contractor?: Contractor | null
+  /** Populated via aggregation lookup; null when not allocated */
+  site?: EmbeddedSite | null
+  /** Derived from active drivervehicleassignment lookup; null when unassigned */
+  driver?: EmbeddedDriver | null
+  createdAt?: string
+  updatedAt?: string
 }
 
 export type VehicleMeta = {
@@ -66,6 +82,18 @@ export type VehicleListResponse = {
     data: Vehicle[]
     meta: VehicleMeta
   }
+}
+
+export type ListVehiclesParams = {
+  page?: number
+  limit?: number
+  search?: string
+  name?: string
+  site?: string
+  type?: string
+  registrationNumber?: string
+  status?: VehicleStatus
+  approvalStatus?: ApprovalStatus
 }
 
 export type VehicleUpsertRequest = {

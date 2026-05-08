@@ -1,4 +1,5 @@
 export type SiteStatus = "ACTIVE" | "INACTIVE"
+export type SiteApprovalStatus = "PENDING_APPROVAL" | "APPROVED" | "REJECTED"
 
 export interface PaginationParams {
   page?: number
@@ -13,6 +14,7 @@ export interface Site {
   email: string
   location: string
   status: SiteStatus
+  approvalStatus?: SiteApprovalStatus
   createdAt: string
   updatedAt: string
 }
@@ -37,6 +39,7 @@ export interface UpdateSiteRequest {
 export interface ListSitesParams extends PaginationParams {
   name?: string
   status?: SiteStatus
+  approvalStatus?: SiteApprovalStatus
 }
 
 export type CreateSiteApiResponse = {

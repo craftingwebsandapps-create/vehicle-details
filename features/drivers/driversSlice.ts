@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 
 import { listDrivers } from "~/features/drivers/api"
-import type { Driver } from "~/types/driver"
+import type { Driver, ListDriversParams } from "~/types/driver"
 
 const PAGE_SIZE = 20
 
@@ -9,6 +9,7 @@ type DriversState = {
   items: Driver[]
   currentPage: number
   hasNextPage: boolean
+  currentFilters: Omit<ListDriversParams, "page" | "limit">
   status: "idle" | "loading" | "succeeded" | "failed"
   loadMoreStatus: "idle" | "loading" | "succeeded" | "failed"
   error: string | null
@@ -18,6 +19,7 @@ const initialState: DriversState = {
   items: [],
   currentPage: 0,
   hasNextPage: false,
+  currentFilters: {},
   status: "idle",
   loadMoreStatus: "idle",
   error: null,
@@ -25,9 +27,21 @@ const initialState: DriversState = {
 
 export const fetchDriversThunk = createAsyncThunk(
   "drivers/fetchFirst",
-  async (_, { rejectWithValue }) => {
+  async (
+    filters: Omit<ListDriversParams, "page" | "limit"> | undefined,
+    { rejectWithValue }
+  ) => {
     try {
-      return await listDrivers({ page: 1, limit: PAGE_SIZE })
+      const appliedFilters = filters ?? {}
+      const response = await listDrivers({
+        page: 1,
+        limit: PAGE_SIZE,
+        ...appliedFilters,
+      })
+      return {
+        ...response,
+        filters: appliedFilters,
+      }
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : "Unable to fetch drivers"
@@ -42,7 +56,11 @@ export const fetchMoreDriversThunk = createAsyncThunk(
     try {
       const state = getState() as { drivers: DriversState }
       const nextPage = state.drivers.currentPage + 1
-      return await listDrivers({ page: nextPage, limit: PAGE_SIZE })
+      return await listDrivers({
+        page: nextPage,
+        limit: PAGE_SIZE,
+        ...state.drivers.currentFilters,
+      })
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : "Unable to fetch drivers"
@@ -64,6 +82,7 @@ const driversSlice = createSlice({
       .addCase(fetchDriversThunk.fulfilled, (state, action) => {
         state.status = "succeeded"
         state.items = action.payload.items
+        state.currentFilters = action.payload.filters
         state.currentPage = action.payload.meta.page
         state.hasNextPage =
           action.payload.meta.page < action.payload.meta.totalPages
