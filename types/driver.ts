@@ -80,18 +80,19 @@ export type DriverListResponse = {
   }
 }
 
-export type DriverUpsertRequest = {
+export type DriverBaseRequest = {
   name: string
   licenceNumber: string
   licenceUrl: string
   mobileNumber: string
-  contractor: string
   status: string
 }
 
-export type CreateDriverRequest = DriverUpsertRequest
+export type CreateDriverRequest = DriverBaseRequest
 
-export type UpdateDriverRequest = DriverUpsertRequest
+export type UpdateDriverRequest = DriverBaseRequest & {
+  contractor: string
+}
 
 export type DriverFormValues = {
   name: string

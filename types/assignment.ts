@@ -11,8 +11,11 @@ export type AssignmentApiRef = {
   id?: string
   _id?: string
   name?: string
+  licenceNumber?: string
   registrationNumber?: string
+  type?: string
   mobileNumber?: string
+  status?: string
 }
 
 export type AssignmentApiEntity = {
@@ -28,16 +31,27 @@ export type AssignmentApiEntity = {
   destination?: string
   sourceSite?: { name?: string }
   destinationSite?: { name?: string }
+  assignedAt?: string
+  unassignedAt?: string
   createdAt?: string
   updatedAt?: string
 }
 
 export type Assignment = {
   id: string
-  driverName: string
-  vehicleLabel: string
+  driver: {
+    name: string
+    licenceNumber?: string
+    mobileNumber?: string
+  }
+  vehicle: {
+    name: string
+    registrationNumber?: string
+    type?: string
+  }
   status: string
-  route: string
+  assignedAt?: string
+  unassignedAt?: string
   createdAt?: string
   updatedAt?: string
 }

@@ -182,12 +182,11 @@ export default function Drivers() {
         throw new Error("Please upload a licence file")
       }
 
-      const payload: CreateDriverRequest = {
+      const createPayload: CreateDriverRequest = {
         name: values.name.trim(),
         licenceNumber: values.licenceNumber.trim(),
         licenceUrl,
         mobileNumber: values.mobileNumber.trim(),
-        contractor: values.contractor.trim(),
         status: values.status,
       }
 
@@ -197,13 +196,14 @@ export default function Drivers() {
         }
 
         const updatePayload: UpdateDriverRequest = {
-          ...payload,
+          ...createPayload,
+          contractor: values.contractor.trim(),
         }
 
         await updateDriver(editingDriverId, updatePayload)
         toast.success("Driver updated successfully", { position: "top-center" })
       } else {
-        await createDriver(payload)
+        await createDriver(createPayload)
         toast.success("Driver created successfully", { position: "top-center" })
       }
 

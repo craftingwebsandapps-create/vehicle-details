@@ -22,43 +22,34 @@ const getAuthToken = () => {
   return accessToken
 }
 
-const toRoute = (entity: AssignmentApiEntity) => {
-  const directRoute = entity.route?.trim()
-
-  if (directRoute) {
-    return directRoute
-  }
-
-  const source =
-    entity.sourceSite?.name ?? entity.source ?? entity.from ?? "Unknown source"
-  const destination =
-    entity.destinationSite?.name ??
-    entity.destination ??
-    entity.to ??
-    "Unknown destination"
-
-  return `${source} to ${destination}`
-}
-
 const toAssignment = (entity: AssignmentApiEntity): Assignment => {
   const assignmentId = entity.id ?? entity._id ?? ""
-  const driverName =
-    typeof entity.driver === "string"
-      ? entity.driver
-      : (entity.driver?.name ?? "Unassigned")
-  const vehicleLabel =
-    typeof entity.vehicle === "string"
-      ? entity.vehicle
-      : (entity.vehicle?.registrationNumber ??
-        entity.vehicle?.name ??
-        "Unassigned")
+  const driverRef =
+    typeof entity.driver === "string" ? undefined : entity.driver
+  const vehicleRef =
+    typeof entity.vehicle === "string" ? undefined : entity.vehicle
 
   return {
     id: assignmentId,
-    driverName,
-    vehicleLabel,
+    driver: {
+      name:
+        (typeof entity.driver === "string"
+          ? entity.driver
+          : entity.driver?.name) ?? "Unassigned",
+      licenceNumber: driverRef?.licenceNumber,
+      mobileNumber: driverRef?.mobileNumber,
+    },
+    vehicle: {
+      name:
+        (typeof entity.vehicle === "string"
+          ? entity.vehicle
+          : entity.vehicle?.name) ?? "Unassigned",
+      registrationNumber: vehicleRef?.registrationNumber,
+      type: vehicleRef?.type,
+    },
     status: entity.status ?? "ASSIGNED",
-    route: toRoute(entity),
+    assignedAt: entity.assignedAt,
+    unassignedAt: entity.unassignedAt,
     createdAt: entity.createdAt,
     updatedAt: entity.updatedAt,
   }

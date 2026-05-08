@@ -1,16 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { ArrowRightLeft, ClipboardList, Map, UserSquare2 } from "lucide-react"
+import { ClipboardList, UserSquare2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAppDispatch, useAppSelector } from "~/app/hooks"
+import {
+  OpsActionSheet,
+  OpsCard,
+  OpsEmptyState,
+  OpsFloatingFilterButton,
+  OpsListHeader,
+  OpsListSkeleton,
+} from "~/components/mobile/ops/OpsListPrimitives"
 import { Button } from "~/components/ui/button"
 import {
   GenericDialog,
   GenericDialogBody,
   GenericDialogFooter,
 } from "~/components/ui/generic-dialog"
-import { Input } from "~/components/ui/input"
 import {
   changeAssignmentDriver,
   createAssignment,
@@ -22,6 +29,15 @@ import {
 } from "~/features/assignments/assignmentsSlice"
 import { fetchDriversThunk } from "~/features/drivers/driversSlice"
 import { fetchVehiclesThunk } from "~/features/vehicles/vehiclesSlice"
+
+type AssignmentSegment = "all" | "assigned" | "unassigned"
+
+const ASSIGNMENT_SEGMENTS: Array<{ label: string; value: AssignmentSegment }> =
+  [
+    { label: "All", value: "all" },
+    { label: "Assigned", value: "assigned" },
+    { label: "Unassigned", value: "unassigned" },
+  ]
 
 export default function Assignments() {
   const dispatch = useAppDispatch()
@@ -41,6 +57,13 @@ export default function Assignments() {
   const [createDriverId, setCreateDriverId] = useState("")
   const [createVehicleId, setCreateVehicleId] = useState("")
   const [changeDriverId, setChangeDriverId] = useState("")
+  const [query, setQuery] = useState("")
+  const [segment, setSegment] = useState<AssignmentSegment>("all")
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
+  const [unassignTarget, setUnassignTarget] = useState<{
+    id: string
+    label: string
+  } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
@@ -62,6 +85,34 @@ export default function Assignments() {
       })),
     [vehicles]
   )
+
+  const filteredAssignments = useMemo(() => {
+    const term = query.trim().toLowerCase()
+
+    return assignments.filter((assignment) => {
+      const isActive = assignment.status === "ACTIVE"
+
+      const matchesSegment =
+        segment === "all" ? true : segment === "assigned" ? isActive : !isActive
+
+      const matchesSearch =
+        term.length === 0
+          ? true
+          : [
+              assignment.vehicle.name,
+              assignment.vehicle.registrationNumber,
+              assignment.driver.name,
+              assignment.driver.mobileNumber,
+              assignment.driver.licenceNumber,
+              assignment.status,
+            ]
+              .join(" ")
+              .toLowerCase()
+              .includes(term)
+
+      return matchesSegment && matchesSearch
+    })
+  }, [assignments, query, segment])
 
   useEffect(() => {
     void dispatch(fetchAssignmentsThunk())
@@ -99,6 +150,11 @@ export default function Assignments() {
       dispatch(fetchDriversThunk()),
       dispatch(fetchVehiclesThunk()),
     ])
+  }
+
+  const handleRefresh = () => {
+    void refreshAll()
+    toast.success("Assignment list refreshed", { position: "top-center" })
   }
 
   const handleCreateAssignment = async () => {
@@ -176,29 +232,35 @@ export default function Assignments() {
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <section className="rounded-[28px] border border-border/60 bg-background p-5 shadow-sm">
-        <div className="flex items-center gap-3">
-          <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <ClipboardList className="size-5" />
-          </span>
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">
-              Assignments
-            </p>
-            <h2 className="font-heading text-2xl font-semibold text-foreground">
-              Link drivers, vehicles, and routes.
-            </h2>
-          </div>
-        </div>
+  const getStatusToneClass = (status: string) => {
+    const normalized = status.toUpperCase()
 
-        <div className="mt-4 flex justify-end">
-          <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-            Create Assignment
-          </Button>
-        </div>
-      </section>
+    if (normalized === "ACTIVE") {
+      return "bg-emerald-500/10 text-emerald-700"
+    }
+
+    if (normalized === "INACTIVE") {
+      return "bg-zinc-500/10 text-zinc-700"
+    }
+
+    return "bg-primary/10 text-primary"
+  }
+
+  return (
+    <div className="space-y-3 pb-20">
+      <OpsListHeader
+        title="Assignments"
+        totalLabel={`${filteredAssignments.length} in view`}
+        searchValue={query}
+        onSearchChange={setQuery}
+        searchPlaceholder="Search vehicle, driver, mobile"
+        createLabel="Create"
+        onCreate={() => setIsCreateOpen(true)}
+        onRefresh={handleRefresh}
+        segments={ASSIGNMENT_SEGMENTS}
+        activeSegment={segment}
+        onSegmentChange={setSegment}
+      />
 
       <GenericDialog
         open={isCreateOpen}
@@ -286,11 +348,9 @@ export default function Assignments() {
         }
       >
         <GenericDialogBody className="space-y-3 px-1 py-1">
-          <Input
-            value={selectedAssignmentId}
-            disabled
-            aria-label="Assignment id"
-          />
+          <p className="rounded-xl bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+            Assignment ID: {selectedAssignmentId}
+          </p>
 
           <label className="block text-xs text-muted-foreground">
             New Driver
@@ -310,59 +370,127 @@ export default function Assignments() {
         </GenericDialogBody>
       </GenericDialog>
 
-      {status === "loading" ? (
-        <section className="space-y-3">
-          <article className="rounded-[26px] border border-border/60 bg-background p-5 shadow-sm">
-            <p className="text-sm text-muted-foreground">
-              Loading assignments...
-            </p>
-          </article>
-        </section>
-      ) : null}
+      <GenericDialog
+        open={Boolean(unassignTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setUnassignTarget(null)
+          }
+        }}
+        title="Unassign"
+        description="Remove this current assignment?"
+        maxWidth="sm"
+        footer={
+          <GenericDialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setUnassignTarget(null)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (!unassignTarget?.id) {
+                  return
+                }
+
+                void (async () => {
+                  await handleUnassign(unassignTarget.id)
+                  setUnassignTarget(null)
+                })()
+              }}
+              disabled={isSubmitting || !unassignTarget?.id}
+            >
+              {isSubmitting ? "Unassigning..." : "Unassign"}
+            </Button>
+          </GenericDialogFooter>
+        }
+      >
+        <GenericDialogBody className="px-1 py-1">
+          <p className="text-sm text-muted-foreground">
+            {unassignTarget?.label}
+          </p>
+        </GenericDialogBody>
+      </GenericDialog>
+
+      {status === "loading" ? <OpsListSkeleton /> : null}
 
       {status === "failed" ? (
-        <section className="space-y-3">
-          <article className="rounded-[26px] border border-destructive/30 bg-destructive/10 p-5 shadow-sm">
-            <p className="text-sm text-destructive">
-              {error ?? "Unable to load assignments"}
-            </p>
-          </article>
-        </section>
+        <p className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error ?? "Unable to load assignments"}
+        </p>
+      ) : null}
+
+      {status !== "loading" &&
+      status !== "failed" &&
+      filteredAssignments.length === 0 ? (
+        <OpsEmptyState
+          title="No matching assignments"
+          subtitle="Try a different search or filter."
+        />
       ) : null}
 
       {status !== "loading" && status !== "failed" ? (
-        <section className="space-y-3">
-          {assignments.map((assignment, index) => (
-            <article
+        <section className="space-y-2">
+          {filteredAssignments.map((assignment, index) => (
+            <OpsCard
               key={
                 assignment.id ||
-                `${assignment.vehicleLabel}-${assignment.driverName}-${index}`
+                `${assignment.vehicle.registrationNumber ?? assignment.vehicle.name}-${assignment.driver.name}-${index}`
               }
-              className="rounded-[26px] border border-border/60 bg-background p-5 shadow-sm"
             >
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold text-foreground">
-                  {assignment.vehicleLabel}
-                </p>
-                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                  {assignment.status}
-                </span>
-              </div>
-              <div className="mt-4 space-y-3 text-sm text-muted-foreground">
-                <p className="inline-flex items-center gap-2">
-                  <UserSquare2 className="size-4 text-primary" />
-                  {assignment.driverName}
-                </p>
-                <p className="inline-flex items-center gap-2">
-                  <Map className="size-4 text-primary" />
-                  {assignment.route}
-                </p>
-                <p className="inline-flex items-center gap-2">
-                  <ArrowRightLeft className="size-4 text-primary" />
-                  Route assignment synced.
-                </p>
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm leading-tight font-semibold text-foreground">
+                      {assignment.vehicle.registrationNumber ??
+                        assignment.vehicle.name}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {assignment.vehicle.name}
+                    </p>
+                  </div>
 
-                <div className="flex items-center gap-2 pt-1">
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${getStatusToneClass(
+                      assignment.status
+                    )}`}
+                  >
+                    {assignment.status}
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-muted-foreground">
+                  <p className="inline-flex items-center gap-1.5">
+                    <UserSquare2 className="size-3.5 text-primary" />
+                    {assignment.driver.name}
+                  </p>
+                  {assignment.driver.mobileNumber ? (
+                    <p>Mobile: {assignment.driver.mobileNumber}</p>
+                  ) : null}
+                  {assignment.driver.licenceNumber ? (
+                    <p>Licence: {assignment.driver.licenceNumber}</p>
+                  ) : null}
+                  {assignment.vehicle.type ? (
+                    <p>Type: {assignment.vehicle.type}</p>
+                  ) : null}
+                  {assignment.assignedAt ? (
+                    <p>
+                      Assigned At:{" "}
+                      {new Date(assignment.assignedAt).toLocaleString()}
+                    </p>
+                  ) : null}
+                  <p>
+                    Unassigned At:{" "}
+                    {assignment.unassignedAt
+                      ? new Date(assignment.unassignedAt).toLocaleString()
+                      : "-"}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-end gap-1.5 pt-1">
                   <Button
                     size="xs"
                     variant="outline"
@@ -374,14 +502,19 @@ export default function Assignments() {
                   <Button
                     size="xs"
                     variant="destructive"
-                    onClick={() => void handleUnassign(assignment.id)}
+                    onClick={() =>
+                      setUnassignTarget({
+                        id: assignment.id,
+                        label: `${assignment.vehicle.registrationNumber ?? assignment.vehicle.name} • ${assignment.driver.name}`,
+                      })
+                    }
                     disabled={!assignment.id || isSubmitting}
                   >
                     Unassign
                   </Button>
                 </div>
               </div>
-            </article>
+            </OpsCard>
           ))}
 
           <div ref={loadMoreRef} className="py-2 text-center">
@@ -397,6 +530,20 @@ export default function Assignments() {
           </div>
         </section>
       ) : null}
+
+      <OpsFloatingFilterButton onClick={() => setIsFilterSheetOpen(true)} />
+
+      <OpsActionSheet
+        open={isFilterSheetOpen}
+        onOpenChange={setIsFilterSheetOpen}
+        title="Assignment Filters"
+        actions={ASSIGNMENT_SEGMENTS.map((item) => ({
+          key: item.value,
+          label: `${item.label}${segment === item.value ? " • selected" : ""}`,
+          icon: ClipboardList,
+          onClick: () => setSegment(item.value),
+        }))}
+      />
     </div>
   )
 }
