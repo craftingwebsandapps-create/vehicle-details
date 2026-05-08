@@ -54,6 +54,7 @@ export function SearchableSelect({
   const [asyncLoading, setAsyncLoading] = useState(false)
   const [selectedLabel, setSelectedLabel] = useState<string | undefined>()
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const openedOnceRef = useRef(false)
 
   const isAsync = !!loadOptions
 
@@ -81,9 +82,11 @@ export function SearchableSelect({
   useEffect(() => {
     if (!isAsync) return
     if (open) {
+      openedOnceRef.current = true
       void fetchAsync("", 1)
       setTimeout(() => inputRef.current?.focus(), 50)
     } else {
+      openedOnceRef.current = false
       setSearch("")
       setAsyncItems([])
       setAsyncPage(1)
@@ -94,6 +97,8 @@ export function SearchableSelect({
   // Debounced search for async mode
   useEffect(() => {
     if (!isAsync || !open) return
+    // Opening already performs an immediate fetch for empty search.
+    if (openedOnceRef.current && search.trim().length === 0) return
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       void fetchAsync(search, 1)
@@ -102,6 +107,12 @@ export function SearchableSelect({
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
   }, [search, isAsync, open, fetchAsync])
+
+  useEffect(() => {
+    if (!value) {
+      setSelectedLabel(undefined)
+    }
+  }, [value])
 
   // ── Static state ──────────────────────────────────────────────────────────
   const [visibleCount, setVisibleCount] = useState(pageSize)

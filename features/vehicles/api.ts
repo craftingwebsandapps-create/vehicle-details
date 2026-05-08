@@ -70,11 +70,25 @@ export const listAvailableVehicles = async (params?: {
 export const listVehicles = async (params?: {
   page?: number
   limit?: number
+  search?: string
+  name?: string
+  site?: string
+  type?: string
+  registrationNumber?: string
+  status?: string
 }): Promise<VehicleListResponse> => {
   const token = getAuthToken()
   const query = new URLSearchParams()
   if (params?.page) query.set("page", String(params.page))
   if (params?.limit) query.set("limit", String(params.limit))
+  if (params?.search) query.set("search", params.search)
+  if (params?.name) query.set("name", params.name)
+  if (params?.site) query.set("site", params.site)
+  if (params?.type) query.set("type", params.type)
+  if (params?.registrationNumber) {
+    query.set("registrationNumber", params.registrationNumber)
+  }
+  if (params?.status) query.set("status", params.status)
 
   const queryString = query.toString()
   const url = queryString

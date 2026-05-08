@@ -137,13 +137,26 @@ export const listAvailableDrivers = async (params?: {
 }
 
 export const listDrivers = async (
-  params: { page?: number; limit?: number } = {}
+  params: {
+    page?: number
+    limit?: number
+    search?: string
+    name?: string
+    licenceNumber?: string
+    mobileNumber?: string
+    status?: string
+  } = {}
 ) => {
   const accessToken = getAuthToken()
   const query = new URLSearchParams()
 
   query.set("page", String(params.page ?? 1))
   query.set("limit", String(params.limit ?? 10))
+  if (params.search) query.set("search", params.search)
+  if (params.name) query.set("name", params.name)
+  if (params.licenceNumber) query.set("licenceNumber", params.licenceNumber)
+  if (params.mobileNumber) query.set("mobileNumber", params.mobileNumber)
+  if (params.status) query.set("status", params.status)
 
   const response = await apiClient.getWithAuth<DriverListResponse>(
     `${CONTRACTOR_V1_PREFIX}/drivers?${query.toString()}`,
