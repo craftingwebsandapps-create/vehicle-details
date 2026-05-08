@@ -5,6 +5,9 @@ import type {
   AssignmentApiEntity,
   AssignmentListApiResponse,
   AssignmentMeta,
+  AssignmentMutationResponse,
+  ChangeAssignmentDriverRequest,
+  CreateAssignmentRequest,
 } from "~/types/assignment"
 
 const CONTRACTOR_V1_PREFIX = "/v1/contractor"
@@ -82,5 +85,78 @@ export const listAssignments = async (
   return {
     items: response.data.data.map(toAssignment),
     meta: response.data.meta,
+  }
+}
+
+export const createAssignment = async (
+  payload: CreateAssignmentRequest
+): Promise<Assignment> => {
+  const accessToken = getAuthToken()
+
+  if (!payload.driver || !payload.vehicle) {
+    throw new Error("Driver and vehicle are required")
+  }
+
+  const response = await apiClient.post<AssignmentMutationResponse>(
+    `${CONTRACTOR_V1_PREFIX}/assignments`,
+    payload,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  )
+
+  if (!response.success || !response.data) {
+    throw new Error(response.message || "Unable to create assignment")
+  }
+
+  return toAssignment(response.data)
+}
+
+export const changeAssignmentDriver = async (
+  assignmentId: string,
+  payload: ChangeAssignmentDriverRequest
+): Promise<Assignment> => {
+  const accessToken = getAuthToken()
+
+  if (!assignmentId || !payload.driver) {
+    throw new Error("Assignment id and driver are required")
+  }
+
+  const response = await apiClient.putWithAuth<AssignmentMutationResponse>(
+    `${CONTRACTOR_V1_PREFIX}/assignments/${assignmentId}/change-driver`,
+    payload,
+    accessToken
+  )
+
+  if (!response.success || !response.data) {
+    throw new Error(response.message || "Unable to change driver")
+  }
+
+  return toAssignment(response.data)
+}
+
+export const unassignAssignment = async (
+  assignmentId: string
+): Promise<void> => {
+  const accessToken = getAuthToken()
+
+  if (!assignmentId) {
+    throw new Error("Assignment id is required")
+  }
+
+  const response = await apiClient.request<{
+    success: boolean
+    message: string
+  }>(`${CONTRACTOR_V1_PREFIX}/assignments/${assignmentId}/unassign`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+
+  if (!response.success) {
+    throw new Error(response.message || "Unable to unassign")
   }
 }

@@ -50,3 +50,18 @@ export type AssignmentListApiResponse = {
     meta: AssignmentMeta
   }
 }
+
+export type CreateAssignmentRequest = {
+  driver: string
+  vehicle: string
+}
+
+export type ChangeAssignmentDriverRequest = {
+  driver: string
+}
+
+export type AssignmentMutationResponse = {
+  success: boolean
+  message: string
+  data?: AssignmentApiEntity
+}
