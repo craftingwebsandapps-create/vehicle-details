@@ -97,14 +97,24 @@ export const toDriver = (entity: DriverApiEntity): Driver => ({
 type SimpleDriverListResponse = {
   success: boolean
   message: string
-  data: DriverApiEntity[] | { data: DriverApiEntity[] }
+  data:
+    | DriverApiEntity[]
+    | { data: DriverApiEntity[]; meta?: { hasNextPage?: boolean } }
 }
 
-export const listAvailableDrivers = async (): Promise<Driver[]> => {
+export const listAvailableDrivers = async (params?: {
+  page?: number
+  limit?: number
+  search?: string
+}): Promise<{ items: Driver[]; hasMore: boolean }> => {
   const accessToken = getAuthToken()
+  const query = new URLSearchParams()
+  query.set("page", String(params?.page ?? 1))
+  query.set("limit", String(params?.limit ?? 10))
+  if (params?.search) query.set("search", params.search)
 
   const response = await apiClient.getWithAuth<SimpleDriverListResponse>(
-    `${CONTRACTOR_V1_PREFIX}/drivers/available`,
+    `${CONTRACTOR_V1_PREFIX}/drivers/available?${query.toString()}`,
     accessToken
   )
 
@@ -112,11 +122,18 @@ export const listAvailableDrivers = async (): Promise<Driver[]> => {
     throw new Error(response.message || "Unable to fetch available drivers")
   }
 
-  const entities = Array.isArray(response.data)
-    ? response.data
-    : (response.data as { data: DriverApiEntity[] }).data
+  if (Array.isArray(response.data)) {
+    return { items: response.data.map(toDriver), hasMore: false }
+  }
 
-  return entities.map(toDriver)
+  const paginated = response.data as {
+    data: DriverApiEntity[]
+    meta?: { hasNextPage?: boolean }
+  }
+  return {
+    items: paginated.data.map(toDriver),
+    hasMore: paginated.meta?.hasNextPage ?? false,
+  }
 }
 
 export const listDrivers = async (

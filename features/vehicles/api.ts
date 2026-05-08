@@ -30,14 +30,22 @@ const getAuthToken = () => {
 type SimpleVehicleListResponse = {
   success: boolean
   message: string
-  data: Vehicle[] | { data: Vehicle[] }
+  data: Vehicle[] | { data: Vehicle[]; meta?: { hasNextPage?: boolean } }
 }
 
-export const listAvailableVehicles = async (): Promise<Vehicle[]> => {
+export const listAvailableVehicles = async (params?: {
+  page?: number
+  limit?: number
+  search?: string
+}): Promise<{ items: Vehicle[]; hasMore: boolean }> => {
   const token = getAuthToken()
+  const query = new URLSearchParams()
+  query.set("page", String(params?.page ?? 1))
+  query.set("limit", String(params?.limit ?? 10))
+  if (params?.search) query.set("search", params.search)
 
   const response = await apiClient.getWithAuth<SimpleVehicleListResponse>(
-    `${CONTRACTOR_V1_PREFIX}/vehicles/available`,
+    `${CONTRACTOR_V1_PREFIX}/vehicles/available?${query.toString()}`,
     token
   )
 
@@ -45,11 +53,18 @@ export const listAvailableVehicles = async (): Promise<Vehicle[]> => {
     throw new Error(response.message || "Unable to fetch available vehicles")
   }
 
-  const entities = Array.isArray(response.data)
-    ? response.data
-    : (response.data as { data: Vehicle[] }).data
+  if (Array.isArray(response.data)) {
+    return { items: response.data, hasMore: false }
+  }
 
-  return entities
+  const paginated = response.data as {
+    data: Vehicle[]
+    meta?: { hasNextPage?: boolean }
+  }
+  return {
+    items: paginated.data,
+    hasMore: paginated.meta?.hasNextPage ?? false,
+  }
 }
 
 export const listVehicles = async (params?: {
