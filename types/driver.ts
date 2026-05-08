@@ -1,9 +1,11 @@
+export type DriverStatus = "ACTIVE" | "INACTIVE"
+
 export type Driver = {
   id: string
   name: string
   licenceNumber: string
   mobileNumber: string
-  status: string
+  status: DriverStatus
   licenceUrl?: string
   contractor?: {
     id: string
@@ -62,7 +64,7 @@ export type DriverApiEntity = {
   name: string
   licenceNumber: string
   mobileNumber: string
-  status: string
+  status: DriverStatus
   licenceUrl?: string
   contractor?: string | DriverContractorApiEntity
   site?: string | DriverSiteApiEntity
@@ -85,7 +87,7 @@ export type DriverBaseRequest = {
   licenceNumber: string
   licenceUrl: string
   mobileNumber: string
-  status: string
+  status: DriverStatus
 }
 
 export type CreateDriverRequest = DriverBaseRequest
@@ -100,7 +102,7 @@ export type DriverFormValues = {
   licenceUrl: string | File | null
   mobileNumber: string
   contractor: string
-  status: string
+  status: DriverStatus
 }
 
 export type UploadSingleFileResponse = {

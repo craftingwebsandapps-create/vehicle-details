@@ -185,10 +185,12 @@ export default function Sites() {
         }
 
         await updateSite(editingSiteId, updatePayload)
-        toast.success("Site updated successfully", { position: "top-center" })
+        toast.success("Site update submitted for approval", {
+          position: "top-center",
+        })
       } else {
         await createSite(payload)
-        toast.success("Site created successfully", { position: "top-center" })
+        toast.success("Site submitted for approval", { position: "top-center" })
       }
 
       await dispatch(fetchSitesThunk())

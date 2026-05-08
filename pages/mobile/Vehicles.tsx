@@ -202,12 +202,12 @@ export default function Vehicles() {
         }
 
         await updateVehicle(editingVehicleId, updatePayload)
-        toast.success("Vehicle updated successfully", {
+        toast.success("Vehicle update submitted for approval", {
           position: "top-center",
         })
       } else {
         await createVehicle(payload)
-        toast.success("Vehicle created successfully", {
+        toast.success("Vehicle submitted for approval", {
           position: "top-center",
         })
       }

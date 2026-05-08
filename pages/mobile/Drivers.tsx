@@ -201,10 +201,14 @@ export default function Drivers() {
         }
 
         await updateDriver(editingDriverId, updatePayload)
-        toast.success("Driver updated successfully", { position: "top-center" })
+        toast.success("Driver update submitted for approval", {
+          position: "top-center",
+        })
       } else {
         await createDriver(createPayload)
-        toast.success("Driver created successfully", { position: "top-center" })
+        toast.success("Driver submitted for approval", {
+          position: "top-center",
+        })
       }
 
       await dispatch(fetchDriversThunk())

@@ -1,3 +1,5 @@
+export type VehicleStatus = "ACTIVE" | "INACTIVE"
+
 export type Contractor = {
   _id: string
   name: string
@@ -41,7 +43,7 @@ export type Vehicle = {
   type: string
   registrationNumber: string
   document: string
-  status: string
+  status: VehicleStatus
   site: Site
   driver: Driver
   createdAt: string
@@ -71,7 +73,7 @@ export type VehicleUpsertRequest = {
   type: string
   registrationNumber: string
   document: string
-  status: string
+  status: VehicleStatus
   site: string
 }
 
@@ -84,7 +86,7 @@ export type VehicleFormValues = {
   type: string
   registrationNumber: string
   document: string | File | null
-  status: string
+  status: VehicleStatus
   site: string
 }
 
