@@ -15,7 +15,12 @@ import type {
 type DriverApiResponse = {
   success: boolean
   message: string
-  data?: DriverApiEntity
+  data?:
+    | DriverApiEntity
+    | {
+        driver?: DriverApiEntity
+        approvalRequest?: unknown
+      }
 }
 
 const CONTRACTOR_V1_PREFIX = "/v1/contractor"
@@ -192,7 +197,16 @@ export const createDriver = async (
     throw new Error(response.message || "Unable to create driver")
   }
 
-  return toDriver(response.data)
+  const entity =
+    "driver" in response.data
+      ? response.data.driver
+      : (response.data as DriverApiEntity)
+
+  if (!entity) {
+    throw new Error(response.message || "Unable to create driver")
+  }
+
+  return toDriver(entity)
 }
 
 export const updateDriver = async (
@@ -220,7 +234,26 @@ export const updateDriver = async (
     throw new Error(response.message || "Unable to update driver")
   }
 
-  return toDriver(response.data)
+  const entity =
+    "driver" in response.data
+      ? response.data.driver
+      : (response.data as DriverApiEntity)
+
+  if (entity && entity.name) {
+    return toDriver(entity)
+  }
+
+  // Some update responses only return approvalRequest. Fetch latest entity.
+  const latest = await apiClient.getWithAuth<{
+    success: boolean
+    data?: DriverApiEntity
+  }>(`${CONTRACTOR_V1_PREFIX}/drivers/${driverId}`, accessToken)
+
+  if (!latest.success || !latest.data) {
+    throw new Error(response.message || "Unable to update driver")
+  }
+
+  return toDriver(latest.data)
 }
 
 export const uploadDriverLicence = async (file: File): Promise<string> => {

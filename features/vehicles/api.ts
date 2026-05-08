@@ -12,7 +12,12 @@ import type {
 type VehicleApiResponse = {
   success: boolean
   message: string
-  data?: Vehicle
+  data?:
+    | Vehicle
+    | {
+        vehicle?: Vehicle
+        approvalRequest?: unknown
+      }
 }
 
 const CONTRACTOR_V1_PREFIX = "/v1/contractor"
@@ -123,7 +128,16 @@ export const createVehicle = async (
     throw new Error(response.message || "Unable to create vehicle")
   }
 
-  return response.data
+  const entity =
+    "vehicle" in response.data
+      ? response.data.vehicle
+      : (response.data as Vehicle)
+
+  if (!entity) {
+    throw new Error(response.message || "Unable to create vehicle")
+  }
+
+  return entity
 }
 
 export const updateVehicle = async (
@@ -151,7 +165,26 @@ export const updateVehicle = async (
     throw new Error(response.message || "Unable to update vehicle")
   }
 
-  return response.data
+  const entity =
+    "vehicle" in response.data
+      ? response.data.vehicle
+      : (response.data as Vehicle)
+
+  if (entity && entity._id) {
+    return entity
+  }
+
+  // Some update responses only return approvalRequest. Fetch latest entity.
+  const latest = await apiClient.getWithAuth<{
+    success: boolean
+    data?: Vehicle
+  }>(`${CONTRACTOR_V1_PREFIX}/vehicles/${id}`, accessToken)
+
+  if (!latest.success || !latest.data) {
+    throw new Error(response.message || "Unable to update vehicle")
+  }
+
+  return latest.data
 }
 
 export const uploadVehicleDocument = async (file: File): Promise<string> => {
