@@ -285,9 +285,15 @@ export function DriverDetailDialog({
           </section>
         </div>
 
-        <DialogFooter className="border-border bg-muted/30 border-t p-4">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+        <DialogFooter className="mx-0 mb-0 gap-0 border-border bg-muted/30 border-t px-4 py-2.5 sm:flex-row sm:justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-auto shrink-0 px-2 py-1 text-muted-foreground hover:text-foreground"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
           </Button>
         </DialogFooter>
       </DialogContent>

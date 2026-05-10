@@ -38,6 +38,9 @@ import type { ApprovalStatus, Contractor } from "~/types/vehicle"
 const PAGE_SIZE = 20
 const NONE_CONTRACTOR = "__none__"
 
+const confirmDialogFooterClass =
+  "mx-0 mb-0 mt-0 flex-row flex-wrap justify-end gap-2 border-0 bg-transparent p-0 pt-3 shadow-none"
+
 function formatCell(value: string | undefined | null) {
   const v = value?.trim()
   return v && v.length > 0 ? v : "—"
@@ -466,7 +469,7 @@ export default function AdminDrivers() {
               </span>
             </p>
           ) : null}
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className={confirmDialogFooterClass}>
             <Button
               type="button"
               variant="outline"
@@ -513,7 +516,7 @@ export default function AdminDrivers() {
               </span>
             </p>
           ) : null}
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className={confirmDialogFooterClass}>
             <Button
               type="button"
               variant="outline"
@@ -557,7 +560,7 @@ export default function AdminDrivers() {
             rows={4}
             maxLength={2000}
           />
-          <DialogFooter>
+          <DialogFooter className={confirmDialogFooterClass}>
             <Button
               type="button"
               variant="outline"

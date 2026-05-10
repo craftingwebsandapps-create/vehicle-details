@@ -15,11 +15,8 @@ import {
   Home,
   Settings,
   Users,
-  FileText,
   Car,
   MapPin,
-  LifeBuoy,
-  Send,
   LogOut,
   ChevronUp,
   User2,
@@ -39,12 +36,6 @@ const navItems = [
   { title: "Vehicles", url: "/admin/vehicles", icon: Car },
   { title: "Drivers", url: "/admin/drivers", icon: Users },
   { title: "Sites", url: "/admin/sites", icon: MapPin },
-  { title: "Reports", url: "/admin/reports", icon: FileText },
-]
-
-const secondaryItems = [
-  { title: "Support", url: "#", icon: LifeBuoy },
-  { title: "Feedback", url: "#", icon: Send },
 ]
 
 export function AdminSidebar() {
@@ -88,23 +79,6 @@ export function AdminSidebar() {
                     isActive={location.pathname.startsWith(item.url)}
                     tooltip={item.title}
                   >
-                    <Link to={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup className="mt-auto">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {secondaryItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild size="sm">
                     <Link to={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
