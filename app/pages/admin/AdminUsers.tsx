@@ -31,7 +31,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
+  dialogConfirmActionsFooterClass,
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog"
@@ -60,9 +60,6 @@ import type { AdminUser } from "~/types/admin-user"
 import type { Contractor } from "~/types/vehicle"
 
 const PAGE_SIZE = 20
-
-const confirmDialogFooterClass =
-  "mx-0 mb-0 mt-0 flex-row flex-wrap justify-end gap-3 border-0 bg-transparent p-0 pt-3 shadow-none"
 
 const NONE_SCOPE_CONTRACTOR = "__none_scope_contractor__"
 
@@ -595,7 +592,7 @@ export default function AdminUsers() {
               </span>
             </p>
           ) : null}
-          <DialogFooter className={confirmDialogFooterClass}>
+          <div className={dialogConfirmActionsFooterClass}>
             <Button
               type="button"
               variant="outline"
@@ -616,7 +613,7 @@ export default function AdminUsers() {
             >
               {deleteBusy ? "Deleting…" : "Delete"}
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

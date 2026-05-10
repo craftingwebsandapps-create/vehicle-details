@@ -12,7 +12,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
+  dialogConfirmActionsFooterClass,
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog"
@@ -37,9 +37,6 @@ import type { Contractor, Vehicle } from "~/types/vehicle"
 
 const PAGE_SIZE = 20
 const NONE_CONTRACTOR = "__none__"
-
-const confirmDialogFooterClass =
-  "mx-0 mb-0 mt-0 flex-row flex-wrap justify-end gap-3 border-0 bg-transparent p-0 pt-3 shadow-none"
 
 function formatCell(value: string | undefined | null) {
   const v = value?.trim()
@@ -463,7 +460,7 @@ export default function AdminVehicles() {
               {formatCell(approveConfirmVehicle.name)}
             </p>
           ) : null}
-          <DialogFooter className={confirmDialogFooterClass}>
+          <div className={dialogConfirmActionsFooterClass}>
             <Button
               type="button"
               variant="outline"
@@ -481,7 +478,7 @@ export default function AdminVehicles() {
             >
               Yes, approve
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -508,7 +505,7 @@ export default function AdminVehicles() {
               {formatCell(rejectConfirmVehicle.name)}
             </p>
           ) : null}
-          <DialogFooter className={confirmDialogFooterClass}>
+          <div className={dialogConfirmActionsFooterClass}>
             <Button
               type="button"
               variant="outline"
@@ -527,7 +524,7 @@ export default function AdminVehicles() {
             >
               Continue to note
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -553,7 +550,7 @@ export default function AdminVehicles() {
             rows={4}
             maxLength={2000}
           />
-          <DialogFooter className={confirmDialogFooterClass}>
+          <div className={dialogConfirmActionsFooterClass}>
             <Button
               type="button"
               variant="outline"
@@ -570,7 +567,7 @@ export default function AdminVehicles() {
             >
               Confirm reject
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

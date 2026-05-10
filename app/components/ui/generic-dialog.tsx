@@ -190,9 +190,12 @@ export function GenericDialog({
         {/* Fixed Footer */}
         {footer ? (
           <div
-            className={`flex shrink-0 items-center justify-end gap-3 ${
-              showFooterDivider ? "border-t pt-3" : "pt-0"
-            }`}
+            className={cn(
+              "flex shrink-0 flex-row flex-wrap items-center justify-end gap-3",
+              showFooterDivider
+                ? "border-border bg-muted/50 border-t px-6 py-4"
+                : "pt-0"
+            )}
           >
             {footer}
           </div>

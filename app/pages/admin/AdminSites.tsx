@@ -12,7 +12,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
+  dialogConfirmActionsFooterClass,
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog"
@@ -37,9 +37,6 @@ import type { ApprovalStatus, Contractor } from "~/types/vehicle"
 
 const PAGE_SIZE = 20
 const NONE_CONTRACTOR = "__none__"
-
-const confirmDialogFooterClass =
-  "mx-0 mb-0 mt-0 flex-row flex-wrap justify-end gap-3 border-0 bg-transparent p-0 pt-3 shadow-none"
 
 function formatCell(value: string | undefined | null) {
   const v = value?.trim()
@@ -438,7 +435,7 @@ export default function AdminSites() {
               {formatCell(approveConfirmSite.location)}
             </p>
           ) : null}
-          <DialogFooter className={confirmDialogFooterClass}>
+          <div className={dialogConfirmActionsFooterClass}>
             <Button
               type="button"
               variant="outline"
@@ -456,7 +453,7 @@ export default function AdminSites() {
             >
               Yes, approve
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -483,7 +480,7 @@ export default function AdminSites() {
               {formatCell(rejectConfirmSite.location)}
             </p>
           ) : null}
-          <DialogFooter className={confirmDialogFooterClass}>
+          <div className={dialogConfirmActionsFooterClass}>
             <Button
               type="button"
               variant="outline"
@@ -502,7 +499,7 @@ export default function AdminSites() {
             >
               Continue to note
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -527,7 +524,7 @@ export default function AdminSites() {
             rows={4}
             maxLength={2000}
           />
-          <DialogFooter className={confirmDialogFooterClass}>
+          <div className={dialogConfirmActionsFooterClass}>
             <Button
               type="button"
               variant="outline"
@@ -544,7 +541,7 @@ export default function AdminSites() {
             >
               Confirm reject
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
