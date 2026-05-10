@@ -1,18 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { Clock3, ExternalLink, Pencil, Phone } from "lucide-react"
+import { ExternalLink, Pencil, Phone } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAppDispatch, useAppSelector } from "~/hooks"
 import {
-  OpsActionSheet,
   OpsApprovalPill,
   OpsCard,
   OpsEmptyState,
-  OpsFloatingFilterButton,
   OpsListHeader,
   OpsListSkeleton,
-  OpsStatusPill,
 } from "~/components/mobile/ops/OpsListPrimitives"
 import { FormBuilder } from "~/components/form"
 import { Button } from "~/components/ui/button"
@@ -31,10 +28,10 @@ import {
 } from "~/features/drivers/driversSlice"
 import { getDriverDialogFormConfig } from "~/schemas/driver-dialog-form-config"
 import type {
-  ApprovalStatus,
   CreateDriverRequest,
   Driver,
   DriverFormValues,
+  DriverListApprovalStatus,
   UpdateDriverRequest,
 } from "~/types/driver"
 
@@ -46,24 +43,16 @@ const initialFormState: DriverFormValues = {
   contractor: "",
 }
 
-type DriverSegment = "all" | "active" | "inactive" | "assigned"
-type DriverApprovalFilter = "all" | ApprovalStatus
-
-const DRIVER_SEGMENTS: Array<{ label: string; value: DriverSegment }> = [
-  { label: "All", value: "all" },
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-  { label: "Assigned", value: "assigned" },
-]
+type DriverApprovalFilter = "all" | DriverListApprovalStatus
 
 const DRIVER_APPROVAL_FILTERS: Array<{
   label: string
   value: DriverApprovalFilter
 }> = [
   { label: "All", value: "all" },
-  { label: "Pending", value: "PENDING_APPROVAL" },
-  { label: "Approved", value: "APPROVED" },
-  { label: "Rejected", value: "REJECTED" },
+  { label: "Pending", value: "pending" },
+  { label: "Approved", value: "approved" },
+  { label: "Rejected", value: "rejected" },
 ]
 
 export default function Drivers() {
@@ -84,10 +73,8 @@ export default function Drivers() {
     useState<DriverFormValues>(initialFormState)
   const [query, setQuery] = useState("")
   const [debouncedQuery, setDebouncedQuery] = useState("")
-  const [segment, setSegment] = useState<DriverSegment>("all")
   const [approvalFilter, setApprovalFilter] =
     useState<DriverApprovalFilter>("all")
-  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
@@ -96,12 +83,6 @@ export default function Drivers() {
     [dialogMode]
   )
 
-  const serverStatusFilter =
-    segment === "active"
-      ? "ACTIVE"
-      : segment === "inactive"
-        ? "INACTIVE"
-        : undefined
   const serverApprovalFilter =
     approvalFilter === "all" ? undefined : approvalFilter
 
@@ -116,45 +97,11 @@ export default function Drivers() {
   useEffect(() => {
     void dispatch(
       fetchDriversThunk({
-        status: serverStatusFilter,
         approvalStatus: serverApprovalFilter,
         search: debouncedQuery || undefined,
       })
     )
-  }, [dispatch, serverStatusFilter, serverApprovalFilter, debouncedQuery])
-
-  const filteredDrivers = useMemo(() => {
-    const term = query.trim().toLowerCase()
-
-    return drivers.filter((driver) => {
-      const matchesSegment =
-        segment === "all"
-          ? true
-          : segment === "active"
-            ? driver.status === "ACTIVE"
-            : segment === "inactive"
-              ? driver.status === "INACTIVE"
-              : Boolean(
-                  driver.vehicle?.id || driver.vehicle?.registrationNumber
-                )
-
-      const matchesSearch =
-        term.length === 0
-          ? true
-          : [
-              driver.name,
-              driver.mobileNumber,
-              driver.licenceNumber,
-              driver.vehicle?.registrationNumber,
-              driver.site?.name,
-            ]
-              .join(" ")
-              .toLowerCase()
-              .includes(term)
-
-      return matchesSegment && matchesSearch
-    })
-  }, [drivers, query, segment])
+  }, [dispatch, serverApprovalFilter, debouncedQuery])
 
   useEffect(() => {
     const node = loadMoreRef.current
@@ -182,7 +129,6 @@ export default function Drivers() {
   const refreshDrivers = () => {
     void dispatch(
       fetchDriversThunk({
-        status: serverStatusFilter,
         approvalStatus: serverApprovalFilter,
         search: debouncedQuery || undefined,
       })
@@ -260,7 +206,6 @@ export default function Drivers() {
 
       await dispatch(
         fetchDriversThunk({
-          status: serverStatusFilter,
           approvalStatus: serverApprovalFilter,
           search: debouncedQuery || undefined,
         })
@@ -291,16 +236,16 @@ export default function Drivers() {
     <div className="space-y-3 pb-20">
       <OpsListHeader
         title="Drivers"
-        totalLabel={`${filteredDrivers.length} in view`}
+        totalLabel={`${drivers.length} in view`}
         searchValue={query}
         onSearchChange={setQuery}
         searchPlaceholder="Search name, mobile, vehicle"
         createLabel="Create"
         onCreate={openCreateDialog}
         onRefresh={refreshDrivers}
-        segments={DRIVER_SEGMENTS}
-        activeSegment={segment}
-        onSegmentChange={setSegment}
+        segments={[{ label: "All", value: "all" }]}
+        activeSegment="all"
+        onSegmentChange={() => {}}
         approvalSegments={DRIVER_APPROVAL_FILTERS}
         activeApprovalSegment={approvalFilter}
         onApprovalSegmentChange={setApprovalFilter}
@@ -360,7 +305,7 @@ export default function Drivers() {
 
       {status !== "loading" &&
       status !== "failed" &&
-      filteredDrivers.length === 0 ? (
+      drivers.length === 0 ? (
         <OpsEmptyState
           title="No matching drivers"
           subtitle="Try a different search or change filters."
@@ -369,12 +314,16 @@ export default function Drivers() {
 
       {status !== "loading" && status !== "failed" ? (
         <section className="space-y-2">
-          {filteredDrivers.map((driver) => {
+          {drivers.map((driver) => {
             const initial = driver.name.charAt(0).toUpperCase()
             const assignedVehicle =
               driver.vehicle?.registrationNumber ??
               driver.vehicle?.name ??
               "Unassigned"
+            const rejectionNote = driver.approvalNote?.trim()
+            const isRejected =
+              driver.approvalStatus === "REJECTED" ||
+              String(driver.approvalStatus ?? "").toLowerCase() === "rejected"
 
             return (
               <OpsCard key={driver.id}>
@@ -395,11 +344,14 @@ export default function Drivers() {
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-1">
-                          <OpsStatusPill status={driver.status} />
-                          <OpsApprovalPill status={driver.approvalStatus} />
-                        </div>
+                        <OpsApprovalPill status={driver.approvalStatus} />
                       </div>
+
+                      {isRejected && rejectionNote ? (
+                        <p className="mt-2 rounded-lg border border-destructive/25 bg-destructive/5 px-2.5 py-2 text-xs leading-snug text-destructive">
+                          {rejectionNote}
+                        </p>
+                      ) : null}
 
                       <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
                         <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
@@ -468,28 +420,6 @@ export default function Drivers() {
           </div>
         </section>
       ) : null}
-
-      <OpsFloatingFilterButton onClick={() => setIsFilterSheetOpen(true)} />
-
-      <OpsActionSheet
-        open={isFilterSheetOpen}
-        onOpenChange={setIsFilterSheetOpen}
-        title="Driver Filters"
-        actions={[
-          ...DRIVER_SEGMENTS.map((item) => ({
-            key: `segment-${item.value}`,
-            label: `${item.label}${segment === item.value ? " • selected" : ""}`,
-            icon: Clock3,
-            onClick: () => setSegment(item.value),
-          })),
-          ...DRIVER_APPROVAL_FILTERS.map((item) => ({
-            key: `approval-${item.value}`,
-            label: `${item.label}${approvalFilter === item.value ? " • selected" : ""}`,
-            icon: Clock3,
-            onClick: () => setApprovalFilter(item.value),
-          })),
-        ]}
-      />
     </div>
   )
 }

@@ -1,5 +1,4 @@
 import {
-  ClipboardList,
   LayoutDashboard,
   MapPinned,
   Truck,
@@ -42,11 +41,5 @@ export const MOBILE_TABS = [
     label: "Drivers",
     path: "/mobile/drivers",
     icon: UserSquare2,
-  },
-  {
-    key: "assignments",
-    label: "Assignments",
-    path: "/mobile/assignments",
-    icon: ClipboardList,
   },
 ] as const

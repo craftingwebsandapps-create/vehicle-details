@@ -1,8 +1,13 @@
+import {
+  normalizeApprovalStatus,
+  normalizeOperationalStatus,
+} from "~/features/admin/vi-normalize"
 import { getAccessToken } from "~/features/auth/auth-storage"
 import { uploadAuthenticatedFile } from "~/features/files/api"
 import { apiClient } from "~/services/api-client"
 
 import type {
+  ApprovalStatus,
   CreateDriverRequest,
   Driver,
   DriverApiEntity,
@@ -23,7 +28,7 @@ type DriverApiResponse = {
       }
 }
 
-const CONTRACTOR_V1_PREFIX = "/v1/contractor"
+const DRIVER_LIST_SEARCH_MAX = 200
 
 const getAuthToken = () => {
   const accessToken = getAccessToken()
@@ -54,8 +59,12 @@ export const toDriver = (entity: DriverApiEntity): Driver => ({
   name: entity.name,
   licenceNumber: entity.licenceNumber,
   mobileNumber: entity.mobileNumber,
-  status: entity.status,
-  approvalStatus: entity.approvalStatus,
+  status: entity.status ?? "ACTIVE",
+  approvalStatus: entity.approvalStatus as ApprovalStatus | undefined,
+  approvalNote: entity.approvalNote,
+  approvedAt: entity.approvedAt,
+  rejectedAt: entity.rejectedAt,
+  deletedAt: entity.deletedAt,
   licenceUrl: entity.licenceUrl,
   contractor: (() => {
     const contractorRef = normalizeEntityRef(entity.contractor)
@@ -100,6 +109,18 @@ export const toDriver = (entity: DriverApiEntity): Driver => ({
   updatedAt: entity.updatedAt,
 })
 
+function mapDriverPayload(entity: DriverApiEntity): Driver {
+  const approvalNormalized = normalizeApprovalStatus(entity.approvalStatus)
+  const prepared: DriverApiEntity = {
+    ...entity,
+    status: normalizeOperationalStatus(entity.status),
+    ...(approvalNormalized !== undefined
+      ? { approvalStatus: approvalNormalized }
+      : {}),
+  }
+  return toDriver(prepared)
+}
+
 type SimpleDriverListResponse = {
   success: boolean
   message: string
@@ -120,7 +141,7 @@ export const listAvailableDrivers = async (params?: {
   if (params?.search) query.set("search", params.search)
 
   const response = await apiClient.getWithAuth<SimpleDriverListResponse>(
-    `${CONTRACTOR_V1_PREFIX}/drivers/available?${query.toString()}`,
+    `/drivers/available?${query.toString()}`,
     accessToken
   )
 
@@ -129,7 +150,10 @@ export const listAvailableDrivers = async (params?: {
   }
 
   if (Array.isArray(response.data)) {
-    return { items: response.data.map(toDriver), hasMore: false }
+    return {
+      items: response.data.map(mapDriverPayload),
+      hasMore: false,
+    }
   }
 
   const paginated = response.data as {
@@ -137,7 +161,7 @@ export const listAvailableDrivers = async (params?: {
     meta?: { hasNextPage?: boolean }
   }
   return {
-    items: paginated.data.map(toDriver),
+    items: paginated.data.map(mapDriverPayload),
     hasMore: paginated.meta?.hasNextPage ?? false,
   }
 }
@@ -148,7 +172,10 @@ export const listDrivers = async (params: ListDriversParams = {}) => {
 
   query.set("page", String(params.page ?? 1))
   query.set("limit", String(params.limit ?? 10))
-  if (params.search) query.set("search", params.search)
+  const searchTrimmed = params.search?.trim()
+  if (searchTrimmed) {
+    query.set("search", searchTrimmed.slice(0, DRIVER_LIST_SEARCH_MAX))
+  }
   if (params.name) query.set("name", params.name)
   if (params.licenceNumber) query.set("licenceNumber", params.licenceNumber)
   if (params.mobileNumber) query.set("mobileNumber", params.mobileNumber)
@@ -158,17 +185,30 @@ export const listDrivers = async (params: ListDriversParams = {}) => {
   }
 
   const response = await apiClient.getWithAuth<DriverListResponse>(
-    `${CONTRACTOR_V1_PREFIX}/drivers?${query.toString()}`,
+    `/drivers?${query.toString()}`,
     accessToken
   )
 
-  if (!response.success) {
+  if (!response.success || !response.data?.meta) {
     throw new Error(response.message || "Unable to fetch drivers")
   }
 
+  const rawItems = Array.isArray(response.data.items)
+    ? response.data.items
+    : Array.isArray(response.data.data)
+      ? response.data.data
+      : []
+
+  const meta = response.data.meta
+  const hasNextPage = meta.hasNextPage ?? meta.page < meta.totalPages
+
   return {
-    items: response.data.data.map(toDriver),
-    meta: response.data.meta as DriverMeta,
+    items: rawItems.map((row) => mapDriverPayload(row)),
+    meta: {
+      ...meta,
+      hasNextPage,
+      hasPrevPage: meta.hasPrevPage ?? meta.page > 1,
+    } satisfies DriverMeta,
   }
 }
 
@@ -178,7 +218,7 @@ export const createDriver = async (
   const accessToken = getAuthToken()
 
   const response = await apiClient.post<DriverApiResponse>(
-    `${CONTRACTOR_V1_PREFIX}/drivers`,
+    `/drivers`,
     payload,
     {
       headers: {
@@ -200,7 +240,7 @@ export const createDriver = async (
     throw new Error(response.message || "Unable to create driver")
   }
 
-  return toDriver(entity)
+  return mapDriverPayload(entity)
 }
 
 export const updateDriver = async (
@@ -214,7 +254,7 @@ export const updateDriver = async (
   }
 
   const response = await apiClient.request<DriverApiResponse>(
-    `${CONTRACTOR_V1_PREFIX}/drivers/${driverId}`,
+    `/drivers/${driverId}`,
     {
       method: "PATCH",
       body: JSON.stringify(payload),
@@ -234,20 +274,19 @@ export const updateDriver = async (
       : (response.data as DriverApiEntity)
 
   if (entity && entity.name) {
-    return toDriver(entity)
+    return mapDriverPayload(entity)
   }
 
-  // Some update responses only return approvalRequest. Fetch latest entity.
   const latest = await apiClient.getWithAuth<{
     success: boolean
     data?: DriverApiEntity
-  }>(`${CONTRACTOR_V1_PREFIX}/drivers/${driverId}`, accessToken)
+  }>(`/drivers/${driverId}`, accessToken)
 
   if (!latest.success || !latest.data) {
     throw new Error(response.message || "Unable to update driver")
   }
 
-  return toDriver(latest.data)
+  return mapDriverPayload(latest.data)
 }
 
 export const uploadDriverLicence = async (file: File): Promise<string> => {

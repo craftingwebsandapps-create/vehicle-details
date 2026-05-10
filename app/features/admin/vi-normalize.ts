@@ -23,7 +23,8 @@ export function normalizeApprovalStatus(
   return undefined
 }
 
-function normalizeOperationalStatus(raw: unknown): VehicleStatus {
+/** ACTIVE | INACTIVE; defaults to ACTIVE when omitted from API payloads */
+export function normalizeOperationalStatus(raw: unknown): VehicleStatus {
   if (raw === "ACTIVE" || raw === "INACTIVE") return raw
   if (typeof raw === "string") {
     const u = raw.toUpperCase()

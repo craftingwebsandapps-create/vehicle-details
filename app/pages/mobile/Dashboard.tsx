@@ -1,13 +1,6 @@
 import { useEffect } from "react"
 import { Link } from "react-router"
-import {
-  Car,
-  ClipboardList,
-  MapPin,
-  RefreshCw,
-  Users,
-  Briefcase,
-} from "lucide-react"
+import { Car, MapPin, RefreshCw, Users, Briefcase } from "lucide-react"
 
 import { useAppDispatch, useAppSelector } from "~/hooks"
 import { fetchDashboardThunk } from "~/features/dashboard/dashboardSlice"
@@ -67,7 +60,7 @@ function DashboardSkeleton() {
     <div className="space-y-5 pb-6">
       <Skeleton className="h-28 w-full rounded-[28px]" />
       <div className="grid grid-cols-2 gap-3">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton key={i} className="h-28 w-full rounded-2xl" />
         ))}
       </div>
@@ -178,15 +171,6 @@ export default function Dashboard() {
               rejected={data.sites?.rejected ?? 0}
               icon={MapPin}
               accentClass="bg-emerald-100 text-emerald-600"
-            />
-            <StatCard
-              label="Assignments"
-              total={data.activeDriverAssignments ?? 0}
-              approved={data.activeDriverAssignments ?? 0}
-              pending={0}
-              rejected={0}
-              icon={ClipboardList}
-              accentClass="bg-violet-100 text-violet-600"
             />
           </section>
 

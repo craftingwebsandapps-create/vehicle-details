@@ -6,7 +6,6 @@ import MobileProtectedLayout from "~/layouts/MobileProtectedLayout"
 import { PageLoader } from "~/components/ui/PageLoader"
 import { mobileProtectedLoader } from "~/routes/protected-route"
 
-const Assignments = lazy(() => import("~/pages/mobile/Assignments"))
 const Dashboard = lazy(() => import("~/pages/mobile/Dashboard"))
 const Organization = lazy(() => import("~/pages/mobile/Organization"))
 const Drivers = lazy(() => import("~/pages/mobile/Drivers"))
@@ -37,7 +36,6 @@ export const mobileRoutes: RouteObject[] = [
       { path: "vehicles", element: withSuspense(Vehicles) },
       { path: "drivers", element: withSuspense(Drivers) },
       { path: "organization", element: withSuspense(Organization) },
-      { path: "assignments", element: withSuspense(Assignments) },
       { path: "forms", element: withSuspense(FormSystemDemo) },
     ],
   },

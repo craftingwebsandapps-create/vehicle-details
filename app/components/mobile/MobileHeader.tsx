@@ -1,6 +1,5 @@
 import {
   Building2,
-  ClipboardList,
   LayoutDashboard,
   MapPinned,
   Sparkles,
@@ -39,10 +38,6 @@ export default function MobileHeader({
 
     if (pathname.startsWith("/mobile/drivers")) {
       return { label: "Drivers", Icon: UserSquare2 }
-    }
-
-    if (pathname.startsWith("/mobile/assignments")) {
-      return { label: "Tasks", Icon: ClipboardList }
     }
 
     if (pathname.startsWith("/mobile/dashboard")) {

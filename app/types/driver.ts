@@ -10,6 +10,10 @@ export type Driver = {
   mobileNumber: string
   status: DriverStatus
   approvalStatus?: ApprovalStatus
+  approvalNote?: string | null
+  approvedAt?: string | null
+  rejectedAt?: string | null
+  deletedAt?: string | null
   licenceUrl?: string
   contractor?: {
     id: string
@@ -68,8 +72,13 @@ export type DriverApiEntity = {
   name: string
   licenceNumber: string
   mobileNumber: string
-  status: DriverStatus
-  approvalStatus?: ApprovalStatus
+  /** Defaults to ACTIVE in client mapping when omitted */
+  status?: DriverStatus
+  approvalStatus?: ApprovalStatus | string
+  approvalNote?: string | null
+  approvedAt?: string | null
+  rejectedAt?: string | null
+  deletedAt?: string | null
   licenceUrl?: string
   contractor?: string | DriverContractorApiEntity
   site?: string | DriverSiteApiEntity
@@ -78,11 +87,15 @@ export type DriverApiEntity = {
   updatedAt?: string
 }
 
+/** GET /api/drivers query — lowercase matches typical backend validators */
+export type DriverListApprovalStatus = "pending" | "approved" | "rejected"
+
 export type DriverListResponse = {
   success: boolean
-  message: string
+  message?: string
   data: {
-    data: DriverApiEntity[]
+    items?: DriverApiEntity[]
+    data?: DriverApiEntity[]
     meta: DriverMeta
   }
 }
@@ -90,12 +103,13 @@ export type DriverListResponse = {
 export type ListDriversParams = {
   page?: number
   limit?: number
+  /** Case-insensitive substring; clamped client-side */
   search?: string
   name?: string
   licenceNumber?: string
   mobileNumber?: string
   status?: DriverStatus
-  approvalStatus?: ApprovalStatus
+  approvalStatus?: DriverListApprovalStatus
 }
 
 /** POST /api/drivers — tenant should omit `contractor` */

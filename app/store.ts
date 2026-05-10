@@ -1,6 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit"
 
-import assignmentsReducer from "~/features/assignments/assignmentsSlice"
 import authReducer from "~/features/auth/authSlice"
 import dashboardReducer from "~/features/dashboard/dashboardSlice"
 import driversReducer from "~/features/drivers/driversSlice"
@@ -9,7 +8,6 @@ import vehiclesReducer from "~/features/vehicles/vehiclesSlice"
 
 export const store = configureStore({
   reducer: {
-    assignments: assignmentsReducer,
     auth: authReducer,
     dashboard: dashboardReducer,
     drivers: driversReducer,
