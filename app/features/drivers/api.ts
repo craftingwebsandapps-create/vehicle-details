@@ -121,57 +121,15 @@ function mapDriverPayload(entity: DriverApiEntity): Driver {
   return toDriver(prepared)
 }
 
-type SimpleDriverListResponse = {
-  success: boolean
-  message: string
-  data:
-    | DriverApiEntity[]
-    | { data: DriverApiEntity[]; meta?: { hasNextPage?: boolean } }
-}
-
-export const listAvailableDrivers = async (params?: {
-  page?: number
-  limit?: number
-  search?: string
-}): Promise<{ items: Driver[]; hasMore: boolean }> => {
-  const accessToken = getAuthToken()
-  const query = new URLSearchParams()
-  query.set("page", String(params?.page ?? 1))
-  query.set("limit", String(params?.limit ?? 10))
-  if (params?.search) query.set("search", params.search)
-
-  const response = await apiClient.getWithAuth<SimpleDriverListResponse>(
-    `/drivers/available?${query.toString()}`,
-    accessToken
-  )
-
-  if (!response.success) {
-    throw new Error(response.message || "Unable to fetch available drivers")
-  }
-
-  if (Array.isArray(response.data)) {
-    return {
-      items: response.data.map(mapDriverPayload),
-      hasMore: false,
-    }
-  }
-
-  const paginated = response.data as {
-    data: DriverApiEntity[]
-    meta?: { hasNextPage?: boolean }
-  }
-  return {
-    items: paginated.data.map(mapDriverPayload),
-    hasMore: paginated.meta?.hasNextPage ?? false,
-  }
-}
-
 export const listDrivers = async (params: ListDriversParams = {}) => {
   const accessToken = getAuthToken()
   const query = new URLSearchParams()
 
   query.set("page", String(params.page ?? 1))
-  query.set("limit", String(params.limit ?? 10))
+  query.set(
+    "limit",
+    String(Math.min(100, Math.max(1, Math.floor(params.limit ?? 20))))
+  )
   const searchTrimmed = params.search?.trim()
   if (searchTrimmed) {
     query.set("search", searchTrimmed.slice(0, DRIVER_LIST_SEARCH_MAX))
@@ -183,6 +141,13 @@ export const listDrivers = async (params: ListDriversParams = {}) => {
   if (params.approvalStatus) {
     query.set("approvalStatus", params.approvalStatus)
   }
+  if (params.availableOnly === true) {
+    query.set("availableOnly", "true")
+  } else if (params.availableOnly === false) {
+    query.set("availableOnly", "false")
+  }
+  const contractorId = params.contractor?.trim()
+  if (contractorId) query.set("contractor", contractorId)
 
   const response = await apiClient.getWithAuth<DriverListResponse>(
     `/drivers?${query.toString()}`,
@@ -209,6 +174,24 @@ export const listDrivers = async (params: ListDriversParams = {}) => {
       hasNextPage,
       hasPrevPage: meta.hasPrevPage ?? meta.page > 1,
     } satisfies DriverMeta,
+  }
+}
+
+/** Drivers with no active vehicle assignment (`GET /api/drivers?availableOnly=true`). */
+export const listAvailableDrivers = async (params?: {
+  page?: number
+  limit?: number
+  search?: string
+}): Promise<{ items: Driver[]; hasMore: boolean }> => {
+  const result = await listDrivers({
+    page: params?.page ?? 1,
+    limit: Math.min(100, params?.limit ?? 100),
+    search: params?.search,
+    availableOnly: true,
+  })
+  return {
+    items: result.items,
+    hasMore: result.meta.hasNextPage,
   }
 }
 

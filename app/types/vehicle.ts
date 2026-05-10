@@ -159,6 +159,11 @@ export type UpdateVehicleRequest = Partial<
   driver?: ObjectIdString | null
 }
 
+/** PATCH body for assign / unassign driver only */
+export type PatchVehicleDriverBody = {
+  driver: ObjectIdString | null
+}
+
 export type VehicleFormValues = {
   name: string
   type: string

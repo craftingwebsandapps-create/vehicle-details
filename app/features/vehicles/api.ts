@@ -220,21 +220,28 @@ export const updateVehicle = async (
       : (response.data as Vehicle)
 
   if (entity && entity._id) {
-    return entity
+    return mapPlatformVehiclePayload(entity as unknown as Record<string, unknown>)
   }
 
   // Some update responses only return approvalRequest. Fetch latest entity.
   const latest = await apiClient.getWithAuth<{
     success: boolean
-    data?: Vehicle
+    data?: Vehicle | Record<string, unknown>
   }>(`/vehicles/${id}`, accessToken)
 
   if (!latest.success || !latest.data) {
     throw new Error(response.message || "Unable to update vehicle")
   }
 
-  return latest.data
+  return mapPlatformVehiclePayload(latest.data as Record<string, unknown>)
 }
+
+/** PATCH `/vehicles/:id` — assign or clear driver only */
+export const patchVehicleDriver = async (
+  vehicleId: string,
+  driverId: string | null
+): Promise<Vehicle> =>
+  updateVehicle(vehicleId, { driver: driverId })
 
 export const uploadVehicleDocument = async (file: File): Promise<string> => {
   const { url } = await uploadAuthenticatedFile(file)

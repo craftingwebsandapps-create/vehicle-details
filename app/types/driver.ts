@@ -100,6 +100,7 @@ export type DriverListResponse = {
   }
 }
 
+/** GET /api/drivers — matches listDriversQuerySchema */
 export type ListDriversParams = {
   page?: number
   limit?: number
@@ -110,7 +111,14 @@ export type ListDriversParams = {
   mobileNumber?: string
   status?: DriverStatus
   approvalStatus?: DriverListApprovalStatus
+  /** Query string `availableOnly=true`: no active vehicle assignment */
+  availableOnly?: boolean
+  /** Tenant must omit (or match JWT); else 403 */
+  contractor?: ObjectIdString
 }
+
+/** Alias for API docs */
+export type ListDriversQuery = ListDriversParams
 
 /** POST /api/drivers — tenant should omit `contractor` */
 export type CreateDriverRequest = {
