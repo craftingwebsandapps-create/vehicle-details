@@ -587,16 +587,16 @@ export default function Vehicles() {
 
             return (
               <OpsCard key={vehicle._id}>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
                     <div className={mobileListCardIconTile} aria-hidden>
-                      <Truck className="size-6 stroke-[2]" />
+                      <Truck className="size-4 stroke-2" />
                     </div>
                     <div className="min-w-0 flex-1 pt-0.5">
-                      <p className="text-lg leading-tight font-bold tracking-tight break-words text-foreground">
+                      <p className="text-base leading-tight font-semibold tracking-tight break-words text-foreground">
                         {vehicle.registrationNumber}
                       </p>
-                      <p className="mt-0.5 text-xs break-words text-muted-foreground">
+                      <p className="mt-0.5 text-[0.64rem] break-words text-muted-foreground">
                         {vehicle.name} • {vehicle.type}
                       </p>
                     </div>
@@ -614,34 +614,34 @@ export default function Vehicles() {
                     </p>
                   ) : null}
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-1.5">
                     <div className={mobileListCardMetaPanel}>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5">
                         <UserRound
-                          className="size-5 shrink-0 stroke-[2.25] text-primary"
+                          className="size-4 shrink-0 stroke-2 text-primary"
                           aria-hidden
                         />
                         <div className="min-w-0">
-                          <p className="text-[11px] leading-none font-medium text-muted-foreground">
+                          <p className="text-[0.64rem] leading-none font-medium text-muted-foreground">
                             Driver
                           </p>
-                          <p className="mt-1 text-sm leading-snug font-semibold break-words text-foreground">
+                          <p className="mt-0.5 text-xs leading-snug font-medium break-words text-foreground">
                             {driverName}
                           </p>
                         </div>
                       </div>
                     </div>
                     <div className={mobileListCardMetaPanel}>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5">
                         <MapPin
-                          className="size-5 shrink-0 stroke-[2.25] text-primary"
+                          className="size-4 shrink-0 stroke-2 text-primary"
                           aria-hidden
                         />
                         <div className="min-w-0">
-                          <p className="text-[11px] leading-none font-medium text-muted-foreground">
+                          <p className="text-[0.64rem] leading-none font-medium text-muted-foreground">
                             Site
                           </p>
-                          <p className="mt-1 text-sm leading-snug font-semibold break-words text-foreground">
+                          <p className="mt-0.5 text-xs leading-snug font-medium break-words text-foreground">
                             {siteName}
                           </p>
                         </div>
@@ -655,26 +655,26 @@ export default function Vehicles() {
                         href={vehicle.document}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex max-w-full items-center justify-between gap-3 rounded-lg py-2 text-primary transition-colors hover:bg-primary/10 hover:text-primary"
+                        className="flex max-w-full items-center justify-between gap-2 rounded-lg py-1.5 text-primary transition-colors hover:bg-primary/10 hover:text-primary"
                       >
-                        <span className="flex min-w-0 items-center gap-2">
+                        <span className="flex min-w-0 items-center gap-1.5">
                           <FileText
-                            className="size-5 shrink-0 stroke-[2.35]"
+                            className="size-4 shrink-0 stroke-2"
                             aria-hidden
                           />
-                          <span className="truncate text-sm font-semibold">
+                          <span className="truncate text-[0.64rem] font-medium">
                             Document
                           </span>
                         </span>
                         <ChevronRight
-                          className="size-5 shrink-0 text-primary opacity-80"
+                          className="size-4 shrink-0 text-primary opacity-80"
                           aria-hidden
                         />
                       </a>
                     ) : (
-                      <span className="flex items-center gap-2 rounded-lg py-2 text-sm font-medium text-muted-foreground">
+                      <span className="flex items-center gap-1.5 rounded-lg py-1.5 text-[0.64rem] font-medium text-muted-foreground">
                         <FileQuestion
-                          className="size-5 shrink-0 stroke-[2.25] opacity-70"
+                          className="size-4 shrink-0 stroke-2 opacity-70"
                           aria-hidden
                         />
                         No document on file
@@ -682,8 +682,8 @@ export default function Vehicles() {
                     )}
                   </div>
 
-                  <div className="border-border border-t border-dashed pt-3 dark:border-border">
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <div className="border-border border-t border-dashed pt-2 dark:border-border">
+                    <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
                       {canAssignDriver ? (
                         <>
                           <Button
@@ -693,7 +693,7 @@ export default function Vehicles() {
                             className={mobileListCardActionBtn}
                             onClick={() => openAssignPicker(vehicle._id)}
                           >
-                            <UserPlus className="size-[18px]" />
+                            <UserPlus />
                             {vehicle.driver ? "Change" : "Assign"}
                           </Button>
                           {vehicle.driver ? (
@@ -704,7 +704,7 @@ export default function Vehicles() {
                               disabled={busy}
                               onClick={() => void handleUnassignDriver(vehicle)}
                             >
-                              <UserMinus className="size-[18px]" />
+                              <UserMinus />
                               Unassign
                             </Button>
                           ) : null}
@@ -718,7 +718,7 @@ export default function Vehicles() {
                         onClick={() => void handleDownloadVehicleQr(vehicle)}
                         aria-label={`Download QR for ${vehicle.registrationNumber}`}
                       >
-                        <QrCode className="size-[18px]" />
+                        <QrCode />
                         QR
                       </Button>
                       <Button
@@ -727,23 +727,23 @@ export default function Vehicles() {
                         className={mobileListCardActionBtn}
                         onClick={() => openEditDialog(vehicle)}
                       >
-                        <Pencil className="size-[18px]" />
+                        <Pencil />
                         Edit
                       </Button>
                     </div>
                     {driverPhone ? (
-                      <div className="mt-2 flex justify-start">
+                      <div className="mt-1.5 flex justify-start">
                         <Button
                           variant="outline"
                           size="sm"
                           className={cn(
                             mobileListCardActionBtn,
-                            "min-w-[calc(50%-4px)] sm:min-w-[7.5rem]"
+                            "min-w-[calc(50%-4px)] sm:min-w-[6.5rem]"
                           )}
                           asChild
                         >
                           <a href={`tel:${driverPhone}`}>
-                            <Phone className="size-[18px]" />
+                            <Phone />
                             Call
                           </a>
                         </Button>

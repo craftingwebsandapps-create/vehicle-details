@@ -340,16 +340,16 @@ export default function Drivers() {
 
             return (
               <OpsCard key={driver.id}>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
                     <div className={mobileListCardIconTile} aria-hidden>
-                      <UserRound className="size-6 stroke-[2]" />
+                      <UserRound className="size-4 stroke-2" />
                     </div>
                     <div className="min-w-0 flex-1 pt-0.5">
-                      <p className="text-lg leading-tight font-bold break-words text-foreground">
+                      <p className="text-base leading-tight font-semibold break-words text-foreground">
                         {driver.name}
                       </p>
-                      <p className="mt-0.5 text-xs break-words text-muted-foreground">
+                      <p className="mt-0.5 text-[0.64rem] break-words text-muted-foreground">
                         {driver.mobileNumber}
                       </p>
                     </div>
@@ -367,34 +367,34 @@ export default function Drivers() {
                     </p>
                   ) : null}
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-1.5">
                     <div className={mobileListCardMetaPanel}>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5">
                         <IdCard
-                          className="size-5 shrink-0 stroke-[2.25] text-primary"
+                          className="size-4 shrink-0 stroke-2 text-primary"
                           aria-hidden
                         />
                         <div className="min-w-0">
-                          <p className="text-[11px] leading-none font-medium text-muted-foreground">
+                          <p className="text-[0.64rem] leading-none font-medium text-muted-foreground">
                             Licence
                           </p>
-                          <p className="mt-1 text-sm leading-snug font-semibold break-words tabular-nums text-foreground">
+                          <p className="mt-0.5 text-xs leading-snug font-medium break-words tabular-nums text-foreground">
                             {driver.licenceNumber}
                           </p>
                         </div>
                       </div>
                     </div>
                     <div className={mobileListCardMetaPanel}>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5">
                         <Truck
-                          className="size-5 shrink-0 stroke-[2.25] text-primary"
+                          className="size-4 shrink-0 stroke-2 text-primary"
                           aria-hidden
                         />
                         <div className="min-w-0">
-                          <p className="text-[11px] leading-none font-medium text-muted-foreground">
+                          <p className="text-[0.64rem] leading-none font-medium text-muted-foreground">
                             Vehicle
                           </p>
-                          <p className="mt-1 text-sm leading-snug font-semibold break-words text-foreground">
+                          <p className="mt-0.5 text-xs leading-snug font-medium break-words text-foreground">
                             {assignedVehicle}
                           </p>
                         </div>
@@ -408,26 +408,26 @@ export default function Drivers() {
                         href={driver.licenceUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex max-w-full items-center justify-between gap-3 rounded-lg py-2 text-primary transition-colors hover:bg-primary/10 hover:text-primary"
+                        className="flex max-w-full items-center justify-between gap-2 rounded-lg py-1.5 text-primary transition-colors hover:bg-primary/10 hover:text-primary"
                       >
-                        <span className="flex min-w-0 items-center gap-2">
+                        <span className="flex min-w-0 items-center gap-1.5">
                           <FileText
-                            className="size-5 shrink-0 stroke-[2.35]"
+                            className="size-4 shrink-0 stroke-2"
                             aria-hidden
                           />
-                          <span className="truncate text-sm font-semibold">
+                          <span className="truncate text-[0.64rem] font-medium">
                             View licence
                           </span>
                         </span>
                         <ChevronRight
-                          className="size-5 shrink-0 text-primary opacity-80"
+                          className="size-4 shrink-0 text-primary opacity-80"
                           aria-hidden
                         />
                       </a>
                     ) : (
-                      <span className="flex items-center gap-2 rounded-lg py-2 text-sm font-medium text-muted-foreground">
+                      <span className="flex items-center gap-1.5 rounded-lg py-1.5 text-[0.64rem] font-medium text-muted-foreground">
                         <FileQuestion
-                          className="size-5 shrink-0 stroke-[2.25] opacity-70"
+                          className="size-4 shrink-0 stroke-2 opacity-70"
                           aria-hidden
                         />
                         No licence file
@@ -435,8 +435,8 @@ export default function Drivers() {
                     )}
                   </div>
 
-                  <div className="border-border border-t border-dashed pt-3 dark:border-border">
-                    <div className="grid grid-cols-2 gap-2">
+                  <div className="border-border border-t border-dashed pt-2 dark:border-border">
+                    <div className="grid grid-cols-2 gap-1.5">
                       <Button
                         variant="outline"
                         size="sm"
@@ -444,7 +444,7 @@ export default function Drivers() {
                         asChild
                       >
                         <a href={`tel:${driver.mobileNumber}`}>
-                          <Phone className="size-[18px]" />
+                          <Phone />
                           Call
                         </a>
                       </Button>
@@ -454,7 +454,7 @@ export default function Drivers() {
                         className={mobileListCardActionBtn}
                         onClick={() => openEditDialog(driver)}
                       >
-                        <Pencil className="size-[18px]" />
+                        <Pencil />
                         Edit
                       </Button>
                     </div>

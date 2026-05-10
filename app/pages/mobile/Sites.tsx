@@ -327,16 +327,16 @@ export default function Sites() {
             const adminNote = siteListNote(site)
             return (
               <OpsCard key={site.id}>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
                     <div className={mobileListCardIconTile} aria-hidden>
-                      <MapPin className="size-6 stroke-[2]" />
+                      <MapPin className="size-4 stroke-2" />
                     </div>
                     <div className="min-w-0 flex-1 pt-0.5">
-                      <p className="text-lg leading-tight font-bold break-words text-foreground">
+                      <p className="text-base leading-tight font-semibold break-words text-foreground">
                         {site.name}
                       </p>
-                      <p className="mt-0.5 text-xs break-words text-muted-foreground">
+                      <p className="mt-0.5 text-[0.64rem] break-words text-muted-foreground">
                         {site.location}
                       </p>
                     </div>
@@ -348,34 +348,34 @@ export default function Sites() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-1.5">
                     <div className={mobileListCardMetaPanel}>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5">
                         <UserRound
-                          className="size-5 shrink-0 stroke-[2.25] text-primary"
+                          className="size-4 shrink-0 stroke-2 text-primary"
                           aria-hidden
                         />
                         <div className="min-w-0">
-                          <p className="text-[11px] leading-none font-medium text-muted-foreground">
+                          <p className="text-[0.64rem] leading-none font-medium text-muted-foreground">
                             Contact
                           </p>
-                          <p className="mt-1 text-sm leading-snug font-semibold break-words text-foreground">
+                          <p className="mt-0.5 text-xs leading-snug font-medium break-words text-foreground">
                             {site.contactPerson}
                           </p>
                         </div>
                       </div>
                     </div>
                     <div className={mobileListCardMetaPanel}>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5">
                         <Phone
-                          className="size-5 shrink-0 stroke-[2.25] text-primary"
+                          className="size-4 shrink-0 stroke-2 text-primary"
                           aria-hidden
                         />
                         <div className="min-w-0">
-                          <p className="text-[11px] leading-none font-medium text-muted-foreground">
+                          <p className="text-[0.64rem] leading-none font-medium text-muted-foreground">
                             Mobile
                           </p>
-                          <p className="mt-1 text-sm leading-snug font-semibold break-words tabular-nums text-foreground">
+                          <p className="mt-0.5 text-xs leading-snug font-medium break-words tabular-nums text-foreground">
                             {site.mobileNumber}
                           </p>
                         </div>
@@ -384,16 +384,16 @@ export default function Sites() {
                   </div>
 
                   <div className={mobileListCardMetaPanel}>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1.5">
                       <Mail
-                        className="size-5 shrink-0 stroke-[2.25] text-primary"
+                        className="size-4 shrink-0 stroke-2 text-primary"
                         aria-hidden
                       />
                       <div className="min-w-0">
-                        <p className="text-[11px] leading-none font-medium text-muted-foreground">
+                        <p className="text-[0.64rem] leading-none font-medium text-muted-foreground">
                           Email
                         </p>
-                        <p className="mt-1 text-sm leading-snug font-semibold break-words text-foreground">
+                        <p className="mt-0.5 text-xs leading-snug font-medium break-words text-foreground">
                           {site.email}
                         </p>
                       </div>
@@ -403,7 +403,7 @@ export default function Sites() {
                   {adminNote ? (
                     <p
                       className={cn(
-                        "rounded-xl px-3 py-2 text-xs",
+                        "rounded-lg px-2.5 py-1.5 text-[0.64rem] leading-snug",
                         siteIsRejected(site)
                           ? "border border-destructive/30 bg-destructive/5 text-destructive"
                           : "border border-border bg-muted/30 text-muted-foreground"
@@ -414,8 +414,8 @@ export default function Sites() {
                     </p>
                   ) : null}
 
-                  <div className="border-border border-t border-dashed pt-3 dark:border-border">
-                    <div className="grid grid-cols-2 gap-2">
+                  <div className="border-border border-t border-dashed pt-2 dark:border-border">
+                    <div className="grid grid-cols-2 gap-1.5">
                       <Button
                         variant="outline"
                         size="sm"
@@ -423,7 +423,7 @@ export default function Sites() {
                         asChild
                       >
                         <a href={`tel:${site.mobileNumber}`}>
-                          <Phone className="size-[18px]" />
+                          <Phone />
                           Call
                         </a>
                       </Button>
@@ -433,7 +433,7 @@ export default function Sites() {
                         className={mobileListCardActionBtn}
                         onClick={() => openEditDialog(site)}
                       >
-                        <Pencil className="size-[18px]" />
+                        <Pencil />
                         Edit
                       </Button>
                     </div>

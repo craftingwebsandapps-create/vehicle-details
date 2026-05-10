@@ -30,11 +30,11 @@ function StatCard({
         <span className="text-xs font-medium text-muted-foreground">
           {label}
         </span>
-        <div className="rounded-xl bg-primary/15 p-1.5 text-primary dark:bg-primary/22">
-          <Icon className="size-4 stroke-[2.25]" />
+        <div className="rounded-lg bg-primary/15 p-1 text-primary dark:bg-primary/22">
+          <Icon className="size-4 stroke-2" />
         </div>
       </div>
-      <p className="text-3xl font-semibold text-foreground">{total}</p>
+      <p className="text-2xl font-semibold tabular-nums text-foreground">{total}</p>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
         <span className="flex items-center gap-1">
           <span className="size-1.5 shrink-0 rounded-full bg-primary" />

@@ -132,7 +132,7 @@ export function OpsListHeader<T extends string, A extends string = string>({
 
 export function OpsCard({ children }: { children: ReactNode }) {
   return (
-    <article className="touch-pan-y rounded-2xl border border-border/60 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.07)] dark:bg-background">
+    <article className="touch-pan-y rounded-2xl border border-border/60 bg-white p-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.07)] dark:bg-background">
       {children}
     </article>
   )
@@ -219,9 +219,9 @@ export function OpsApprovalPill({
     const Icon = config.BadgeIcon
     return (
       <span
-        className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${config.badgeClass}`}
+        className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-[0.64rem] font-medium leading-tight ${config.badgeClass}`}
       >
-        <Icon className="size-3.5 stroke-[2.75]" aria-hidden />
+        <Icon className="size-3 stroke-2" aria-hidden />
         {config.label}
       </span>
     )
@@ -229,7 +229,7 @@ export function OpsApprovalPill({
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${config.pill}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.64rem] font-medium leading-tight ${config.pill}`}
     >
       <span className={`size-1.5 rounded-full ${config.dot}`} />
       {config.label}
