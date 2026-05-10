@@ -78,6 +78,18 @@ const toSite = (raw: unknown): Site => {
                 typeof (contractorRaw as Record<string, unknown>).name === "string"
                   ? ((contractorRaw as Record<string, unknown>).name as string)
                   : undefined,
+              contactPerson:
+                typeof (contractorRaw as Record<string, unknown>).contactPerson ===
+                "string"
+                  ? ((contractorRaw as Record<string, unknown>)
+                      .contactPerson as string)
+                  : undefined,
+              mobileNumber:
+                typeof (contractorRaw as Record<string, unknown>).mobileNumber ===
+                "string"
+                  ? ((contractorRaw as Record<string, unknown>)
+                      .mobileNumber as string)
+                  : undefined,
               email:
                 typeof (contractorRaw as Record<string, unknown>).email === "string"
                   ? ((contractorRaw as Record<string, unknown>).email as string)

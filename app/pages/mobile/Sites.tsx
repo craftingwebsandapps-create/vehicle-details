@@ -51,6 +51,19 @@ const SITE_APPROVAL_FILTERS: Array<{
   { label: "Rejected", value: "rejected" },
 ]
 
+function siteListNote(site: Site): string | null {
+  const n =
+    site.rejectedNote?.trim() || site.approvalNote?.trim() || ""
+  return n || null
+}
+
+function siteIsRejected(site: Site): boolean {
+  const st = site.approvalStatus
+  if (!st) return false
+  if (st === "REJECTED") return true
+  return String(st).toLowerCase() === "rejected"
+}
+
 export default function Sites() {
   const dispatch = useAppDispatch()
   const {
@@ -305,66 +318,82 @@ export default function Sites() {
 
       {sitesStatus !== "loading" && !listError ? (
         <section className="space-y-2">
-          {filteredSites.map((site) => (
-            <OpsCard key={site.id}>
-              <div className="space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-sm leading-tight font-semibold text-foreground">
-                      {site.name}
+          {filteredSites.map((site) => {
+            const adminNote = siteListNote(site)
+            return (
+              <OpsCard key={site.id}>
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-sm leading-tight font-semibold text-foreground">
+                        {site.name}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {site.location}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <OpsApprovalPill status={site.approvalStatus} />
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                    <p>
+                      Contact:{" "}
+                      <span className="text-foreground">
+                        {site.contactPerson}
+                      </span>
                     </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {site.location}
+                    <p className="mt-0.5">
+                      Mobile:{" "}
+                      <span className="text-foreground">{site.mobileNumber}</span>
+                    </p>
+                    <p className="mt-0.5 truncate">
+                      Email:{" "}
+                      <span className="text-foreground">{site.email}</span>
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-1">
-                    <OpsStatusPill status={site.status} />
-                    <OpsApprovalPill status={site.approvalStatus} />
+                  {adminNote ? (
+                    <p
+                      className={
+                        siteIsRejected(site)
+                          ? "rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive"
+                          : "rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground"
+                      }
+                    >
+                      <span className="font-medium text-foreground">Note: </span>
+                      {adminNote}
+                    </p>
+                  ) : null}
+
+                  <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        onClick={() => {
+                          window.location.href = `tel:${site.mobileNumber}`
+                        }}
+                      >
+                        <Phone className="size-3.5" />
+                        Call
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        onClick={() => openEditDialog(site)}
+                      >
+                        <Pencil className="size-3.5" />
+                        Edit
+                      </Button>
+                    </div>
                   </div>
                 </div>
-
-                <div className="rounded-xl bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
-                  <p>
-                    Contact:{" "}
-                    <span className="text-foreground">
-                      {site.contactPerson}
-                    </span>
-                  </p>
-                  <p className="mt-0.5">
-                    Mobile:{" "}
-                    <span className="text-foreground">{site.mobileNumber}</span>
-                  </p>
-                  <p className="mt-0.5 truncate">
-                    Email: <span className="text-foreground">{site.email}</span>
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-end gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      variant="outline"
-                      size="xs"
-                      onClick={() => {
-                        window.location.href = `tel:${site.mobileNumber}`
-                      }}
-                    >
-                      <Phone className="size-3.5" />
-                      Call
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="xs"
-                      onClick={() => openEditDialog(site)}
-                    >
-                      <Pencil className="size-3.5" />
-                      Edit
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </OpsCard>
-          ))}
+              </OpsCard>
+            )
+          })}
 
           <div ref={loadMoreRef} className="py-2 text-center">
             {hasMore ? (

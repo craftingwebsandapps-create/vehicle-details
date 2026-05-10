@@ -150,7 +150,11 @@ export function GenericDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className={`flex max-h-[90vh] flex-col overflow-hidden ${maxWidthClass} ${contentClassName || ""}`}
+        className={cn(
+          "flex max-h-[min(90vh,760px)] flex-col gap-0 overflow-hidden p-0",
+          maxWidthClass,
+          contentClassName
+        )}
         // Prevent close button click from triggering if preventOutsideClose is true
         onPointerDownOutside={(e) => {
           if (preventOutsideClose) {
@@ -161,9 +165,10 @@ export function GenericDialog({
       >
         {/* Fixed Header */}
         <DialogHeader
-          className={`flex shrink-0 flex-col ${
-            showHeaderDivider ? "border-b pb-3" : "pb-0"
-          }`}
+          className={cn(
+            "border-border shrink-0 p-6 pb-4",
+            showHeaderDivider ? "border-b" : null
+          )}
         >
           <div className="min-w-0 flex-1">
             <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
@@ -177,12 +182,11 @@ export function GenericDialog({
 
         {/* Independently Scrollable Body */}
         <div
-          className={`min-h-0 flex-1 overflow-x-hidden overflow-y-auto ${bodyClassName || ""}`}
-          // Prevent scrolling issues on iOS
-          style={{
-            WebkitOverflowScrolling: "touch",
-            scrollBehavior: "smooth",
-          }}
+          className={cn(
+            "min-h-0 flex-1 overscroll-contain overflow-x-hidden overflow-y-auto px-6 py-4 touch-pan-y",
+            bodyClassName
+          )}
+          style={{ WebkitOverflowScrolling: "touch" }}
         >
           {children}
         </div>

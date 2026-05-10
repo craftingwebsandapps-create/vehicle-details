@@ -18,7 +18,13 @@ export interface Site {
   name: string
   contractor?:
     | string
-    | { _id: string; name?: string; email?: string }
+    | {
+        _id: string
+        name?: string
+        contactPerson?: string
+        mobileNumber?: string
+        email?: string
+      }
   contactPerson: string
   mobileNumber: string
   email: string
