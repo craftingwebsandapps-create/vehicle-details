@@ -36,6 +36,15 @@ export type PublicVehicleLookupData = {
   /** Present when the vehicle is linked to a site (may be omitted by older APIs). */
   site?: PublicVehicleSite | null
   driver: PublicVehicleDriver | null
+  /** Optional timestamps / audit fields when the API returns them. */
+  createdAt?: string | null
+  updatedAt?: string | null
+  approvedAt?: string | null
+  registeredAt?: string | null
+  /** Operational status (e.g. ACTIVE). */
+  status?: string | null
+  approvalNote?: string | null
+  rejectionNote?: string | null
 }
 
 export type PublicVehicleLookupSuccessResponse = {

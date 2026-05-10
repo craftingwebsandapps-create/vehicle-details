@@ -2,7 +2,7 @@ import { PublicVehicleLookup } from "~/components/web/PublicVehicleLookup"
 
 export default function Home() {
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col px-0 pb-16 pt-6 sm:pt-10 md:max-w-2xl md:pt-14">
+    <div className="mx-auto flex w-full max-w-xl flex-col px-0 pb-16 pt-6 sm:pt-10 md:max-w-5xl md:pt-14">
       <header className="mb-8 space-y-2 text-center sm:mb-10 sm:text-left">
         <h1
           id="lookup-heading"
