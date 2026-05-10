@@ -53,18 +53,47 @@ const toSite = (raw: unknown): Site => {
 
   if (!id) throw new Error("Site id is missing")
   const approvalStatus = normalizeApprovalStatus(site.approvalStatus)
+  const contractorRaw = site.contractor as unknown
+  const statusRaw = site.status
+  const status =
+    statusRaw === "ACTIVE" || statusRaw === "INACTIVE"
+      ? statusRaw
+      : typeof statusRaw === "string"
+        ? statusRaw.toUpperCase() === "INACTIVE"
+          ? "INACTIVE"
+          : "ACTIVE"
+        : "ACTIVE"
 
   return {
     id,
     _id: typeof site._id === "string" ? site._id : undefined,
     name: String(site.name ?? ""),
-    contractor: typeof site.contractor === "string" ? site.contractor : undefined,
+    contractor:
+      typeof contractorRaw === "string"
+        ? contractorRaw
+        : contractorRaw && typeof contractorRaw === "object"
+          ? {
+              _id: String((contractorRaw as Record<string, unknown>)._id ?? ""),
+              name:
+                typeof (contractorRaw as Record<string, unknown>).name === "string"
+                  ? ((contractorRaw as Record<string, unknown>).name as string)
+                  : undefined,
+              email:
+                typeof (contractorRaw as Record<string, unknown>).email === "string"
+                  ? ((contractorRaw as Record<string, unknown>).email as string)
+                  : undefined,
+            }
+          : undefined,
     contactPerson: String(site.contactPerson ?? ""),
     mobileNumber: String(site.mobileNumber ?? ""),
     email: String(site.email ?? ""),
     location: String(site.location ?? ""),
-    status: (site.status as Site["status"]) ?? "ACTIVE",
+    status,
     approvalStatus: approvalStatus as Site["approvalStatus"],
+    approvalNote:
+      site.approvalNote === null || typeof site.approvalNote === "string"
+        ? (site.approvalNote as string | null)
+        : undefined,
     approvedBy:
       site.approvedBy === null || typeof site.approvedBy === "string"
         ? (site.approvedBy as string | null)
@@ -72,6 +101,10 @@ const toSite = (raw: unknown): Site => {
     approvedAt:
       site.approvedAt === null || typeof site.approvedAt === "string"
         ? (site.approvedAt as string | null)
+        : undefined,
+    rejectedAt:
+      site.rejectedAt === null || typeof site.rejectedAt === "string"
+        ? (site.rejectedAt as string | null)
         : undefined,
     rejectedNote:
       site.rejectedNote === null || typeof site.rejectedNote === "string"
@@ -130,14 +163,14 @@ export const listSites = async (params: ListSitesParams = {}) => {
 export const createSite = async (payload: CreateSiteRequest): Promise<Site> => {
   const accessToken = getAuthToken()
 
-  const response = await apiClient.postWithAuth<{ success: boolean; data?: unknown }>(
-    "/sites",
-    payload,
-    accessToken
-  )
+  const response = await apiClient.postWithAuth<{
+    success: boolean
+    data?: unknown
+    error?: { message?: string; code?: string }
+  }>("/sites", payload, accessToken)
 
   if (!response.success || !response.data) {
-    throw new Error("Unable to create site")
+    throw new Error(response.error?.message || "Unable to create site")
   }
 
   return toSite(response.data)
@@ -153,10 +186,14 @@ export const updateSite = async (
     throw new Error("Site id is required")
   }
 
-  const response = await apiClient.request<{ success: boolean; data?: unknown }>(
+  const response = await apiClient.request<{
+    success: boolean
+    data?: unknown
+    error?: { message?: string; code?: string }
+  }>(
     `/sites/${siteId}`,
     {
-      method: "PUT",
+      method: "PATCH",
       body: JSON.stringify(payload),
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -165,7 +202,7 @@ export const updateSite = async (
   )
 
   if (!response.success || !response.data) {
-    throw new Error("Unable to update site")
+    throw new Error(response.error?.message || "Unable to update site")
   }
 
   return toSite(response.data)

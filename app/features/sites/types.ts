@@ -1,5 +1,11 @@
 export type SiteStatus = "ACTIVE" | "INACTIVE"
-export type SiteApprovalStatus = "PENDING_APPROVAL" | "APPROVED" | "REJECTED"
+export type SiteApprovalStatus =
+  | "PENDING_APPROVAL"
+  | "APPROVED"
+  | "REJECTED"
+  | "pending"
+  | "approved"
+  | "rejected"
 
 export interface PaginationParams {
   page?: number
@@ -10,15 +16,19 @@ export interface Site {
   id: string
   _id?: string
   name: string
-  contractor?: string
+  contractor?:
+    | string
+    | { _id: string; name?: string; email?: string }
   contactPerson: string
   mobileNumber: string
   email: string
   location: string
   status: SiteStatus
   approvalStatus?: SiteApprovalStatus
+  approvalNote?: string | null
   approvedBy?: string | null
   approvedAt?: string | null
+  rejectedAt?: string | null
   rejectedNote?: string | null
   deletedAt?: string | null
   createdAt: string
@@ -31,15 +41,14 @@ export interface CreateSiteRequest {
   mobileNumber: string
   email: string
   location: string
-  status?: SiteStatus
 }
 
 export interface UpdateSiteRequest {
+  name?: string
   contactPerson?: string
   mobileNumber?: string
   email?: string
   location?: string
-  status?: SiteStatus
 }
 
 export interface ListSitesParams extends PaginationParams {

@@ -1,15 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { Layers, Pencil, Phone } from "lucide-react"
+import { Pencil, Phone } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAppDispatch, useAppSelector } from "~/hooks"
 import {
-  OpsActionSheet,
   OpsApprovalPill,
   OpsCard,
   OpsEmptyState,
-  OpsFloatingFilterButton,
   OpsListHeader,
   OpsListSkeleton,
   OpsStatusPill,
@@ -39,26 +37,18 @@ const initialFormState: CreateSiteRequest = {
   mobileNumber: "",
   email: "",
   location: "",
-  status: "ACTIVE",
 }
 
-type SiteSegment = "all" | "active" | "inactive"
 type SiteApprovalFilter = "all" | SiteApprovalStatus
-
-const SITE_SEGMENTS: Array<{ label: string; value: SiteSegment }> = [
-  { label: "All", value: "all" },
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-]
 
 const SITE_APPROVAL_FILTERS: Array<{
   label: string
   value: SiteApprovalFilter
 }> = [
   { label: "All", value: "all" },
-  { label: "Pending", value: "PENDING_APPROVAL" },
-  { label: "Approved", value: "APPROVED" },
-  { label: "Rejected", value: "REJECTED" },
+  { label: "Pending", value: "pending" },
+  { label: "Approved", value: "approved" },
+  { label: "Rejected", value: "rejected" },
 ]
 
 export default function Sites() {
@@ -79,30 +69,21 @@ export default function Sites() {
     useState<CreateSiteRequest>(initialFormState)
 
   const [query, setQuery] = useState("")
-  const [segment, setSegment] = useState<SiteSegment>("all")
   const [approvalFilter, setApprovalFilter] =
     useState<SiteApprovalFilter>("all")
-  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
-  const serverStatusFilter =
-    segment === "active"
-      ? "ACTIVE"
-      : segment === "inactive"
-        ? "INACTIVE"
-        : undefined
   const serverApprovalFilter =
     approvalFilter === "all" ? undefined : approvalFilter
 
   useEffect(() => {
     void dispatch(
       fetchSitesThunk({
-        status: serverStatusFilter,
         approvalStatus: serverApprovalFilter,
       })
     )
-  }, [dispatch, serverStatusFilter, serverApprovalFilter])
+  }, [dispatch, serverApprovalFilter])
 
   const siteFormConfig = useMemo(
     () => getSiteDialogFormConfig(dialogMode === "edit"),
@@ -113,13 +94,6 @@ export default function Sites() {
     const term = query.trim().toLowerCase()
 
     return sites.filter((site) => {
-      const matchesSegment =
-        segment === "all"
-          ? true
-          : segment === "active"
-            ? site.status === "ACTIVE"
-            : site.status === "INACTIVE"
-
       const matchesSearch =
         term.length === 0
           ? true
@@ -134,9 +108,9 @@ export default function Sites() {
               .toLowerCase()
               .includes(term)
 
-      return matchesSegment && matchesSearch
+      return matchesSearch
     })
-  }, [query, segment, sites])
+  }, [query, sites])
 
   useEffect(() => {
     const node = loadMoreRef.current
@@ -164,7 +138,6 @@ export default function Sites() {
   const refreshSites = () => {
     void dispatch(
       fetchSitesThunk({
-        status: serverStatusFilter,
         approvalStatus: serverApprovalFilter,
       })
     )
@@ -187,7 +160,6 @@ export default function Sites() {
       mobileNumber: site.mobileNumber,
       email: site.email,
       location: site.location,
-      status: site.status,
     })
     setIsSiteDialogOpen(true)
   }
@@ -196,10 +168,9 @@ export default function Sites() {
     const payload: CreateSiteRequest = {
       name: values.name.trim(),
       contactPerson: values.contactPerson.trim(),
-      mobileNumber: values.mobileNumber.trim(),
+      mobileNumber: values.mobileNumber.replace(/\s+/g, "").trim(),
       email: values.email.trim(),
       location: values.location.trim(),
-      status: values.status,
     }
 
     setIsSubmitting(true)
@@ -211,11 +182,11 @@ export default function Sites() {
         }
 
         const updatePayload: UpdateSiteRequest = {
+          name: payload.name,
           contactPerson: payload.contactPerson,
           mobileNumber: payload.mobileNumber,
           email: payload.email,
           location: payload.location,
-          status: payload.status,
         }
 
         await updateSite(editingSiteId, updatePayload)
@@ -229,7 +200,6 @@ export default function Sites() {
 
       await dispatch(
         fetchSitesThunk({
-          status: serverStatusFilter,
           approvalStatus: serverApprovalFilter,
         })
       )
@@ -266,9 +236,9 @@ export default function Sites() {
         createLabel="Create"
         onCreate={openCreateDialog}
         onRefresh={refreshSites}
-        segments={SITE_SEGMENTS}
-        activeSegment={segment}
-        onSegmentChange={setSegment}
+        segments={[{ label: "All", value: "all" }]}
+        activeSegment="all"
+        onSegmentChange={() => {}}
         approvalSegments={SITE_APPROVAL_FILTERS}
         activeApprovalSegment={approvalFilter}
         onApprovalSegmentChange={setApprovalFilter}
@@ -408,27 +378,6 @@ export default function Sites() {
         </section>
       ) : null}
 
-      <OpsFloatingFilterButton onClick={() => setIsFilterSheetOpen(true)} />
-
-      <OpsActionSheet
-        open={isFilterSheetOpen}
-        onOpenChange={setIsFilterSheetOpen}
-        title="Site Filters"
-        actions={[
-          ...SITE_SEGMENTS.map((item) => ({
-            key: `segment-${item.value}`,
-            label: `${item.label}${segment === item.value ? " • selected" : ""}`,
-            icon: Layers,
-            onClick: () => setSegment(item.value),
-          })),
-          ...SITE_APPROVAL_FILTERS.map((item) => ({
-            key: `approval-${item.value}`,
-            label: `${item.label}${approvalFilter === item.value ? " • selected" : ""}`,
-            icon: Layers,
-            onClick: () => setApprovalFilter(item.value),
-          })),
-        ]}
-      />
     </div>
   )
 }

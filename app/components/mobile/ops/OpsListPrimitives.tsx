@@ -87,22 +87,24 @@ export function OpsListHeader<T extends string, A extends string = string>({
         className="h-9 rounded-xl"
       />
 
-      <div className="flex items-center gap-1">
-        {segments.map((segment) => (
-          <button
-            key={segment.value}
-            type="button"
-            onClick={() => onSegmentChange(segment.value)}
-            className={
-              activeSegment === segment.value
-                ? "flex-1 rounded-full bg-foreground py-1.5 text-center text-xs font-medium whitespace-nowrap text-background"
-                : "flex-1 rounded-full border border-border/70 bg-background py-1.5 text-center text-xs font-medium whitespace-nowrap text-muted-foreground"
-            }
-          >
-            {segment.label}
-          </button>
-        ))}
-      </div>
+      {segments.length > 1 ? (
+        <div className="flex items-center gap-1">
+          {segments.map((segment) => (
+            <button
+              key={segment.value}
+              type="button"
+              onClick={() => onSegmentChange(segment.value)}
+              className={
+                activeSegment === segment.value
+                  ? "flex-1 rounded-full bg-foreground py-1.5 text-center text-xs font-medium whitespace-nowrap text-background"
+                  : "flex-1 rounded-full border border-border/70 bg-background py-1.5 text-center text-xs font-medium whitespace-nowrap text-muted-foreground"
+              }
+            >
+              {segment.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {approvalSegments &&
         approvalSegments.length > 0 &&

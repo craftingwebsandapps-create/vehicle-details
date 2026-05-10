@@ -3,11 +3,6 @@ import { z } from "zod"
 import type { CreateSiteRequest } from "~/features/sites/types"
 import type { FormConfig } from "~/types/form-builder"
 
-const STATUS_OPTIONS = [
-  { label: "ACTIVE", value: "ACTIVE" },
-  { label: "INACTIVE", value: "INACTIVE" },
-]
-
 export const siteDialogSchema = z.object({
   name: z.string().trim().min(2, "Site name must be at least 2 characters"),
   contactPerson: z
@@ -17,10 +12,10 @@ export const siteDialogSchema = z.object({
   mobileNumber: z
     .string()
     .trim()
-    .regex(/^\d{10}$/, "Mobile number must be 10 digits"),
+    .transform((v) => v.replace(/\s+/g, ""))
+    .refine((v) => /^\+?[0-9]{8,15}$/.test(v), "Enter a valid mobile number"),
   email: z.string().trim().email("Enter a valid email"),
   location: z.string().trim().min(1, "Location is required"),
-  status: z.enum(["ACTIVE", "INACTIVE"]),
 })
 
 export const getSiteDialogFormConfig = (
@@ -62,7 +57,7 @@ export const getSiteDialogFormConfig = (
       placeholder: "Enter mobile number",
       validation: {
         required: "Mobile number is required",
-        pattern: /^\d{10}$/,
+        pattern: /^\+?[0-9]{8,15}$/,
       },
       grid: { colSpan: 12 },
     },
@@ -84,17 +79,6 @@ export const getSiteDialogFormConfig = (
       placeholder: "Enter location",
       validation: {
         required: "Location is required",
-      },
-      grid: { colSpan: 12 },
-    },
-    {
-      type: "select",
-      name: "status",
-      label: "Status",
-      placeholder: "Select status",
-      options: STATUS_OPTIONS,
-      validation: {
-        required: "Status is required",
       },
       grid: { colSpan: 12 },
     },
