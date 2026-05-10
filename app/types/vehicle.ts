@@ -119,18 +119,22 @@ export type VehicleListResponse = {
   }
 }
 
+/** Allowed approval states when querying GET /api/vehicles */
+export type VehicleListApprovalStatus = "pending" | "approved" | "rejected"
+
+/** GET /api/vehicles — matches listVehiclesQuerySchema */
 export type ListVehiclesParams = {
+  /** Omit to include vehicles in every approval state */
+  approvalStatus?: VehicleListApprovalStatus
   page?: number
   limit?: number
+  /** Case-insensitive substring on name, registrationNumber, type (max 200 chars) */
   search?: string
-  name?: string
+  /** Optional 24-char hex ObjectId — vehicles linked to this site */
   site?: string
-  type?: string
-  registrationNumber?: string
-  status?: VehicleStatus
-  /** Sent as lowercase pending|approved|rejected when querying /api/vehicles */
-  approvalStatus?: ApprovalStatus | "pending" | "approved" | "rejected"
 }
+
+export type VehicleListFilters = Omit<ListVehiclesParams, "page" | "limit">
 
 export type VehicleUpsertRequest = {
   name: string

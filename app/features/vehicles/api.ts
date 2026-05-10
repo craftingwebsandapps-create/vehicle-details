@@ -24,20 +24,7 @@ type VehicleApiResponse = {
 
 const CONTRACTOR_V1_PREFIX = "/v1/contractor"
 
-function toVehicleApprovalQuery(
-  v: ListVehiclesParams["approvalStatus"]
-): string | undefined {
-  if (v === undefined) return undefined
-  if (typeof v !== "string") return undefined
-  const lower = v.toLowerCase()
-  if (lower === "pending" || lower === "approved" || lower === "rejected") {
-    return lower
-  }
-  if (v === "PENDING_APPROVAL") return "pending"
-  if (v === "APPROVED") return "approved"
-  if (v === "REJECTED") return "rejected"
-  return undefined
-}
+const VEHICLE_LIST_SEARCH_MAX = 200
 
 const getAuthToken = () => {
   const accessToken = getAccessToken()
@@ -108,22 +95,31 @@ type VehiclesListApiEnvelope = {
 }
 
 export const listVehicles = async (
-  params?: ListVehiclesParams
+  params: ListVehiclesParams
 ): Promise<VehicleListResponse> => {
   const token = getAuthToken()
   const query = new URLSearchParams()
-  if (params?.page) query.set("page", String(params.page))
-  if (params?.limit) query.set("limit", String(params.limit))
-  if (params?.search?.trim()) query.set("search", params.search.trim())
-  if (params?.name?.trim()) query.set("name", params.name.trim())
-  if (params?.site?.trim()) query.set("site", params.site.trim())
-  if (params?.type?.trim()) query.set("type", params.type.trim())
-  if (params?.registrationNumber?.trim()) {
-    query.set("registrationNumber", params.registrationNumber.trim())
+  if (params.approvalStatus) {
+    query.set("approvalStatus", params.approvalStatus)
   }
-  if (params?.status) query.set("status", params.status)
-  const approvalQs = toVehicleApprovalQuery(params?.approvalStatus)
-  if (approvalQs) query.set("approvalStatus", approvalQs)
+  if (params.page !== undefined) {
+    query.set("page", String(Math.max(1, Math.floor(params.page))))
+  }
+  if (params.limit !== undefined) {
+    query.set(
+      "limit",
+      String(Math.min(100, Math.max(1, Math.floor(params.limit))))
+    )
+  }
+  const searchTrimmed = params.search?.trim()
+  if (searchTrimmed) {
+    query.set(
+      "search",
+      searchTrimmed.slice(0, VEHICLE_LIST_SEARCH_MAX)
+    )
+  }
+  const siteId = params.site?.trim()
+  if (siteId) query.set("site", siteId)
 
   const queryString = query.toString()
   const url = queryString ? `/vehicles?${queryString}` : "/vehicles"

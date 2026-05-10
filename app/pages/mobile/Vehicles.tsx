@@ -30,12 +30,14 @@ import {
 } from "~/features/vehicles/vehiclesSlice"
 import { getVehicleDialogFormConfig } from "~/schemas/vehicle-dialog-form-config"
 import type {
-  ApprovalStatus,
   CreateVehicleRequest,
   UpdateVehicleRequest,
   Vehicle,
   VehicleFormValues,
+  VehicleListApprovalStatus,
 } from "~/types/vehicle"
+
+type VehicleApprovalFilter = "all" | VehicleListApprovalStatus
 
 const initialFormState: VehicleFormValues = {
   name: "",
@@ -46,16 +48,16 @@ const initialFormState: VehicleFormValues = {
   site: "",
 }
 
-type VehicleApprovalFilter = "all" | ApprovalStatus
+const VEHICLE_SEARCH_MAX = 200
 
 const VEHICLE_APPROVAL_FILTERS: Array<{
   label: string
   value: VehicleApprovalFilter
 }> = [
   { label: "All", value: "all" },
-  { label: "Pending", value: "PENDING_APPROVAL" },
-  { label: "Approved", value: "APPROVED" },
-  { label: "Rejected", value: "REJECTED" },
+  { label: "Pending", value: "pending" },
+  { label: "Approved", value: "approved" },
+  { label: "Rejected", value: "rejected" },
 ]
 
 export default function Vehicles() {
@@ -81,15 +83,15 @@ export default function Vehicles() {
   const [approvalFilter, setApprovalFilter] =
     useState<VehicleApprovalFilter>("all")
 
+  const serverApprovalFilter =
+    approvalFilter === "all" ? undefined : approvalFilter
+
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
   const vehicleFormConfig = useMemo(
     () => getVehicleDialogFormConfig(dialogMode === "edit", sites),
     [dialogMode, sites]
   )
-
-  const serverApprovalFilter =
-    approvalFilter === "all" ? undefined : approvalFilter
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
@@ -100,40 +102,23 @@ export default function Vehicles() {
   }, [query])
 
   useEffect(() => {
+    const search =
+      debouncedQuery.trim().slice(0, VEHICLE_SEARCH_MAX) || undefined
     void dispatch(
       fetchVehiclesThunk({
-        approvalStatus: serverApprovalFilter,
-        search: debouncedQuery || undefined,
+        ...(serverApprovalFilter !== undefined
+          ? { approvalStatus: serverApprovalFilter }
+          : {}),
+        search,
       })
     )
-  }, [dispatch, serverApprovalFilter, debouncedQuery])
+  }, [dispatch, debouncedQuery, serverApprovalFilter])
 
   useEffect(() => {
     void dispatch(
       fetchSitesThunk({ status: "ACTIVE", approvalStatus: "APPROVED" })
     )
   }, [dispatch])
-
-  const filteredVehicles = useMemo(() => {
-    const term = query.trim().toLowerCase()
-
-    return vehicles.filter((vehicle) => {
-      const siteName =
-        typeof vehicle.site === "string"
-          ? vehicle.site
-          : (vehicle.site?.name ?? "")
-
-      const matchesSearch =
-        term.length === 0
-          ? true
-          : [vehicle.registrationNumber, vehicle.name, vehicle.type, siteName]
-              .join(" ")
-              .toLowerCase()
-              .includes(term)
-
-      return matchesSearch
-    })
-  }, [vehicles, query])
 
   useEffect(() => {
     const node = loadMoreRef.current
@@ -159,10 +144,14 @@ export default function Vehicles() {
   }, [dispatch, hasNextPage, loadMoreStatus])
 
   const refreshVehicles = () => {
+    const search =
+      debouncedQuery.trim().slice(0, VEHICLE_SEARCH_MAX) || undefined
     void dispatch(
       fetchVehiclesThunk({
-        approvalStatus: serverApprovalFilter,
-        search: debouncedQuery || undefined,
+        ...(serverApprovalFilter !== undefined
+          ? { approvalStatus: serverApprovalFilter }
+          : {}),
+        search,
       })
     )
     toast.success("Vehicle list refreshed", { position: "top-center" })
@@ -236,10 +225,14 @@ export default function Vehicles() {
         })
       }
 
+      const search =
+        debouncedQuery.trim().slice(0, VEHICLE_SEARCH_MAX) || undefined
       await dispatch(
         fetchVehiclesThunk({
-          approvalStatus: serverApprovalFilter,
-          search: debouncedQuery || undefined,
+          ...(serverApprovalFilter !== undefined
+            ? { approvalStatus: serverApprovalFilter }
+            : {}),
+          search,
         })
       )
 
@@ -268,10 +261,10 @@ export default function Vehicles() {
     <div className="space-y-3 pb-20">
       <OpsListHeader
         title="Vehicles"
-        totalLabel={`${filteredVehicles.length} in view`}
+        totalLabel={`${vehicles.length} in view`}
         searchValue={query}
         onSearchChange={setQuery}
-        searchPlaceholder="Search reg no, type, site"
+        searchPlaceholder="Search name, registration, type"
         createLabel="Create"
         onCreate={openCreateDialog}
         onRefresh={refreshVehicles}
@@ -337,7 +330,7 @@ export default function Vehicles() {
 
       {status !== "loading" &&
       status !== "failed" &&
-      filteredVehicles.length === 0 ? (
+      vehicles.length === 0 ? (
         <OpsEmptyState
           title="No matching vehicles"
           subtitle="Try another filter or search term."
@@ -346,7 +339,7 @@ export default function Vehicles() {
 
       {status !== "loading" && status !== "failed" ? (
         <section className="space-y-2">
-          {filteredVehicles.map((vehicle) => {
+          {vehicles.map((vehicle) => {
             const siteName =
               typeof vehicle.site === "string"
                 ? vehicle.site

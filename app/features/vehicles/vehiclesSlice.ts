@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 
 import { listVehicles } from "~/features/vehicles/api"
-import type { ListVehiclesParams, Vehicle } from "~/types/vehicle"
+import type { Vehicle, VehicleListFilters } from "~/types/vehicle"
 
 const PAGE_SIZE = 20
 
@@ -9,7 +9,7 @@ type VehiclesState = {
   items: Vehicle[]
   currentPage: number
   hasNextPage: boolean
-  currentFilters: Omit<ListVehiclesParams, "page" | "limit">
+  currentFilters: VehicleListFilters
   status: "idle" | "loading" | "succeeded" | "failed"
   loadMoreStatus: "idle" | "loading" | "succeeded" | "failed"
   error: string | null
@@ -27,10 +27,7 @@ const initialState: VehiclesState = {
 
 export const fetchVehiclesThunk = createAsyncThunk(
   "vehicles/fetchFirst",
-  async (
-    filters: Omit<ListVehiclesParams, "page" | "limit"> | undefined,
-    { rejectWithValue }
-  ) => {
+  async (filters: VehicleListFilters | undefined, { rejectWithValue }) => {
     try {
       const appliedFilters = filters ?? {}
       const response = await listVehicles({
