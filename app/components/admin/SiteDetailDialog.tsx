@@ -7,7 +7,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
+  dialogActionsFooterClass,
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog"
@@ -166,7 +166,7 @@ export function SiteDetailDialog({
           </section>
         </div>
 
-        <DialogFooter className="mx-0 mb-0 gap-3 border-border bg-muted/30 border-t px-4 py-2.5 sm:flex-row sm:justify-end">
+        <div className={dialogActionsFooterClass}>
           <Button
             type="button"
             variant="ghost"
@@ -176,7 +176,7 @@ export function SiteDetailDialog({
           >
             Cancel
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   )

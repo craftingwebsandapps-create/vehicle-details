@@ -2,6 +2,16 @@ import * as React from "react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { cn } from "~/lib/utils"
+
+/** Primary actions row — use with split layouts (`DialogContent` + `p-0`). */
+export const dialogActionsFooterClass =
+  "border-border bg-muted/50 flex shrink-0 flex-row flex-wrap items-center justify-end gap-3 border-t px-6 py-4"
+
+/** Same actions row inside default padded `DialogContent` (confirm / alert flows). */
+export const dialogConfirmActionsFooterClass = cn(
+  dialogActionsFooterClass,
+  "mt-4 shrink-0"
+)
 import { Button } from "~/components/ui/button"
 import { XIcon } from "lucide-react"
 

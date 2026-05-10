@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 
 import { Button } from "~/components/ui/button"
+import { cn } from "~/lib/utils"
 import {
   Dialog,
   DialogContent,
@@ -220,7 +221,12 @@ export function GenericDialogFooter({
   className?: string
 }) {
   return (
-    <div className={`flex items-center justify-end gap-3 ${className || ""}`}>
+    <div
+      className={cn(
+        "flex flex-row flex-wrap items-center justify-end gap-3",
+        className
+      )}
+    >
       {children}
     </div>
   )

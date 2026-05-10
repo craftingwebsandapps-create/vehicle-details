@@ -5,7 +5,7 @@ import { Button } from "~/components/ui/button"
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
+  dialogActionsFooterClass,
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog"
@@ -165,11 +165,11 @@ export function AdminUserDetailDialog({
           ) : null}
         </div>
 
-        <DialogFooter className="border-border shrink-0 gap-3 border-t px-6 py-4 sm:flex-row sm:justify-end">
+        <div className={dialogActionsFooterClass}>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   )

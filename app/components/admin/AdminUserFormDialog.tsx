@@ -7,7 +7,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
+  dialogActionsFooterClass,
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog"
@@ -405,7 +405,7 @@ export function AdminUserFormDialog({
           ) : null}
         </div>
 
-        <DialogFooter className="border-border shrink-0 gap-3 border-t px-6 py-4 sm:justify-end">
+        <div className={dialogActionsFooterClass}>
           <Button
             type="button"
             variant="outline"
@@ -421,7 +421,7 @@ export function AdminUserFormDialog({
           >
             {submitting ? "Saving…" : mode === "create" ? "Create" : "Save"}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   )

@@ -8,6 +8,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  dialogActionsFooterClass,
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog"
@@ -348,7 +349,7 @@ export function ContractorFormDialog({
           ) : null}
         </div>
 
-        <div className="border-border bg-muted/50 flex shrink-0 flex-row flex-wrap items-center justify-end gap-3 border-t px-6 py-4">
+        <div className={dialogActionsFooterClass}>
           <Button
             type="button"
             variant="outline"

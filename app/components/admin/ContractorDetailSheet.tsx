@@ -2,15 +2,16 @@ import { format } from "date-fns"
 import { useEffect, useState } from "react"
 
 import { Button } from "~/components/ui/button"
+import { dialogActionsFooterClass } from "~/components/ui/dialog"
 import { Separator } from "~/components/ui/separator"
 import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "~/components/ui/sheet"
+import { cn } from "~/lib/utils"
 import { Skeleton } from "~/components/ui/skeleton"
 import { getContractor } from "~/features/admin/contractors-admin-api"
 import type { Contractor, ContractorWorkTypeRef } from "~/types/vehicle"
@@ -190,7 +191,7 @@ export function ContractorDetailSheet({
           ) : null}
         </div>
 
-        <SheetFooter className="border-border flex-row flex-wrap justify-end gap-3 border-t pt-4">
+        <div className={cn(dialogActionsFooterClass, "mt-auto")}>
           <Button
             type="button"
             variant="ghost"
@@ -204,7 +205,7 @@ export function ContractorDetailSheet({
               Edit
             </Button>
           ) : null}
-        </SheetFooter>
+        </div>
       </SheetContent>
     </Sheet>
   )
