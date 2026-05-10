@@ -42,6 +42,7 @@ import { getAuditLog, listAdminAuditLogs } from "~/features/admin/api"
 import { isValidObjectId } from "~/features/admin/contractors-admin-api"
 import { useAppSelector } from "~/hooks"
 import { getApiErrorMeta } from "~/services/api-error"
+import { formatPaginationSummary } from "~/utils/pagination-summary"
 import type {
   AuditActorRole,
   AuditApiScope,
@@ -624,7 +625,12 @@ export default function AdminAuditLogs() {
 
           <div className="text-muted-foreground flex flex-col items-center justify-between gap-3 px-6 pt-2 text-sm sm:flex-row">
             <span>
-              Page {page} of {totalPages}
+              {formatPaginationSummary({
+                page,
+                pageSize: clampLimit(limit),
+                total,
+                totalPages,
+              })}
             </span>
             <div className="flex gap-2">
               <Button

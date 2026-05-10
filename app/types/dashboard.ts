@@ -1,31 +1,20 @@
 export type DashboardCountStat = {
   total: number
-  active: number
-  inactive: number
-}
-
-export type DashboardUtilization = {
-  driverUtilizationPercent: number
-  vehicleUtilizationPercent: number
+  pending: number
+  approved: number
+  rejected: number
 }
 
 export type DashboardData = {
-  contractors: DashboardCountStat
-  users: DashboardCountStat
-  usersByRole: Record<string, number>
-  drivers: DashboardCountStat
   vehicles: DashboardCountStat
   sites: DashboardCountStat
-  workTypes: DashboardCountStat
-  assignments: DashboardCountStat
-  unassignedDrivers: number
-  unassignedVehicles: number
-  utilization: DashboardUtilization
-  recentAssignmentsThisWeek: number
+  drivers: DashboardCountStat
+  contractorId: string
+  activeDriverAssignments: number
 }
 
 export type DashboardApiResponse = {
   success: boolean
-  message: string
-  data: DashboardData
+  data?: DashboardData
+  error?: { message?: string; code?: string }
 }

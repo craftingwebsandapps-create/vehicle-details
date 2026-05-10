@@ -56,6 +56,7 @@ import { getAccessToken } from "~/features/auth/auth-storage"
 import { getUserIdFromAccessToken } from "~/features/auth/jwt-utils"
 import { useAppSelector } from "~/hooks"
 import { getApiErrorMeta } from "~/services/api-error"
+import { formatPaginationSummary } from "~/utils/pagination-summary"
 import type { AdminUser } from "~/types/admin-user"
 import type { Contractor } from "~/types/vehicle"
 
@@ -278,12 +279,6 @@ export default function AdminUsers() {
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
             Users
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Superadmin CRUD on{" "}
-            <code className="text-xs">/api/admin/users</code>. Do not combine{" "}
-            <code className="text-xs">contractor</code> with{" "}
-            <code className="text-xs">isSuperadmin</code> query params.
-          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" size="sm" onClick={() => openCreate()}>
@@ -519,7 +514,12 @@ export default function AdminUsers() {
 
           <div className="text-muted-foreground flex flex-col items-center justify-between gap-3 px-6 pt-4 text-sm sm:flex-row">
             <span>
-              Page {page} of {totalPages} · limit ≤ 100
+              {formatPaginationSummary({
+                page,
+                pageSize: PAGE_SIZE,
+                total,
+                totalPages,
+              })}
             </span>
             <div className="flex gap-2">
               <Button
@@ -578,9 +578,7 @@ export default function AdminUsers() {
           <DialogHeader>
             <DialogTitle>Delete user?</DialogTitle>
             <DialogDescription>
-              Calls{" "}
-              <code className="text-xs">DELETE /api/admin/users/:id</code> (204).
-              Refresh sessions for that user are revoked.
+              This user will be permanently deleted.
             </DialogDescription>
           </DialogHeader>
           {deleteTarget ? (

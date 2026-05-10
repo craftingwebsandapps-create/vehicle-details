@@ -23,8 +23,10 @@ export const fetchDashboardThunk = createAsyncThunk(
       const token = getAccessToken()
       const response = await fetchDashboard(token ?? "")
 
-      if (!response.success) {
-        throw new Error(response.message || "Unable to fetch dashboard data")
+      if (!response.success || !response.data) {
+        const message =
+          response.error?.message || "Unable to fetch dashboard data"
+        throw new Error(message)
       }
 
       return response.data

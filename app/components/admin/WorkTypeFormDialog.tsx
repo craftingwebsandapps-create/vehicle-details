@@ -6,7 +6,6 @@ import { Button } from "~/components/ui/button"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   dialogActionsFooterClass,
   DialogHeader,
   DialogTitle,
@@ -143,11 +142,6 @@ export function WorkTypeFormDialog({
           <DialogTitle>
             {mode === "create" ? "Create work type" : "Edit work type"}
           </DialogTitle>
-          <DialogDescription>
-            Reference data at{" "}
-            <code className="text-xs">GET/POST /api/work-types</code>. Codes are
-            stored uppercase on the server.
-          </DialogDescription>
         </DialogHeader>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
@@ -167,8 +161,7 @@ export function WorkTypeFormDialog({
               placeholder="e.g. HAULAGE"
             />
             <p className="text-muted-foreground text-xs">
-              1–64 characters: letters, digits, underscore, hyphen (stored
-              uppercase server-side).
+              1–64 characters: letters, digits, underscore, hyphen.
             </p>
           </div>
           <div className="space-y-2">

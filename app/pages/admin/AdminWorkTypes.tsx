@@ -41,6 +41,7 @@ import {
   listWorkTypesPaginated,
 } from "~/features/admin/work-types-api"
 import { getApiErrorMeta } from "~/services/api-error"
+import { formatPaginationSummary } from "~/utils/pagination-summary"
 import type { WorkTypeRecord } from "~/types/work-type"
 
 const PAGE_SIZE = 20
@@ -303,7 +304,12 @@ export default function AdminWorkTypes() {
 
           <div className="text-muted-foreground flex flex-col items-center justify-between gap-3 px-6 pt-4 text-sm sm:flex-row">
             <span>
-              Page {page} of {totalPages} · limit ≤ 100
+              {formatPaginationSummary({
+                page,
+                pageSize: PAGE_SIZE,
+                total,
+                totalPages,
+              })}
             </span>
             <div className="flex gap-2">
               <Button
@@ -349,10 +355,7 @@ export default function AdminWorkTypes() {
           <DialogHeader>
             <DialogTitle>Delete work type?</DialogTitle>
             <DialogDescription>
-              Soft-delete via{" "}
-              <code className="text-xs">DELETE /api/work-types/:id</code> (204).
-              Contractor APIs require valid{" "}
-              <code className="text-xs">workTypeIds</code>.
+              This work type will be removed from the catalog.
             </DialogDescription>
           </DialogHeader>
           {deleteTarget ? (

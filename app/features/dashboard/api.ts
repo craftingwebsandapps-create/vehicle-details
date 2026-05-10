@@ -5,7 +5,7 @@ export async function fetchDashboard(
   token: string
 ): Promise<DashboardApiResponse> {
   return apiClient.getWithAuth<DashboardApiResponse>(
-    "/v1/contractor/dashboard/summary",
+    "/api/dashboard",
     token
   )
 }

@@ -7,7 +7,6 @@ import { Checkbox } from "~/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   dialogActionsFooterClass,
   DialogHeader,
   DialogTitle,
@@ -224,10 +223,6 @@ export function ContractorFormDialog({
           <DialogTitle>
             {mode === "create" ? "Create contractor" : "Edit contractor"}
           </DialogTitle>
-          <DialogDescription>
-            Values are validated against{" "}
-            <code className="text-xs">POST/PATCH /api/contractors</code>.
-          </DialogDescription>
         </DialogHeader>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">

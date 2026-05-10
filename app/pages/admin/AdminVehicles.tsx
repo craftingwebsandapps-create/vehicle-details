@@ -34,6 +34,7 @@ import {
   rejectVehicle,
 } from "~/features/admin/api"
 import type { Contractor, Vehicle } from "~/types/vehicle"
+import { formatPaginationSummary } from "~/utils/pagination-summary"
 
 const PAGE_SIZE = 20
 const NONE_CONTRACTOR = "__none__"
@@ -402,7 +403,12 @@ export default function AdminVehicles() {
 
           <div className="text-muted-foreground flex flex-col items-center justify-between gap-3 px-6 pt-4 text-sm sm:flex-row">
             <span>
-              Page {page} of {totalPages}
+              {formatPaginationSummary({
+                page,
+                pageSize: PAGE_SIZE,
+                total,
+                totalPages,
+              })}
             </span>
             <div className="flex gap-2">
               <Button

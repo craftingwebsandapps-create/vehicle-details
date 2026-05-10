@@ -113,7 +113,7 @@ export function ContractorDetailSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="flex w-full flex-col sm:max-w-lg">
-        <SheetHeader>
+        <SheetHeader className="pr-12">
           <SheetTitle className="font-heading">
             {loading ? "Loading…" : dash(contractor?.name)}
           </SheetTitle>
@@ -124,7 +124,7 @@ export function ContractorDetailSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-1 py-2">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-2">
           {loading ? (
             <div className="space-y-3">
               <Skeleton className="h-6 w-3/4" />
@@ -193,7 +193,7 @@ export function ContractorDetailSheet({
           ) : null}
         </div>
 
-        <div className={cn(dialogActionsFooterClass, "mt-auto")}>
+        <div className={cn(dialogActionsFooterClass, "mt-auto px-4")}>
           <Button
             type="button"
             variant="ghost"
