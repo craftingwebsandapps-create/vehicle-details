@@ -1,10 +1,19 @@
 import { getAccessToken } from "~/features/auth/auth-storage"
 import { apiClient } from "~/services/api-client"
+import { mapPlatformDriverPayload } from "~/features/admin/driver-normalize"
+import { mapPlatformSitePayload } from "~/features/admin/site-normalize"
 import { mapPlatformVehiclePayload } from "~/features/admin/vi-normalize"
+import type { PlatformDriverRecord } from "~/types/platform-driver"
+import type { PlatformSiteRecord } from "~/types/platform-site"
 import type {
   ContractorsListResponse,
   ListContractorsParams,
+  ListPlatformDriversParams,
+  ListPlatformSitesParams,
   ListPlatformVehiclesParams,
+  PlatformDriversListResponse,
+  PlatformSiteDetailResponse,
+  PlatformSitesListResponse,
   PlatformVehiclesListResponse,
   ViPaginatedMeta,
 } from "~/types/vi-platform"
@@ -80,6 +89,97 @@ export const listPlatformVehicles = async (
   )
 
   return { items, meta: response.data.meta }
+}
+
+function clampPlatformPage(page?: number) {
+  return Math.max(1, page ?? 1)
+}
+
+function clampPlatformLimit(limit?: number) {
+  return Math.min(100, Math.max(1, limit ?? 20))
+}
+
+/** GET /api/drivers — enriched rows; optional contractor filter for superadmin. */
+export const listPlatformDrivers = async (
+  params?: ListPlatformDriversParams
+): Promise<{ items: PlatformDriverRecord[]; meta: ViPaginatedMeta }> => {
+  const token = getAuthToken()
+  const query = new URLSearchParams()
+  query.set("page", String(clampPlatformPage(params?.page)))
+  query.set("limit", String(clampPlatformLimit(params?.limit)))
+  if (params?.contractor?.trim()) {
+    query.set("contractor", params.contractor.trim())
+  }
+  if (params?.search?.trim()) {
+    const s = params.search.trim().slice(0, 200)
+    query.set("search", s)
+  }
+  if (params?.availableOnly === true) {
+    query.set("availableOnly", "true")
+  }
+
+  const url = `/drivers?${query.toString()}`
+
+  const response =
+    await apiClient.getWithAuth<PlatformDriversListResponse>(url, token)
+
+  if (!response.success) {
+    throw new Error("Unable to fetch drivers")
+  }
+
+  const items = response.data.items.map((row) =>
+    mapPlatformDriverPayload(row as Record<string, unknown>)
+  )
+
+  return { items, meta: response.data.meta }
+}
+
+/** GET /api/sites — enriched rows; optional contractor filter for superadmin. */
+export const listPlatformSites = async (
+  params?: ListPlatformSitesParams
+): Promise<{ items: PlatformSiteRecord[]; meta: ViPaginatedMeta }> => {
+  const token = getAuthToken()
+  const query = new URLSearchParams()
+  query.set("page", String(clampPlatformPage(params?.page)))
+  query.set("limit", String(clampPlatformLimit(params?.limit)))
+  if (params?.contractor?.trim()) {
+    query.set("contractor", params.contractor.trim())
+  }
+  if (params?.search?.trim()) {
+    query.set("search", params.search.trim().slice(0, 200))
+  }
+
+  const url = `/sites?${query.toString()}`
+
+  const response =
+    await apiClient.getWithAuth<PlatformSitesListResponse>(url, token)
+
+  if (!response.success) {
+    throw new Error("Unable to fetch sites")
+  }
+
+  const items = response.data.items.map((row) =>
+    mapPlatformSitePayload(row as Record<string, unknown>)
+  )
+
+  return { items, meta: response.data.meta }
+}
+
+/** GET /api/sites/:id — single enriched site (same shape as list rows). */
+export const getPlatformSite = async (
+  siteId: string
+): Promise<PlatformSiteRecord> => {
+  const token = getAuthToken()
+  const response = await apiClient.getWithAuth<PlatformSiteDetailResponse>(
+    `/sites/${encodeURIComponent(siteId)}`,
+    token
+  )
+
+  if (!response.success) {
+    throw new Error("Unable to fetch site")
+  }
+
+  return mapPlatformSitePayload(response.data)
 }
 
 export const approveVehicle = async (vehicleId: string) => {

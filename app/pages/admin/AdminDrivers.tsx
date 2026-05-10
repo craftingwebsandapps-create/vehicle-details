@@ -3,9 +3,9 @@ import { useCallback, useEffect, useLayoutEffect, useState } from "react"
 import { ChevronLeft, ChevronRight, Eye, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 
+import { DriverDetailDialog } from "~/components/admin/DriverDetailDialog"
 import { OpsApprovalPill } from "~/components/mobile/ops/OpsListPrimitives"
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert"
-import { Badge } from "~/components/ui/badge"
 import { Button } from "~/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card"
 import {
@@ -26,14 +26,14 @@ import {
 } from "~/components/ui/select"
 import { Skeleton } from "~/components/ui/skeleton"
 import { Textarea } from "~/components/ui/textarea"
-import { VehicleDetailDialog } from "~/components/admin/VehicleDetailDialog"
 import {
-  approveVehicle,
+  approveDriver,
   listContractors,
-  listPlatformVehicles,
-  rejectVehicle,
+  listPlatformDrivers,
+  rejectDriver,
 } from "~/features/admin/api"
-import type { Contractor, Vehicle } from "~/types/vehicle"
+import type { PlatformDriverRecord } from "~/types/platform-driver"
+import type { ApprovalStatus, Contractor } from "~/types/vehicle"
 
 const PAGE_SIZE = 20
 const NONE_CONTRACTOR = "__none__"
@@ -43,24 +43,28 @@ function formatCell(value: string | undefined | null) {
   return v && v.length > 0 ? v : "—"
 }
 
-function isPendingApproval(status: Vehicle["approvalStatus"]) {
+function isPendingApproval(status: ApprovalStatus | undefined) {
   if (!status) return false
   if (status === "PENDING_APPROVAL") return true
   return status.toLowerCase() === "pending"
 }
 
-export default function AdminVehicles() {
+export default function AdminDrivers() {
   const [contractors, setContractors] = useState<Contractor[]>([])
   const [contractorsLoading, setContractorsLoading] = useState(true)
   const [contractorsError, setContractorsError] = useState<string | null>(null)
   const [selectedContractorId, setSelectedContractorId] = useState("")
 
-  const [items, setItems] = useState<Vehicle[]>([])
+  const [availabilityFilter, setAvailabilityFilter] = useState<
+    "all" | "available"
+  >("all")
+
+  const [items, setItems] = useState<PlatformDriverRecord[]>([])
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
-  const [vehiclesLoading, setVehiclesLoading] = useState(false)
-  const [vehiclesError, setVehiclesError] = useState<string | null>(null)
+  const [driversLoading, setDriversLoading] = useState(false)
+  const [driversError, setDriversError] = useState<string | null>(null)
   const [query, setQuery] = useState("")
   const [debouncedQuery, setDebouncedQuery] = useState("")
   const [actingId, setActingId] = useState<string | null>(null)
@@ -68,11 +72,13 @@ export default function AdminVehicles() {
   const [rejectOpen, setRejectOpen] = useState(false)
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null)
   const [rejectNote, setRejectNote] = useState("")
-  const [rejectConfirmVehicle, setRejectConfirmVehicle] =
-    useState<Vehicle | null>(null)
-  const [approveConfirmVehicle, setApproveConfirmVehicle] =
-    useState<Vehicle | null>(null)
-  const [detailVehicle, setDetailVehicle] = useState<Vehicle | null>(null)
+  const [rejectConfirmDriver, setRejectConfirmDriver] =
+    useState<PlatformDriverRecord | null>(null)
+  const [approveConfirmDriver, setApproveConfirmDriver] =
+    useState<PlatformDriverRecord | null>(null)
+  const [detailDriver, setDetailDriver] = useState<PlatformDriverRecord | null>(
+    null
+  )
 
   useEffect(() => {
     const t = window.setTimeout(() => setDebouncedQuery(query.trim()), 300)
@@ -81,7 +87,7 @@ export default function AdminVehicles() {
 
   useLayoutEffect(() => {
     setPage(1)
-  }, [debouncedQuery, selectedContractorId])
+  }, [debouncedQuery, selectedContractorId, availabilityFilter])
 
   const loadContractors = useCallback(async () => {
     setContractorsLoading(true)
@@ -106,53 +112,54 @@ export default function AdminVehicles() {
     void loadContractors()
   }, [loadContractors])
 
-  const loadVehicles = useCallback(async () => {
-    setVehiclesLoading(true)
-    setVehiclesError(null)
+  const loadDrivers = useCallback(async () => {
+    setDriversLoading(true)
+    setDriversError(null)
     try {
-      const { items: rows, meta } = await listPlatformVehicles({
+      const { items: rows, meta } = await listPlatformDrivers({
         ...(selectedContractorId.trim()
           ? { contractor: selectedContractorId.trim() }
           : {}),
         page,
         limit: PAGE_SIZE,
         search: debouncedQuery || undefined,
+        availableOnly: availabilityFilter === "available",
       })
       setItems(rows)
       setTotalPages(Math.max(1, meta.totalPages))
       setTotal(meta.total)
     } catch (e) {
-      setVehiclesError(
-        e instanceof Error ? e.message : "Unable to load vehicles"
+      setDriversError(
+        e instanceof Error ? e.message : "Unable to load drivers"
       )
       setItems([])
     } finally {
-      setVehiclesLoading(false)
+      setDriversLoading(false)
     }
-  }, [selectedContractorId, page, debouncedQuery])
+  }, [selectedContractorId, page, debouncedQuery, availabilityFilter])
 
   useEffect(() => {
-    void loadVehicles()
-  }, [loadVehicles])
+    void loadDrivers()
+  }, [loadDrivers])
 
-  const openRejectNoteDialog = () => {
-    const v = rejectConfirmVehicle
-    if (!v) return
-    setRejectTargetId(v._id)
+  const openDriverRejectNoteDialog = () => {
+    const d = rejectConfirmDriver
+    if (!d) return
+    setRejectTargetId(d._id)
     setRejectNote("")
-    setRejectConfirmVehicle(null)
+    setRejectConfirmDriver(null)
     setRejectOpen(true)
   }
 
   const executeApprove = async () => {
-    const v = approveConfirmVehicle
-    if (!v) return
-    setApproveConfirmVehicle(null)
-    setActingId(v._id)
+    const d = approveConfirmDriver
+    if (!d) return
+    setApproveConfirmDriver(null)
+    setActingId(d._id)
     try {
-      await approveVehicle(v._id)
-      toast.success("Vehicle approved")
-      void loadVehicles()
+      await approveDriver(d._id)
+      toast.success("Driver approved")
+      void loadDrivers()
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Approval failed")
     } finally {
@@ -164,14 +171,11 @@ export default function AdminVehicles() {
     if (!rejectTargetId) return
     setActingId(rejectTargetId)
     try {
-      await rejectVehicle(
-        rejectTargetId,
-        rejectNote.trim() || undefined
-      )
-      toast.success("Vehicle rejected")
+      await rejectDriver(rejectTargetId, rejectNote.trim() || undefined)
+      toast.success("Driver rejected")
       setRejectOpen(false)
       setRejectTargetId(null)
-      void loadVehicles()
+      void loadDrivers()
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Reject failed")
     } finally {
@@ -184,16 +188,25 @@ export default function AdminVehicles() {
 
   const selectValue = selectedContractorId || NONE_CONTRACTOR
 
+  const assignedLabel = (d: PlatformDriverRecord) => {
+    const av = d.assignedVehicle
+    if (!av) return "—"
+    const reg = formatCell(av.registrationNumber)
+    const name = formatCell(av.name)
+    if (reg !== "—" && name !== "—") return `${reg} · ${name}`
+    return reg !== "—" ? reg : name
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            Vehicles
+            Drivers
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Browse and approve vehicles. Filter by contractor or search the fleet
-            from the controls on the right.
+            Browse drivers, filter by contractor or availability, and approve or
+            reject pending registrations from the table.
           </p>
         </div>
         <Button
@@ -203,12 +216,12 @@ export default function AdminVehicles() {
           className="shrink-0 gap-1.5"
           onClick={() => {
             void loadContractors()
-            void loadVehicles()
+            void loadDrivers()
           }}
-          disabled={contractorsLoading || vehiclesLoading}
+          disabled={contractorsLoading || driversLoading}
         >
           <RefreshCw
-            className={`size-3.5 ${contractorsLoading || vehiclesLoading ? "animate-spin" : ""}`}
+            className={`size-3.5 ${contractorsLoading || driversLoading ? "animate-spin" : ""}`}
           />
           Refresh
         </Button>
@@ -218,18 +231,18 @@ export default function AdminVehicles() {
         <CardHeader className="gap-2 space-y-2">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0 shrink">
-              <CardTitle className="text-base">Fleet</CardTitle>
+              <CardTitle className="text-base">Directory</CardTitle>
               <CardDescription>
-                {vehiclesLoading
+                {driversLoading
                   ? "Loading…"
-                  : `${total} vehicle${total === 1 ? "" : "s"}${
+                  : `${total} driver${total === 1 ? "" : "s"}${
                       selectedContractorId.trim()
                         ? " for this contractor"
-                        : " (all contractors)"
-                    }`}
+                        : ""
+                    }${availabilityFilter === "available" ? " (unassigned only)" : ""}`}
               </CardDescription>
             </div>
-            <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-end lg:max-w-xl">
+            <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-end lg:max-w-3xl">
               <Select
                 value={selectValue}
                 onValueChange={(v) =>
@@ -237,7 +250,7 @@ export default function AdminVehicles() {
                 }
                 disabled={contractorsLoading}
               >
-                <SelectTrigger className="w-full sm:w-[min(100%,280px)]">
+                <SelectTrigger className="w-full sm:w-[min(100%,260px)]">
                   <SelectValue placeholder="All contractors" />
                 </SelectTrigger>
                 <SelectContent>
@@ -252,11 +265,26 @@ export default function AdminVehicles() {
                   ))}
                 </SelectContent>
               </Select>
+              <Select
+                value={availabilityFilter}
+                onValueChange={(v) =>
+                  setAvailabilityFilter(v as "all" | "available")
+                }
+              >
+                <SelectTrigger className="w-full sm:w-[min(100%,200px)]">
+                  <SelectValue placeholder="Availability" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All drivers</SelectItem>
+                  <SelectItem value="available">Unassigned only</SelectItem>
+                </SelectContent>
+              </Select>
               <Input
-                placeholder="Search vehicles…"
+                placeholder="Search name or licence…"
                 value={query}
+                maxLength={200}
                 onChange={(e) => setQuery(e.target.value)}
-                className="min-w-0 lg:min-w-[180px] lg:flex-1 lg:basis-[200px]"
+                className="min-w-0 sm:min-w-[180px] sm:flex-1 sm:basis-[200px]"
               />
             </div>
           </div>
@@ -268,32 +296,30 @@ export default function AdminVehicles() {
           ) : null}
         </CardHeader>
         <CardContent className="px-0 pb-4">
-          {vehiclesError ? (
+          {driversError ? (
             <Alert variant="destructive" className="mx-6">
-              <AlertTitle>Vehicles</AlertTitle>
-              <AlertDescription>{vehiclesError}</AlertDescription>
+              <AlertTitle>Drivers</AlertTitle>
+              <AlertDescription>{driversError}</AlertDescription>
             </Alert>
           ) : null}
 
           <div className="overflow-x-auto border-y">
-            <table className="w-full min-w-[920px] text-left text-sm">
+            <table className="w-full min-w-[880px] text-left text-sm">
               <thead className="bg-muted/40 border-b text-xs font-medium text-muted-foreground uppercase">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Registration</th>
-                  <th className="px-4 py-3 font-medium">Vehicle</th>
-                  <th className="px-4 py-3 font-medium">Contractor</th>
-                  <th className="px-4 py-3 font-medium">Site</th>
                   <th className="px-4 py-3 font-medium">Driver</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Licence</th>
+                  <th className="px-4 py-3 font-medium">Contractor</th>
+                  <th className="px-4 py-3 font-medium">Assigned vehicle</th>
                   <th className="px-4 py-3 font-medium">Approval</th>
                   <th className="px-4 py-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {vehiclesLoading ? (
+                {driversLoading ? (
                   Array.from({ length: 6 }).map((_, i) => (
                     <tr key={i}>
-                      {Array.from({ length: 8 }).map((__, j) => (
+                      {Array.from({ length: 6 }).map((__, j) => (
                         <td key={j} className="px-4 py-3">
                           <Skeleton className="h-4 w-full max-w-[140px]" />
                         </td>
@@ -303,57 +329,35 @@ export default function AdminVehicles() {
                 ) : items.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={6}
                       className="text-muted-foreground px-4 py-12 text-center text-sm"
                     >
-                      No vehicles match the current search
-                      {selectedContractorId.trim()
-                        ? " for this contractor"
-                        : ""}
-                      .
+                      No drivers match your filters.
                     </td>
                   </tr>
                 ) : (
-                  items.map((v) => {
-                    const pending = isPendingApproval(v.approvalStatus)
-                    const busy = actingId === v._id
+                  items.map((d) => {
+                    const pending = isPendingApproval(d.approvalStatus)
+                    const busy = actingId === d._id
                     return (
-                      <tr key={v._id} className="hover:bg-muted/30">
-                        <td className="px-4 py-3 font-medium tabular-nums">
-                          {formatCell(v.registrationNumber)}
-                        </td>
+                      <tr key={d._id} className="hover:bg-muted/30">
                         <td className="px-4 py-3">
-                          <div className="font-medium">
-                            {formatCell(v.name)}
-                          </div>
+                          <div className="font-medium">{formatCell(d.name)}</div>
                           <div className="text-muted-foreground text-xs">
-                            {formatCell(v.type)}
+                            {formatCell(d.mobileNumber)}
                           </div>
                         </td>
-                        <td className="px-4 py-3">
-                          {formatCell(v.contractor?.name)}
+                        <td className="px-4 py-3 tabular-nums">
+                          {formatCell(d.licenceNumber)}
                         </td>
                         <td className="px-4 py-3">
-                          {typeof v.site === "string"
-                            ? formatCell(v.site)
-                            : formatCell(v.site?.name)}
+                          {formatCell(d.contractor?.name)}
+                        </td>
+                        <td className="px-4 py-3 text-xs">
+                          {assignedLabel(d)}
                         </td>
                         <td className="px-4 py-3">
-                          {formatCell(v.driver?.name)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge
-                            variant={
-                              v.status === "ACTIVE"
-                                ? "secondary"
-                                : "outline"
-                            }
-                          >
-                            {v.status}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3">
-                          <OpsApprovalPill status={v.approvalStatus} />
+                          <OpsApprovalPill status={d.approvalStatus} />
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex flex-wrap justify-end gap-1.5">
@@ -362,8 +366,8 @@ export default function AdminVehicles() {
                               size="xs"
                               variant="ghost"
                               className="text-muted-foreground hover:text-foreground"
-                              onClick={() => setDetailVehicle(v)}
-                              aria-label={`View details for ${v.registrationNumber}`}
+                              onClick={() => setDetailDriver(d)}
+                              aria-label={`View details for ${d.name}`}
                             >
                               <Eye className="size-3.5" />
                               View
@@ -375,7 +379,7 @@ export default function AdminVehicles() {
                                   size="xs"
                                   variant="outline"
                                   disabled={busy}
-                                  onClick={() => setApproveConfirmVehicle(v)}
+                                  onClick={() => setApproveConfirmDriver(d)}
                                 >
                                   Approve
                                 </Button>
@@ -384,7 +388,7 @@ export default function AdminVehicles() {
                                   size="xs"
                                   variant="destructive"
                                   disabled={busy}
-                                  onClick={() => setRejectConfirmVehicle(v)}
+                                  onClick={() => setRejectConfirmDriver(d)}
                                 >
                                   Reject
                                 </Button>
@@ -409,7 +413,7 @@ export default function AdminVehicles() {
                 type="button"
                 variant="outline"
                 size="sm"
-                disabled={!canPrev || vehiclesLoading}
+                disabled={!canPrev || driversLoading}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
                 <ChevronLeft className="size-4" />
@@ -419,7 +423,7 @@ export default function AdminVehicles() {
                 type="button"
                 variant="outline"
                 size="sm"
-                disabled={!canNext || vehiclesLoading}
+                disabled={!canNext || driversLoading}
                 onClick={() => setPage((p) => (canNext ? p + 1 : p))}
               >
                 Next
@@ -430,34 +434,36 @@ export default function AdminVehicles() {
         </CardContent>
       </Card>
 
-      <VehicleDetailDialog
-        vehicle={detailVehicle}
-        open={detailVehicle !== null}
+      <DriverDetailDialog
+        driver={detailDriver}
+        open={detailDriver !== null}
         onOpenChange={(next) => {
-          if (!next) setDetailVehicle(null)
+          if (!next) setDetailDriver(null)
         }}
       />
 
       <Dialog
-        open={approveConfirmVehicle !== null}
+        open={approveConfirmDriver !== null}
         onOpenChange={(open) => {
-          if (!open) setApproveConfirmVehicle(null)
+          if (!open) setApproveConfirmDriver(null)
         }}
       >
         <DialogContent className="sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>Approve this vehicle?</DialogTitle>
+            <DialogTitle>Approve this driver?</DialogTitle>
             <DialogDescription>
-              This marks the vehicle as approved for the contractor.
+              This marks the driver as approved for the contractor.
             </DialogDescription>
           </DialogHeader>
-          {approveConfirmVehicle ? (
+          {approveConfirmDriver ? (
             <p className="text-sm">
-              <span className="font-medium tabular-nums">
-                {formatCell(approveConfirmVehicle.registrationNumber)}
+              <span className="font-medium">
+                {formatCell(approveConfirmDriver.name)}
               </span>
               <span className="text-muted-foreground"> · </span>
-              {formatCell(approveConfirmVehicle.name)}
+              <span className="tabular-nums">
+                {formatCell(approveConfirmDriver.licenceNumber)}
+              </span>
             </p>
           ) : null}
           <DialogFooter className="gap-2 sm:gap-0">
@@ -465,14 +471,14 @@ export default function AdminVehicles() {
               type="button"
               variant="outline"
               disabled={actingId !== null}
-              onClick={() => setApproveConfirmVehicle(null)}
+              onClick={() => setApproveConfirmDriver(null)}
             >
               Cancel
             </Button>
             <Button
               type="button"
               disabled={
-                actingId !== null || approveConfirmVehicle === null
+                actingId !== null || approveConfirmDriver === null
               }
               onClick={() => void executeApprove()}
             >
@@ -483,26 +489,28 @@ export default function AdminVehicles() {
       </Dialog>
 
       <Dialog
-        open={rejectConfirmVehicle !== null}
+        open={rejectConfirmDriver !== null}
         onOpenChange={(open) => {
-          if (!open) setRejectConfirmVehicle(null)
+          if (!open) setRejectConfirmDriver(null)
         }}
       >
         <DialogContent className="sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>Reject this vehicle?</DialogTitle>
+            <DialogTitle>Reject this driver?</DialogTitle>
             <DialogDescription>
               The contractor will see this rejection. Next you can add an
-              optional note explaining what is wrong or what to fix.
+              optional note.
             </DialogDescription>
           </DialogHeader>
-          {rejectConfirmVehicle ? (
+          {rejectConfirmDriver ? (
             <p className="text-sm">
-              <span className="font-medium tabular-nums">
-                {formatCell(rejectConfirmVehicle.registrationNumber)}
+              <span className="font-medium">
+                {formatCell(rejectConfirmDriver.name)}
               </span>
               <span className="text-muted-foreground"> · </span>
-              {formatCell(rejectConfirmVehicle.name)}
+              <span className="tabular-nums">
+                {formatCell(rejectConfirmDriver.licenceNumber)}
+              </span>
             </p>
           ) : null}
           <DialogFooter className="gap-2 sm:gap-0">
@@ -510,7 +518,7 @@ export default function AdminVehicles() {
               type="button"
               variant="outline"
               disabled={actingId !== null}
-              onClick={() => setRejectConfirmVehicle(null)}
+              onClick={() => setRejectConfirmDriver(null)}
             >
               Cancel
             </Button>
@@ -518,9 +526,9 @@ export default function AdminVehicles() {
               type="button"
               variant="destructive"
               disabled={
-                actingId !== null || rejectConfirmVehicle === null
+                actingId !== null || rejectConfirmDriver === null
               }
-              onClick={() => openRejectNoteDialog()}
+              onClick={() => openDriverRejectNoteDialog()}
             >
               Continue to note
             </Button>
@@ -537,10 +545,9 @@ export default function AdminVehicles() {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Reject vehicle</DialogTitle>
+            <DialogTitle>Reject driver</DialogTitle>
             <DialogDescription>
-              Optionally add a note for the contractor (max 2000 characters). You
-              can leave this blank.
+              Optionally add a note (max 2000 characters).
             </DialogDescription>
           </DialogHeader>
           <Textarea

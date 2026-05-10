@@ -19,6 +19,17 @@ export type EmbeddedSite = {
   location?: string
   status: string
   approvalStatus?: ApprovalStatus
+  approvalNote?: string | null
+  contactPerson?: string
+  mobileNumber?: string
+  email?: string
+  approvedAt?: string | null
+  rejectedAt?: string | null
+  /** Enriched list payloads may nest a contractor summary on the site */
+  contractor?: Pick<
+    Contractor,
+    "name" | "contactPerson" | "mobileNumber" | "email"
+  > | null
 }
 
 /** Full site document (used in standalone site responses) */
@@ -39,6 +50,10 @@ export type EmbeddedDriver = {
   licenceUrl?: string
   mobileNumber?: string
   status: string
+  approvalStatus?: ApprovalStatus | string
+  approvalNote?: string | null
+  approvedAt?: string | null
+  rejectedAt?: string | null
 }
 
 /** Full driver document (used in standalone driver responses) */
@@ -56,6 +71,10 @@ export type Vehicle = {
   document?: string | null
   status: VehicleStatus
   approvalStatus?: ApprovalStatus
+  approvalNote?: string | null
+  approvedAt?: string | null
+  rejectedAt?: string | null
+  approvedBy?: string | null
   /** Populated via aggregation lookup; null when not assigned */
   contractor?: Contractor | null
   /** Populated via aggregation lookup; null when not allocated */

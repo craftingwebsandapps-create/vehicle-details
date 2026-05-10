@@ -39,3 +39,42 @@ export type PlatformVehiclesListResponse = {
     meta: ViPaginatedMeta
   }
 }
+
+export type ListPlatformDriversParams = {
+  page?: number
+  /** Clamped to 1–100 on the client. */
+  limit?: number
+  contractor?: string
+  /** Max 200 chars; trimmed server-side. */
+  search?: string
+  /** Only drivers with no active vehicle assignment. */
+  availableOnly?: boolean
+}
+
+export type PlatformDriversListResponse = {
+  success: boolean
+  data: {
+    items: Record<string, unknown>[]
+    meta: ViPaginatedMeta
+  }
+}
+
+export type ListPlatformSitesParams = {
+  page?: number
+  limit?: number
+  contractor?: string
+  search?: string
+}
+
+export type PlatformSitesListResponse = {
+  success: boolean
+  data: {
+    items: Record<string, unknown>[]
+    meta: ViPaginatedMeta
+  }
+}
+
+export type PlatformSiteDetailResponse = {
+  success: boolean
+  data: Record<string, unknown>
+}
