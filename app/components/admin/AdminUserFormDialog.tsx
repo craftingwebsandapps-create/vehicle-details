@@ -123,7 +123,6 @@ export function AdminUserFormDialog({
         contactPerson: user.contractor?.contactPerson ?? "",
         mobileNumber: user.contractor?.mobileNumber ?? "",
         email: user.contractor?.email ?? "",
-        status: "",
         createdAt: "",
         updatedAt: "",
       })

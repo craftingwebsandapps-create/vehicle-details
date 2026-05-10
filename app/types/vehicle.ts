@@ -14,7 +14,8 @@ export type Contractor = {
   contactPerson: string
   mobileNumber: string
   email: string
-  status: string
+  /** Optional — backend may omit when not used. */
+  status?: string | null
   createdAt: string
   updatedAt: string
   workTypeIds?: ContractorWorkTypeRef[]

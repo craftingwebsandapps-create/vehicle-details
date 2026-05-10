@@ -202,10 +202,14 @@ export function VehicleDetailDialog({
                         value: dash(vehicle.contractor.mobileNumber),
                       },
                       { label: "Email", value: dash(vehicle.contractor.email) },
-                      {
-                        label: "Status",
-                        value: dash(vehicle.contractor.status),
-                      },
+                      ...(vehicle.contractor.status?.trim()
+                        ? [
+                            {
+                              label: "Status",
+                              value: dash(vehicle.contractor.status),
+                            },
+                          ]
+                        : []),
                     ]
                   : [
                       {

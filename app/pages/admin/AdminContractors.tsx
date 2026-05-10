@@ -249,7 +249,6 @@ export default function AdminContractors() {
                   <th className="px-4 py-3 font-medium">Organization</th>
                   <th className="px-4 py-3 font-medium">Contact</th>
                   <th className="px-4 py-3 font-medium">Email</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium">Work types</th>
                   <th className="px-4 py-3 font-medium">Updated</th>
                   <th className="px-4 py-3 font-medium text-right">Actions</th>
@@ -259,7 +258,7 @@ export default function AdminContractors() {
                 {loading ? (
                   Array.from({ length: 6 }).map((_, i) => (
                     <tr key={i}>
-                      {Array.from({ length: 7 }).map((__, j) => (
+                      {Array.from({ length: 6 }).map((__, j) => (
                         <td key={j} className="px-4 py-3">
                           <Skeleton className="h-4 w-full max-w-[140px]" />
                         </td>
@@ -269,7 +268,7 @@ export default function AdminContractors() {
                 ) : items.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={6}
                       className="text-muted-foreground px-4 py-12 text-center text-sm"
                     >
                       No contractors match your search.
@@ -298,11 +297,6 @@ export default function AdminContractors() {
                       </td>
                       <td className="px-4 py-3 max-w-[200px] truncate">
                         {formatCell(c.email)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="bg-muted rounded-full px-2 py-0.5 text-xs font-medium">
-                          {formatCell(c.status)}
-                        </span>
                       </td>
                       <td className="text-muted-foreground max-w-[200px] truncate px-4 py-3 text-xs">
                         {summarizeWorkTypes(c.workTypeIds)}

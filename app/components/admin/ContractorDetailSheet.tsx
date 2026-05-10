@@ -161,12 +161,14 @@ export function ContractorDetailSheet({
                   </dt>
                   <dd className="break-all">{dash(contractor.email)}</dd>
                 </div>
-                <div>
-                  <dt className="text-muted-foreground text-xs font-medium">
-                    Status
-                  </dt>
-                  <dd>{dash(contractor.status)}</dd>
-                </div>
+                {contractor.status?.trim() ? (
+                  <div>
+                    <dt className="text-muted-foreground text-xs font-medium">
+                      Status
+                    </dt>
+                    <dd>{dash(contractor.status)}</dd>
+                  </div>
+                ) : null}
                 <div>
                   <dt className="text-muted-foreground text-xs font-medium">
                     Created
