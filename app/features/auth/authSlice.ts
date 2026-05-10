@@ -127,9 +127,10 @@ const authSlice = createSlice({
         setRefreshToken(action.payload.refreshToken)
         state.isAuthenticated = true
         state.user = buildUserFromEmail(action.meta.arg.email)
-        state.contractorId = getContractorIdFromAccessToken(
-          action.payload.accessToken
-        )
+        state.contractorId =
+          action.payload.contractorId !== undefined
+            ? action.payload.contractorId
+            : getContractorIdFromAccessToken(action.payload.accessToken)
         state.status = "succeeded"
         state.error = null
       })

@@ -7,6 +7,8 @@ export type MobileLoginResponse = {
   accessToken: string
   refreshToken: string
   expiresIn?: number
+  /** null → superadmin / no tenant; set → tenant user (mobile app shell). */
+  contractorId?: string | null
 }
 
 export type MobileLoginApiResponse = {

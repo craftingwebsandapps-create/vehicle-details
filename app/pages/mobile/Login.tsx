@@ -5,7 +5,8 @@ import { useAppDispatch, useAppSelector } from "~/hooks"
 import { Button } from "~/components/ui/button"
 import { Input } from "~/components/ui/input"
 import { loginMobileThunk } from "~/features/auth/authSlice"
-import { isMobileAuthenticated } from "~/utils/auth"
+import { routeAfterLogin } from "~/features/auth/post-login-route"
+import { getAccessToken } from "~/features/auth/auth-storage"
 
 export default function Login() {
   const navigate = useNavigate()
@@ -14,16 +15,23 @@ export default function Login() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
-  if (isMobileAuthenticated()) {
-    return <Navigate to="/mobile/dashboard" replace />
+  if (getAccessToken()) {
+    return (
+      <Navigate
+        to={routeAfterLogin({ contractorId: authState.contractorId })}
+        replace
+      />
+    )
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     try {
-      await dispatch(loginMobileThunk({ email, password })).unwrap()
-      navigate("/mobile/dashboard", { replace: true })
+      const session = await dispatch(
+        loginMobileThunk({ email, password })
+      ).unwrap()
+      navigate(routeAfterLogin(session), { replace: true })
     } catch {
       return
     }

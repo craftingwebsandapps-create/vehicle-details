@@ -5,7 +5,8 @@ import { useAppDispatch, useAppSelector } from "~/hooks"
 import { Button } from "~/components/ui/button"
 import { Input } from "~/components/ui/input"
 import { loginMobileThunk } from "~/features/auth/authSlice"
-import { isAdminAuthenticated } from "~/utils/auth"
+import { routeAfterLogin } from "~/features/auth/post-login-route"
+import { getAccessToken } from "~/features/auth/auth-storage"
 
 export default function AdminLogin() {
   const navigate = useNavigate()
@@ -14,16 +15,23 @@ export default function AdminLogin() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
-  if (isAdminAuthenticated()) {
-    return <Navigate to="/admin/dashboard" replace />
+  if (getAccessToken()) {
+    return (
+      <Navigate
+        to={routeAfterLogin({ contractorId: authState.contractorId })}
+        replace
+      />
+    )
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     try {
-      await dispatch(loginMobileThunk({ email, password })).unwrap()
-      navigate("/admin/dashboard", { replace: true })
+      const session = await dispatch(
+        loginMobileThunk({ email, password })
+      ).unwrap()
+      navigate(routeAfterLogin(session), { replace: true })
     } catch {
       return
     }
