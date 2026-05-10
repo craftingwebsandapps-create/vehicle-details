@@ -28,7 +28,8 @@ export type EmbeddedSite = {
   _id: string
   name: string
   location?: string
-  status: string
+  /** Backend may omit when only approval metadata is returned */
+  status?: string
   approvalStatus?: ApprovalStatus
   approvalNote?: string | null
   contactPerson?: string
@@ -39,7 +40,7 @@ export type EmbeddedSite = {
   /** Enriched list payloads may nest a contractor summary on the site */
   contractor?: Pick<
     Contractor,
-    "name" | "contactPerson" | "mobileNumber" | "email"
+    "_id" | "name" | "contactPerson" | "mobileNumber" | "email"
   > | null
 }
 
@@ -80,16 +81,18 @@ export type Vehicle = {
   type: string
   registrationNumber: string
   document?: string | null
+  /** Defaults to ACTIVE when omitted from list payloads */
   status: VehicleStatus
   approvalStatus?: ApprovalStatus
   approvalNote?: string | null
   approvedAt?: string | null
   rejectedAt?: string | null
   approvedBy?: string | null
+  deletedAt?: string | null
   /** Populated via aggregation lookup; null when not assigned */
   contractor?: Contractor | null
-  /** Populated via aggregation lookup; null when not allocated */
-  site?: EmbeddedSite | null
+  /** Populated via aggregation lookup; raw id string when not expanded */
+  site?: EmbeddedSite | string | null
   /** Derived from active drivervehicleassignment lookup; null when unassigned */
   driver?: EmbeddedDriver | null
   createdAt?: string

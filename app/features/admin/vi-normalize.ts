@@ -1,4 +1,9 @@
-import type { ApprovalStatus, Vehicle, VehicleStatus } from "~/types/vehicle"
+import type {
+  ApprovalStatus,
+  EmbeddedSite,
+  Vehicle,
+  VehicleStatus,
+} from "~/types/vehicle"
 
 export function normalizeApprovalStatus(
   raw: unknown
@@ -30,14 +35,34 @@ function normalizeOperationalStatus(raw: unknown): VehicleStatus {
   return "ACTIVE"
 }
 
+function normalizeEmbeddedSite(raw: unknown): Vehicle["site"] {
+  if (raw === null || raw === undefined) {
+    return raw as null | undefined
+  }
+  if (typeof raw === "string") {
+    return raw
+  }
+  if (typeof raw !== "object" || Array.isArray(raw)) {
+    return undefined
+  }
+  const o = raw as Record<string, unknown>
+  const approvalStatus = normalizeApprovalStatus(o.approvalStatus)
+  return {
+    ...(raw as unknown as EmbeddedSite),
+    approvalStatus,
+  }
+}
+
 /** Maps vi-backend vehicle rows (lower-case approvals, etc.) onto shared Vehicle typing. */
 export function mapPlatformVehiclePayload(raw: Record<string, unknown>): Vehicle {
   const approvalStatus = normalizeApprovalStatus(raw.approvalStatus)
   const status = normalizeOperationalStatus(raw.status)
+  const site = normalizeEmbeddedSite(raw.site)
 
   return {
     ...(raw as unknown as Vehicle),
     approvalStatus,
     status,
+    site,
   }
 }

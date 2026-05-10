@@ -251,28 +251,6 @@ export const updateDriver = async (
 }
 
 export const uploadDriverLicence = async (file: File): Promise<string> => {
-  const accessToken = getAuthToken()
-
-  const formData = new FormData()
-  formData.append("file", file)
-
-  const response = await fetch(`${API_BASE_URL}/upload/single`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: formData,
-  })
-
-  if (!response.ok) {
-    throw new Error(`Upload failed with status ${response.status}`)
-  }
-
-  const data = (await response.json()) as UploadSingleFileResponse
-
-  if (!data.success || !data.data?.url) {
-    throw new Error(data.message || "Unable to upload licence")
-  }
-
-  return data.data.url
+  const { url } = await uploadAuthenticatedFile(file)
+  return url
 }

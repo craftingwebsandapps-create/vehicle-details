@@ -33,7 +33,11 @@ function parseUploadErrorMessage(
   if (code === "FILE_TOO_LARGE") {
     return "File is too large (max 5 MB unless configured otherwise on the server)"
   }
-  if (status === 401) {
+  if (
+    status === 401 ||
+    code === "INVALID_TOKEN" ||
+    code === "UNAUTHORIZED"
+  ) {
     return "Sign in again to upload files"
   }
   return undefined

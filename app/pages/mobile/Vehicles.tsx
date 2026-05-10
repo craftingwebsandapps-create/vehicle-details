@@ -10,7 +10,6 @@ import {
   OpsEmptyState,
   OpsListHeader,
   OpsListSkeleton,
-  OpsStatusPill,
 } from "~/components/mobile/ops/OpsListPrimitives"
 import { FormBuilder } from "~/components/form"
 import { Button } from "~/components/ui/button"
@@ -346,6 +345,10 @@ export default function Vehicles() {
                 ? vehicle.site
                 : (vehicle.site?.name ?? "Unallocated")
             const driverName = vehicle.driver?.name ?? "Unassigned"
+            const rejectionNote = vehicle.approvalNote?.trim()
+            const isRejected =
+              vehicle.approvalStatus === "REJECTED" ||
+              String(vehicle.approvalStatus ?? "").toLowerCase() === "rejected"
 
             return (
               <OpsCard key={vehicle._id}>
@@ -360,11 +363,14 @@ export default function Vehicles() {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-1">
-                      <OpsStatusPill status={vehicle.status} />
-                      <OpsApprovalPill status={vehicle.approvalStatus} />
-                    </div>
+                    <OpsApprovalPill status={vehicle.approvalStatus} />
                   </div>
+
+                  {isRejected && rejectionNote ? (
+                    <p className="rounded-lg border border-destructive/25 bg-destructive/5 px-2.5 py-2 text-xs leading-snug text-destructive">
+                      {rejectionNote}
+                    </p>
+                  ) : null}
 
                   <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
                     <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">

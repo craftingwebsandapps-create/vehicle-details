@@ -21,8 +21,6 @@ type VehicleApiResponse = {
       }
 }
 
-const CONTRACTOR_V1_PREFIX = "/v1/contractor"
-
 const VEHICLE_LIST_SEARCH_MAX = 200
 
 const getAuthToken = () => {
@@ -53,7 +51,7 @@ export const listAvailableVehicles = async (params?: {
   if (params?.search) query.set("search", params.search)
 
   const response = await apiClient.getWithAuth<SimpleVehicleListResponse>(
-    `${CONTRACTOR_V1_PREFIX}/vehicles/available?${query.toString()}`,
+    `/vehicles/available?${query.toString()}`,
     token
   )
 
@@ -166,7 +164,7 @@ export const createVehicle = async (
   const accessToken = getAuthToken()
 
   const response = await apiClient.post<VehicleApiResponse>(
-    `${CONTRACTOR_V1_PREFIX}/vehicles`,
+    `/vehicles`,
     payload,
     {
       headers: {
@@ -202,7 +200,7 @@ export const updateVehicle = async (
   }
 
   const response = await apiClient.request<VehicleApiResponse>(
-    `${CONTRACTOR_V1_PREFIX}/vehicles/${id}`,
+    `/vehicles/${id}`,
     {
       method: "PATCH",
       body: JSON.stringify(payload),
@@ -229,7 +227,7 @@ export const updateVehicle = async (
   const latest = await apiClient.getWithAuth<{
     success: boolean
     data?: Vehicle
-  }>(`${CONTRACTOR_V1_PREFIX}/vehicles/${id}`, accessToken)
+  }>(`/vehicles/${id}`, accessToken)
 
   if (!latest.success || !latest.data) {
     throw new Error(response.message || "Unable to update vehicle")
