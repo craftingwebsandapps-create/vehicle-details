@@ -81,7 +81,7 @@ function DashboardSkeleton() {
 
 export default function Dashboard() {
   const dispatch = useAppDispatch()
-  const { data, status } = useAppSelector((s) => s.dashboard)
+  const { data, status, errorCode } = useAppSelector((s) => s.dashboard)
 
   useEffect(() => {
     void dispatch(fetchDashboardThunk())
@@ -118,7 +118,9 @@ export default function Dashboard() {
         <DashboardSkeleton />
       ) : status === "failed" ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-600">
-          Failed to load dashboard data. Tap refresh to try again.
+          {errorCode === "FORBIDDEN_TENANT_ONLY"
+            ? "Tenant access required. Sign in with a contractor account to view this dashboard."
+            : "Failed to load dashboard data. Tap refresh to try again."}
         </div>
       ) : data ? (
         <>
