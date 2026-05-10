@@ -103,6 +103,13 @@ class ApiClient {
           setRefreshToken(response.data.refreshToken)
         }
 
+        void Promise.all([
+          import("~/store"),
+          import("~/features/auth/authSlice"),
+        ]).then(([{ store }, authMod]) => {
+          store.dispatch(authMod.syncSessionFromStorage())
+        })
+
         return response.data.accessToken
       } catch {
         this.handleSessionExpired()
@@ -141,11 +148,8 @@ class ApiClient {
         const nextAccessToken = await this.refreshAuthToken()
 
         if (nextAccessToken) {
-          const retryHeaders = new Headers(headers)
-
-          if (!retryHeaders.has("Authorization")) {
-            retryHeaders.set("Authorization", `Bearer ${nextAccessToken}`)
-          }
+          const retryHeaders = new Headers(headers ?? undefined)
+          retryHeaders.set("Authorization", `Bearer ${nextAccessToken}`)
 
           const retryResponse = await fetch(`${this.baseUrl}${path}`, {
             ...restOptions,

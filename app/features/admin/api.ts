@@ -16,6 +16,14 @@ import type {
   ViPaginatedMeta,
 } from "~/types/vi-platform"
 import type { Vehicle } from "~/types/vehicle"
+import type { AdminDashboardData } from "~/types/admin-dashboard"
+import type {
+  AuditLogReport,
+  ListAdminAuditLogsParams,
+  PaginationMeta,
+} from "~/types/admin-audit-log"
+import type { ApiSuccessBody } from "~/types/api-envelope"
+import { isValidObjectId } from "~/features/admin/contractors-admin-api"
 
 const ADMIN_API_PREFIX = "/admin"
 
@@ -34,6 +42,109 @@ const getAuthToken = () => {
 }
 
 export { listContractors } from "~/features/admin/contractors-admin-api"
+
+/** GET /api/admin/dashboard — requireAuth + requireSuperadmin */
+export async function getAdminDashboard(): Promise<AdminDashboardData> {
+  const token = getAuthToken()
+  const response = await apiClient.getWithAuth<
+    ApiSuccessBody<AdminDashboardData>
+  >(`${ADMIN_API_PREFIX}/dashboard`, token)
+
+  if (!response.success || response.data === undefined) {
+    throw new Error("Unable to load admin dashboard")
+  }
+
+  return response.data
+}
+
+function clampAuditPage(page?: number) {
+  return Math.max(1, page ?? 1)
+}
+
+function clampAuditLimit(limit?: number) {
+  return Math.min(100, Math.max(1, limit ?? 20))
+}
+
+/** GET /api/admin/audit-logs — requireAuth + requireSuperadmin */
+export async function listAdminAuditLogs(
+  params?: ListAdminAuditLogsParams
+): Promise<{ items: AuditLogReport[]; meta: PaginationMeta }> {
+  const token = getAuthToken()
+  const query = new URLSearchParams()
+  query.set("page", String(clampAuditPage(params?.page)))
+  query.set("limit", String(clampAuditLimit(params?.limit)))
+
+  const actorUserId = params?.actorUserId?.trim()
+  if (actorUserId && isValidObjectId(actorUserId)) {
+    query.set("actorUserId", actorUserId)
+  }
+
+  if (params?.actorRole === "superadmin" || params?.actorRole === "tenant") {
+    query.set("actorRole", params.actorRole)
+  }
+  if (params?.apiScope === "admin" || params?.apiScope === "tenant_api") {
+    query.set("apiScope", params.apiScope)
+  }
+
+  const methodRaw = (params?.method ?? "").trim().toUpperCase().slice(0, 8)
+  if (methodRaw.length >= 1) {
+    query.set("method", methodRaw)
+  }
+
+  const statusCode = params?.statusCode
+  if (
+    typeof statusCode === "number" &&
+    Number.isInteger(statusCode) &&
+    statusCode >= 100 &&
+    statusCode <= 599
+  ) {
+    query.set("statusCode", String(statusCode))
+  }
+
+  const pathContains = (params?.pathContains ?? "").trim().slice(0, 200)
+  if (pathContains.length >= 1) {
+    query.set("pathContains", pathContains)
+  }
+
+  const from = params?.from?.trim()
+  if (from) {
+    query.set("from", from)
+  }
+  const to = params?.to?.trim()
+  if (to) {
+    query.set("to", to)
+  }
+
+  const qs = query.toString()
+  const response = await apiClient.getWithAuth<{
+    success: boolean
+    data?: { items: AuditLogReport[]; meta: PaginationMeta }
+  }>(`${ADMIN_API_PREFIX}/audit-logs?${qs}`, token)
+
+  if (!response.success || !response.data) {
+    throw new Error("Unable to fetch audit logs")
+  }
+
+  return { items: response.data.items, meta: response.data.meta }
+}
+
+/** GET /api/admin/audit-logs/:id — requireAuth + requireSuperadmin */
+export async function getAuditLog(id: string): Promise<AuditLogReport> {
+  if (!isValidObjectId(id)) {
+    throw new Error("Audit log id must be a 24-character hex ObjectId")
+  }
+  const token = getAuthToken()
+  const response = await apiClient.getWithAuth<{
+    success: boolean
+    data?: AuditLogReport
+  }>(`${ADMIN_API_PREFIX}/audit-logs/${encodeURIComponent(id)}`, token)
+
+  if (!response.success || !response.data) {
+    throw new Error("Unable to fetch audit log")
+  }
+
+  return response.data
+}
 
 /** GET /api/vehicles — enriched rows. Omit `contractor` for superadmin to list all tenants (backend permitting). */
 export const listPlatformVehicles = async (

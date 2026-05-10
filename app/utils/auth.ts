@@ -1,7 +1,9 @@
+import { getAccessToken } from "~/features/auth/auth-storage"
+
 export const isMobileAuthenticated = () => {
-  return !!localStorage.getItem("accessToken")
+  return !!getAccessToken()
 }
 
 export const isAdminAuthenticated = () => {
-  return !!localStorage.getItem("accessToken")
+  return !!getAccessToken()
 }

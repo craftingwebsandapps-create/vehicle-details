@@ -16,8 +16,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
-import { ContractorDetailSheet } from "~/components/admin/ContractorDetailSheet"
-import { ContractorFormDialog } from "~/components/admin/ContractorFormDialog"
+import { WorkTypeFormDialog } from "~/components/admin/WorkTypeFormDialog"
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert"
 import { Button } from "~/components/ui/button"
 import {
@@ -38,12 +37,11 @@ import {
 import { Input } from "~/components/ui/input"
 import { Skeleton } from "~/components/ui/skeleton"
 import {
-  deleteContractor,
-  listContractors,
-} from "~/features/admin/contractors-admin-api"
-import { useAppSelector } from "~/hooks"
+  deleteWorkType,
+  listWorkTypesPaginated,
+} from "~/features/admin/work-types-api"
 import { getApiErrorMeta } from "~/services/api-error"
-import type { Contractor, ContractorWorkTypeRef } from "~/types/vehicle"
+import type { WorkTypeRecord } from "~/types/work-type"
 
 const PAGE_SIZE = 20
 
@@ -63,13 +61,6 @@ function formatCell(value: string | undefined | null) {
   return v && v.length > 0 ? v : "—"
 }
 
-function summarizeWorkTypes(types: ContractorWorkTypeRef[] | undefined) {
-  if (!types?.length) return "—"
-  const labels = types.slice(0, 2).map((t) => t.name?.trim() || t.code || "—")
-  const extra = types.length - labels.length
-  return extra > 0 ? `${labels.join(", ")} +${extra}` : labels.join(", ")
-}
-
 function formatShortDate(iso: string | undefined | null) {
   if (!iso) return "—"
   try {
@@ -79,29 +70,29 @@ function formatShortDate(iso: string | undefined | null) {
   }
 }
 
-export default function AdminContractors() {
-  const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated)
+function truncate(text: string | undefined | null, max: number) {
+  const t = text?.trim() ?? ""
+  if (!t) return "—"
+  return t.length <= max ? t : `${t.slice(0, max)}…`
+}
 
-  const [items, setItems] = useState<Contractor[]>([])
+export default function AdminWorkTypes() {
+  const [items, setItems] = useState<WorkTypeRecord[]>([])
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [errorCode, setErrorCode] = useState<string | undefined>(undefined)
+
   const [query, setQuery] = useState("")
   const [debouncedQuery, setDebouncedQuery] = useState("")
 
-  const [detailId, setDetailId] = useState<string | null>(null)
-  const [detailOpen, setDetailOpen] = useState(false)
-
   const [formOpen, setFormOpen] = useState(false)
   const [formMode, setFormMode] = useState<"create" | "edit">("create")
-  const [formContractor, setFormContractor] = useState<Contractor | null>(
-    null
-  )
+  const [formWorkType, setFormWorkType] = useState<WorkTypeRecord | null>(null)
 
-  const [deleteTarget, setDeleteTarget] = useState<Contractor | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<WorkTypeRecord | null>(null)
   const [deleteBusy, setDeleteBusy] = useState(false)
 
   useEffect(() => {
@@ -114,21 +105,18 @@ export default function AdminContractors() {
   }, [debouncedQuery])
 
   const load = useCallback(async () => {
-    if (!isAuthenticated) {
-      return
-    }
     setLoading(true)
     setError(null)
     setErrorCode(undefined)
     try {
-      const res = await listContractors({
+      const { items: rows, meta } = await listWorkTypesPaginated({
         page: clampPage(page),
         limit: clampLimit(PAGE_SIZE),
         search: debouncedQuery ? debouncedQuery.slice(0, 200) : undefined,
       })
-      setItems(res.data.items)
-      setTotalPages(Math.max(1, res.data.meta.totalPages))
-      setTotal(res.data.meta.total)
+      setItems(rows)
+      setTotalPages(Math.max(1, meta.totalPages))
+      setTotal(meta.total)
     } catch (e: unknown) {
       const meta = getApiErrorMeta(e)
       setError(meta.message)
@@ -137,26 +125,21 @@ export default function AdminContractors() {
     } finally {
       setLoading(false)
     }
-  }, [page, debouncedQuery, isAuthenticated])
+  }, [page, debouncedQuery])
 
   useEffect(() => {
     void load()
   }, [load])
 
-  const openDetail = (id: string) => {
-    setDetailId(id)
-    setDetailOpen(true)
-  }
-
   const openCreate = () => {
     setFormMode("create")
-    setFormContractor(null)
+    setFormWorkType(null)
     setFormOpen(true)
   }
 
-  const openEdit = (c: Contractor) => {
+  const openEdit = (w: WorkTypeRecord) => {
     setFormMode("edit")
-    setFormContractor(c)
+    setFormWorkType(w)
     setFormOpen(true)
   }
 
@@ -166,8 +149,8 @@ export default function AdminContractors() {
     }
     setDeleteBusy(true)
     try {
-      await deleteContractor(deleteTarget._id)
-      toast.success("Contractor deleted")
+      await deleteWorkType(deleteTarget._id)
+      toast.success("Work type deleted")
       setDeleteTarget(null)
       void load()
     } catch (e: unknown) {
@@ -186,7 +169,7 @@ export default function AdminContractors() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            Contractors
+            Work types
           </h1>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -214,13 +197,13 @@ export default function AdminContractors() {
         <CardHeader className="gap-2 space-y-2">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0 shrink">
-              <CardTitle className="text-base">Directory</CardTitle>
+              <CardTitle className="text-base">Catalog</CardTitle>
               <CardDescription>
-                {loading ? "Loading…" : `${total} contractor${total === 1 ? "" : "s"}`}
+                {loading ? "Loading…" : `${total} type${total === 1 ? "" : "s"}`}
               </CardDescription>
             </div>
             <Input
-              placeholder="Search name, contact, email…"
+              placeholder="Search name or code…"
               value={query}
               maxLength={200}
               onChange={(e) => setQuery(e.target.value)}
@@ -231,11 +214,7 @@ export default function AdminContractors() {
         <CardContent className="px-0 pb-4">
           {error ? (
             <Alert variant="destructive" className="mx-6 mb-4">
-              <AlertTitle>
-                {errorCode === "FORBIDDEN_SUPERADMIN_ONLY"
-                  ? "Forbidden"
-                  : "Contractors"}
-              </AlertTitle>
+              <AlertTitle>Work types</AlertTitle>
               <AlertDescription>
                 <span>{error}</span>
                 {errorCode ? (
@@ -246,14 +225,12 @@ export default function AdminContractors() {
           ) : null}
 
           <div className="overflow-x-auto border-y">
-            <table className="w-full min-w-[960px] text-left text-sm">
+            <table className="w-full min-w-[820px] text-left text-sm">
               <thead className="bg-muted/40 border-b text-xs font-medium text-muted-foreground uppercase">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Organization</th>
-                  <th className="px-4 py-3 font-medium">Contact</th>
-                  <th className="px-4 py-3 font-medium">Email</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Work types</th>
+                  <th className="px-4 py-3 font-medium">Code</th>
+                  <th className="px-4 py-3 font-medium">Name</th>
+                  <th className="px-4 py-3 font-medium">Description</th>
                   <th className="px-4 py-3 font-medium">Updated</th>
                   <th className="px-4 py-3 font-medium text-right">Actions</th>
                 </tr>
@@ -262,7 +239,7 @@ export default function AdminContractors() {
                 {loading ? (
                   Array.from({ length: 6 }).map((_, i) => (
                     <tr key={i}>
-                      {Array.from({ length: 7 }).map((__, j) => (
+                      {Array.from({ length: 5 }).map((__, j) => (
                         <td key={j} className="px-4 py-3">
                           <Skeleton className="h-4 w-full max-w-[140px]" />
                         </td>
@@ -272,63 +249,39 @@ export default function AdminContractors() {
                 ) : items.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={5}
                       className="text-muted-foreground px-4 py-12 text-center text-sm"
                     >
-                      No contractors match your search.
+                      No work types match your search.
                     </td>
                   </tr>
                 ) : (
-                  items.map((c) => (
-                    <tr key={c._id} className="hover:bg-muted/30">
+                  items.map((w) => (
+                    <tr key={w._id} className="hover:bg-muted/30">
                       <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          className="text-left font-medium underline-offset-4 hover:underline"
-                          onClick={() => openDetail(c._id)}
-                        >
-                          {formatCell(c.name)}
-                        </button>
-                        <div className="text-muted-foreground font-mono text-xs">
-                          {c._id}
+                        <div className="font-mono text-xs font-semibold tracking-wide uppercase">
+                          {formatCell(w.code)}
+                        </div>
+                        <div className="text-muted-foreground font-mono text-[11px]">
+                          {w._id}
                         </div>
                       </td>
-                      <td className="px-4 py-3">
-                        <div>{formatCell(c.contactPerson)}</div>
-                        <div className="text-muted-foreground text-xs">
-                          {formatCell(c.mobileNumber)}
-                        </div>
+                      <td className="max-w-[200px] px-4 py-3 font-medium">
+                        {formatCell(w.name)}
                       </td>
-                      <td className="px-4 py-3 max-w-[200px] truncate">
-                        {formatCell(c.email)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="bg-muted rounded-full px-2 py-0.5 text-xs font-medium">
-                          {formatCell(c.status)}
-                        </span>
-                      </td>
-                      <td className="text-muted-foreground max-w-[200px] truncate px-4 py-3 text-xs">
-                        {summarizeWorkTypes(c.workTypeIds)}
+                      <td className="text-muted-foreground max-w-[280px] px-4 py-3 text-xs">
+                        {truncate(w.description ?? "", 120)}
                       </td>
                       <td className="text-muted-foreground whitespace-nowrap px-4 py-3 text-xs">
-                        {formatShortDate(c.updatedAt)}
+                        {formatShortDate(w.updatedAt)}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex flex-wrap justify-end gap-1">
                           <Button
                             type="button"
                             size="xs"
-                            variant="ghost"
-                            className="text-muted-foreground hover:text-foreground"
-                            onClick={() => openDetail(c._id)}
-                          >
-                            View
-                          </Button>
-                          <Button
-                            type="button"
-                            size="xs"
                             variant="outline"
-                            onClick={() => openEdit(c)}
+                            onClick={() => openEdit(w)}
                           >
                             <Pencil className="size-3.5" />
                             Edit
@@ -337,7 +290,7 @@ export default function AdminContractors() {
                             type="button"
                             size="xs"
                             variant="destructive"
-                            onClick={() => setDeleteTarget(c)}
+                            onClick={() => setDeleteTarget(w)}
                           >
                             <Trash2 className="size-3.5" />
                             Delete
@@ -353,7 +306,7 @@ export default function AdminContractors() {
 
           <div className="text-muted-foreground flex flex-col items-center justify-between gap-3 px-6 pt-4 text-sm sm:flex-row">
             <span>
-              Page {page} of {totalPages} · limit {PAGE_SIZE} (max 100)
+              Page {page} of {totalPages} · limit ≤ 100
             </span>
             <div className="flex gap-2">
               <Button
@@ -381,26 +334,11 @@ export default function AdminContractors() {
         </CardContent>
       </Card>
 
-      <ContractorDetailSheet
-        contractorId={detailId}
-        open={detailOpen}
-        onOpenChange={(next) => {
-          setDetailOpen(next)
-          if (!next) {
-            setDetailId(null)
-          }
-        }}
-        onEdit={(c) => {
-          setDetailOpen(false)
-          openEdit(c)
-        }}
-      />
-
-      <ContractorFormDialog
+      <WorkTypeFormDialog
         mode={formMode}
         open={formOpen}
         onOpenChange={setFormOpen}
-        contractor={formContractor}
+        workType={formWorkType}
         onSaved={() => void load()}
       />
 
@@ -412,20 +350,21 @@ export default function AdminContractors() {
       >
         <DialogContent className="sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>Delete contractor?</DialogTitle>
+            <DialogTitle>Delete work type?</DialogTitle>
             <DialogDescription>
-              This calls{" "}
-              <code className="text-xs">DELETE /api/contractors/:id</code>{" "}
-              (204). This cannot be undone from the UI.
+              Soft-delete via{" "}
+              <code className="text-xs">DELETE /api/work-types/:id</code> (204).
+              Contractor APIs require valid{" "}
+              <code className="text-xs">workTypeIds</code>.
             </DialogDescription>
           </DialogHeader>
           {deleteTarget ? (
             <p className="text-sm">
-              <span className="font-medium">{deleteTarget.name}</span>
-              <span className="text-muted-foreground"> · </span>
-              <span className="break-all font-mono text-xs">
-                {deleteTarget._id}
+              <span className="font-mono font-semibold uppercase">
+                {deleteTarget.code}
               </span>
+              <span className="text-muted-foreground"> · </span>
+              <span>{deleteTarget.name}</span>
             </p>
           ) : null}
           <DialogFooter className={confirmDialogFooterClass}>

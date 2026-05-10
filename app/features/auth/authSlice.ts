@@ -73,7 +73,7 @@ const hasToken = () => {
     return false
   }
 
-  return !!localStorage.getItem("accessToken")
+  return !!getAccessToken()
 }
 
 const initialState: AuthState = {
@@ -109,6 +109,12 @@ const authSlice = createSlice({
       state.status = "idle"
       state.error = null
     },
+    /** Call after silent refresh — JWT in storage may have new expiry/claims. */
+    syncSessionFromStorage(state) {
+      const token = getAccessToken()
+      state.isAuthenticated = !!token
+      state.contractorId = getContractorIdFromAccessToken(token)
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -135,6 +141,6 @@ const authSlice = createSlice({
   },
 })
 
-export const { signOut } = authSlice.actions
+export const { signOut, syncSessionFromStorage } = authSlice.actions
 
 export default authSlice.reducer

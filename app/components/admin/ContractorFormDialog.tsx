@@ -8,17 +8,13 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog"
 import { Input } from "~/components/ui/input"
-import {
-  createContractor,
-  listWorkTypes,
-  updateContractor,
-  type WorkTypeOption,
-} from "~/features/admin/contractors-admin-api"
+import { createContractor, updateContractor } from "~/features/admin/contractors-admin-api"
+import { listWorkTypesForPicker } from "~/features/admin/work-types-api"
+import type { WorkTypePickerItem } from "~/types/work-type"
 import type { Contractor } from "~/types/vehicle"
 import { getApiErrorMeta } from "~/services/api-error"
 
@@ -96,7 +92,7 @@ export function ContractorFormDialog({
   const [selectedWt, setSelectedWt] = useState<Set<string>>(new Set())
   const [wtFilter, setWtFilter] = useState("")
 
-  const [workTypes, setWorkTypes] = useState<WorkTypeOption[]>([])
+  const [workTypes, setWorkTypes] = useState<WorkTypePickerItem[]>([])
   const [wtLoadError, setWtLoadError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitCode, setSubmitCode] = useState<string | undefined>(undefined)
@@ -138,7 +134,7 @@ export function ContractorFormDialog({
     let cancelled = false
     setLoadingWt(true)
     setWtLoadError(null)
-    void listWorkTypes()
+    void listWorkTypesForPicker()
       .then((rows) => {
         if (!cancelled) {
           setWorkTypes(rows)
@@ -228,7 +224,7 @@ export function ContractorFormDialog({
             {mode === "create" ? "Create contractor" : "Edit contractor"}
           </DialogTitle>
           <DialogDescription>
-            Superadmin only. Values are validated against{" "}
+            Values are validated against{" "}
             <code className="text-xs">POST/PATCH /api/contractors</code>.
           </DialogDescription>
         </DialogHeader>
@@ -352,7 +348,7 @@ export function ContractorFormDialog({
           ) : null}
         </div>
 
-        <DialogFooter className="border-border shrink-0 gap-3 border-t px-6 py-4 sm:justify-end">
+        <div className="border-border bg-muted/50 flex shrink-0 flex-row flex-wrap items-center justify-end gap-3 border-t px-6 py-4">
           <Button
             type="button"
             variant="outline"
@@ -368,7 +364,7 @@ export function ContractorFormDialog({
           >
             {submitting ? "Saving…" : mode === "create" ? "Create" : "Save"}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   )
