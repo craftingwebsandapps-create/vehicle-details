@@ -23,6 +23,10 @@ import type {
   PaginationMeta,
 } from "~/types/admin-audit-log"
 import type { ApiSuccessBody } from "~/types/api-envelope"
+import type {
+  UpdateVehicleQrThemePayload,
+  VehicleQrThemeApiData,
+} from "~/types/admin-vehicle-qr-theme"
 import { isValidObjectId } from "~/features/admin/contractors-admin-api"
 
 const ADMIN_API_PREFIX = "/admin"
@@ -352,5 +356,44 @@ export const rejectDriver = async (driverId: string, note?: string) => {
   if (!response.success) {
     throw new Error(response.message || "Failed to reject driver")
   }
+  return response.data
+}
+
+type VehicleQrThemeEnvelope = {
+  success: boolean
+  message?: string
+  data?: VehicleQrThemeApiData
+}
+
+/** GET /api/admin/vehicle-qr-theme */
+export async function getAdminVehicleQrTheme(): Promise<VehicleQrThemeApiData> {
+  const token = getAuthToken()
+  const response = await apiClient.getWithAuth<VehicleQrThemeEnvelope>(
+    `${ADMIN_API_PREFIX}/vehicle-qr-theme`,
+    token
+  )
+
+  if (!response.success || response.data === undefined) {
+    throw new Error(response.message || "Unable to load vehicle QR theme")
+  }
+
+  return response.data
+}
+
+/** PUT /api/admin/vehicle-qr-theme — partial body; server merges with stored values */
+export async function updateAdminVehicleQrTheme(
+  payload: UpdateVehicleQrThemePayload
+): Promise<VehicleQrThemeApiData> {
+  const token = getAuthToken()
+  const response = await apiClient.putWithAuth<VehicleQrThemeEnvelope>(
+    `${ADMIN_API_PREFIX}/vehicle-qr-theme`,
+    payload,
+    token
+  )
+
+  if (!response.success || response.data === undefined) {
+    throw new Error(response.message || "Unable to save vehicle QR theme")
+  }
+
   return response.data
 }

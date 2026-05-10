@@ -15,6 +15,7 @@ const AdminContractors = lazy(() => import("~/pages/admin/AdminContractors"))
 const AdminWorkTypes = lazy(() => import("~/pages/admin/AdminWorkTypes"))
 const AdminUsers = lazy(() => import("~/pages/admin/AdminUsers"))
 const AdminAuditLogs = lazy(() => import("~/pages/admin/AdminAuditLogs"))
+const AdminVehicleQrTheme = lazy(() => import("~/pages/admin/AdminVehicleQrTheme"))
 
 const withSuspense = (Component: React.ComponentType) => (
   <Suspense fallback={<PageLoader />}>
@@ -40,6 +41,10 @@ export const adminRoutes: RouteObject[] = [
       { path: "users", element: withSuspense(AdminUsers) },
       { path: "audit-logs", element: withSuspense(AdminAuditLogs) },
       { path: "vehicles", element: withSuspense(AdminVehicles) },
+      {
+        path: "vehicle-qr-theme",
+        element: withSuspense(AdminVehicleQrTheme),
+      },
       { path: "drivers", element: withSuspense(AdminDrivers) },
       { path: "sites", element: withSuspense(AdminSites) },
     ],

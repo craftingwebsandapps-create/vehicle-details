@@ -20,7 +20,10 @@ function adminSectionTitle(pathname: string) {
     return "Dashboard"
   }
   const raw = segment.replace(/-/g, " ")
-  return raw.charAt(0).toUpperCase() + raw.slice(1)
+  return raw
+    .split(" ")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ")
 }
 
 export default function AdminLayout() {

@@ -21,6 +21,7 @@ import {
   Tags,
   UserCog,
   ScrollText,
+  QrCode,
   LogOut,
   ChevronUp,
   User2,
@@ -42,6 +43,11 @@ const navItems = [
   { title: "Users", url: "/admin/users", icon: UserCog },
   { title: "Audit logs", url: "/admin/audit-logs", icon: ScrollText },
   { title: "Vehicles", url: "/admin/vehicles", icon: Car },
+  {
+    title: "Vehicle QR theme",
+    url: "/admin/vehicle-qr-theme",
+    icon: QrCode,
+  },
   { title: "Drivers", url: "/admin/drivers", icon: Users },
   { title: "Sites", url: "/admin/sites", icon: MapPin },
 ]
