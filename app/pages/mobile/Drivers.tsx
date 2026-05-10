@@ -1,9 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { ExternalLink, Pencil, Phone } from "lucide-react"
+import {
+  ChevronRight,
+  FileQuestion,
+  FileText,
+  IdCard,
+  Pencil,
+  Phone,
+  Truck,
+  UserRound,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { useAppDispatch, useAppSelector } from "~/hooks"
+import {
+  mobileListCardActionBtn,
+  mobileListCardIconTile,
+  mobileListCardMetaPanel,
+} from "~/components/mobile/ops/mobile-list-card-styles"
 import {
   OpsApprovalPill,
   OpsCard,
@@ -315,7 +329,6 @@ export default function Drivers() {
       {status !== "loading" && status !== "failed" ? (
         <section className="space-y-2">
           {drivers.map((driver) => {
-            const initial = driver.name.charAt(0).toUpperCase()
             const assignedVehicle =
               driver.vehicle?.registrationNumber ??
               driver.vehicle?.name ??
@@ -328,76 +341,120 @@ export default function Drivers() {
             return (
               <OpsCard key={driver.id}>
                 <div className="space-y-3">
-                  <div className="flex items-start gap-2.5">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-semibold text-primary">
-                      {initial}
-                    </span>
+                  <div className="flex items-start gap-3">
+                    <div className={mobileListCardIconTile} aria-hidden>
+                      <UserRound className="size-6 stroke-[2]" />
+                    </div>
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      <p className="text-lg leading-tight font-bold break-words text-foreground">
+                        {driver.name}
+                      </p>
+                      <p className="mt-0.5 text-xs break-words text-muted-foreground">
+                        {driver.mobileNumber}
+                      </p>
+                    </div>
+                    <div className="shrink-0 pt-0.5">
+                      <OpsApprovalPill
+                        appearance="badge"
+                        status={driver.approvalStatus}
+                      />
+                    </div>
+                  </div>
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="text-sm leading-tight font-semibold text-foreground">
-                            {driver.name}
+                  {isRejected && rejectionNote ? (
+                    <p className="rounded-lg border border-destructive/25 bg-destructive/5 px-2.5 py-2 text-xs leading-snug text-destructive">
+                      {rejectionNote}
+                    </p>
+                  ) : null}
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className={mobileListCardMetaPanel}>
+                      <div className="flex gap-2">
+                        <IdCard
+                          className="size-5 shrink-0 stroke-[2.25] text-primary"
+                          aria-hidden
+                        />
+                        <div className="min-w-0">
+                          <p className="text-[11px] leading-none font-medium text-muted-foreground">
+                            Licence
                           </p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            {driver.mobileNumber}
+                          <p className="mt-1 text-sm leading-snug font-semibold break-words tabular-nums text-foreground">
+                            {driver.licenceNumber}
                           </p>
                         </div>
-
-                        <OpsApprovalPill status={driver.approvalStatus} />
                       </div>
-
-                      {isRejected && rejectionNote ? (
-                        <p className="mt-2 rounded-lg border border-destructive/25 bg-destructive/5 px-2.5 py-2 text-xs leading-snug text-destructive">
-                          {rejectionNote}
-                        </p>
-                      ) : null}
-
-                      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
-                        <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
-                          Licence: {driver.licenceNumber}
-                        </span>
-                        <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
-                          {assignedVehicle}
-                        </span>
+                    </div>
+                    <div className={mobileListCardMetaPanel}>
+                      <div className="flex gap-2">
+                        <Truck
+                          className="size-5 shrink-0 stroke-[2.25] text-primary"
+                          aria-hidden
+                        />
+                        <div className="min-w-0">
+                          <p className="text-[11px] leading-none font-medium text-muted-foreground">
+                            Vehicle
+                          </p>
+                          <p className="mt-1 text-sm leading-snug font-semibold break-words text-foreground">
+                            {assignedVehicle}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  <div className="min-w-0">
                     {driver.licenceUrl ? (
                       <a
                         href={driver.licenceUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-xs font-medium text-primary"
+                        className="flex max-w-full items-center justify-between gap-3 rounded-lg py-2 text-primary transition-colors hover:bg-primary/10 hover:text-primary"
                       >
-                        <ExternalLink className="size-3" />
-                        View licence
+                        <span className="flex min-w-0 items-center gap-2">
+                          <FileText
+                            className="size-5 shrink-0 stroke-[2.35]"
+                            aria-hidden
+                          />
+                          <span className="truncate text-sm font-semibold">
+                            View licence
+                          </span>
+                        </span>
+                        <ChevronRight
+                          className="size-5 shrink-0 text-primary opacity-80"
+                          aria-hidden
+                        />
                       </a>
                     ) : (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="flex items-center gap-2 rounded-lg py-2 text-sm font-medium text-muted-foreground">
+                        <FileQuestion
+                          className="size-5 shrink-0 stroke-[2.25] opacity-70"
+                          aria-hidden
+                        />
                         No licence file
                       </span>
                     )}
+                  </div>
 
-                    <div className="flex items-center gap-1.5">
+                  <div className="border-border border-t border-dashed pt-3 dark:border-border">
+                    <div className="grid grid-cols-2 gap-2">
                       <Button
                         variant="outline"
-                        size="xs"
-                        onClick={() => {
-                          window.location.href = `tel:${driver.mobileNumber}`
-                        }}
+                        size="sm"
+                        className={mobileListCardActionBtn}
+                        asChild
                       >
-                        <Phone className="size-3.5" />
-                        Call
+                        <a href={`tel:${driver.mobileNumber}`}>
+                          <Phone className="size-[18px]" />
+                          Call
+                        </a>
                       </Button>
                       <Button
                         variant="outline"
-                        size="xs"
+                        size="sm"
+                        className={mobileListCardActionBtn}
                         onClick={() => openEditDialog(driver)}
                       >
-                        <Pencil className="size-3.5" />
+                        <Pencil className="size-[18px]" />
                         Edit
                       </Button>
                     </div>

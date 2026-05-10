@@ -192,6 +192,58 @@ class ApiClient {
     })
   }
 
+  /**
+   * Authenticated GET that returns binary data (e.g. PNG). Skips JSON parsing;
+   * errors still use JSON bodies via {@link parseErrorBody}.
+   */
+  async getBlobWithAuth(
+    path: string,
+    accessToken: string,
+    options: RequestOptions = {}
+  ): Promise<{ blob: Blob; headers: Headers }> {
+    const {
+      timeoutMs = 15_000,
+      headers,
+      skipAuthRefresh = false,
+      ...restOptions
+    } = options
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), timeoutMs)
+
+    const execFetch = (token: string) =>
+      fetch(`${this.baseUrl}${path}`, {
+        ...restOptions,
+        method: "GET",
+        signal: controller.signal,
+        headers: {
+          ...(headers ?? {}),
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+    try {
+      let response = await execFetch(accessToken)
+
+      if (response.status === 401 && !skipAuthRefresh) {
+        const nextAccessToken = await this.refreshAuthToken()
+
+        if (nextAccessToken) {
+          response = await execFetch(nextAccessToken)
+        }
+      }
+
+      if (!response.ok) {
+        await this.parseErrorBody(response)
+      }
+
+      const blob = await response.blob()
+
+      return { blob, headers: response.headers }
+    } finally {
+      window.clearTimeout(timeout)
+    }
+  }
+
   post<T>(path: string, body: unknown, options?: RequestOptions) {
     return this.request<T>(path, {
       ...options,

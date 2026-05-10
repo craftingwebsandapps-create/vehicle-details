@@ -164,6 +164,12 @@ export type PatchVehicleDriverBody = {
   driver: ObjectIdString | null
 }
 
+/** GET `/api/vehicles/:id/qr` — optional query */
+export type VehicleQrQuery = {
+  /** When true, server sends `Content-Disposition: attachment` */
+  download?: boolean
+}
+
 export type VehicleFormValues = {
   name: string
   type: string

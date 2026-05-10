@@ -1,9 +1,27 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { ExternalLink, Pencil, Phone, UserMinus, UserPlus } from "lucide-react"
+import {
+  ChevronRight,
+  FileQuestion,
+  FileText,
+  MapPin,
+  Pencil,
+  Phone,
+  QrCode,
+  Truck,
+  UserMinus,
+  UserPlus,
+  UserRound,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { useAppDispatch, useAppSelector } from "~/hooks"
+import {
+  mobileListCardActionBtn,
+  mobileListCardDangerBtn,
+  mobileListCardIconTile,
+  mobileListCardMetaPanel,
+} from "~/components/mobile/ops/mobile-list-card-styles"
 import {
   OpsApprovalPill,
   OpsCard,
@@ -22,6 +40,7 @@ import { fetchSitesThunk } from "~/features/sites/sitesSlice"
 import { listAvailableDrivers } from "~/features/drivers/api"
 import {
   createVehicle,
+  downloadVehicleQrPng,
   patchVehicleDriver,
   updateVehicle,
   uploadVehicleDocument,
@@ -109,6 +128,7 @@ export default function Vehicles() {
   const [pickerDrivers, setPickerDrivers] = useState<Driver[]>([])
   const [pickerLoading, setPickerLoading] = useState(false)
   const [busyVehicleId, setBusyVehicleId] = useState<string | null>(null)
+  const [busyQrVehicleId, setBusyQrVehicleId] = useState<string | null>(null)
 
   const serverApprovalFilter =
     approvalFilter === "all" ? undefined : approvalFilter
@@ -358,6 +378,18 @@ export default function Vehicles() {
     }
   }
 
+  const handleDownloadVehicleQr = async (vehicle: Vehicle) => {
+    setBusyQrVehicleId(vehicle._id)
+    try {
+      await downloadVehicleQrPng(vehicle._id)
+      toast.success("Vehicle QR downloaded", { position: "top-center" })
+    } catch (err) {
+      toast.error(getApiErrorMeta(err).message, { position: "top-center" })
+    } finally {
+      setBusyQrVehicleId(null)
+    }
+  }
+
   const hasMore = hasNextPage
 
   return (
@@ -498,7 +530,14 @@ export default function Vehicles() {
                       {d.licenceNumber} · {d.mobileNumber}
                     </span>
                     {!ok && hint ? (
-                      <span className="mt-1 text-[11px] text-amber-800 dark:text-amber-600">
+                      <span
+                        className={cn(
+                          "mt-1 text-[11px]",
+                          hint === "Rejected"
+                            ? "text-destructive"
+                            : "text-muted-foreground"
+                        )}
+                      >
                         {hint}
                       </span>
                     ) : null}
@@ -542,23 +581,31 @@ export default function Vehicles() {
             const canAssignDriver =
               isVehicleApprovedForDriverAssignment(vehicle)
             const busy = busyVehicleId === vehicle._id
+            const qrBusy = busyQrVehicleId === vehicle._id
             const driverPhone =
               vehicle.driver?.mobileNumber?.replace(/\s+/g, "").trim() ?? ""
 
             return (
               <OpsCard key={vehicle._id}>
                 <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-base leading-tight font-semibold tracking-tight text-foreground">
+                  <div className="flex items-start gap-3">
+                    <div className={mobileListCardIconTile} aria-hidden>
+                      <Truck className="size-6 stroke-[2]" />
+                    </div>
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      <p className="text-lg leading-tight font-bold tracking-tight break-words text-foreground">
                         {vehicle.registrationNumber}
                       </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
+                      <p className="mt-0.5 text-xs break-words text-muted-foreground">
                         {vehicle.name} • {vehicle.type}
                       </p>
                     </div>
-
-                    <OpsApprovalPill status={vehicle.approvalStatus} />
+                    <div className="shrink-0 pt-0.5">
+                      <OpsApprovalPill
+                        appearance="badge"
+                        status={vehicle.approvalStatus}
+                      />
+                    </div>
                   </div>
 
                   {isRejected && rejectionNote ? (
@@ -567,79 +614,141 @@ export default function Vehicles() {
                     </p>
                   ) : null}
 
-                  <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-                    <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
-                      Driver: {driverName}
-                    </span>
-                    <span className="rounded-lg bg-muted px-2 py-1 text-muted-foreground">
-                      Site: {siteName}
-                    </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className={mobileListCardMetaPanel}>
+                      <div className="flex gap-2">
+                        <UserRound
+                          className="size-5 shrink-0 stroke-[2.25] text-primary"
+                          aria-hidden
+                        />
+                        <div className="min-w-0">
+                          <p className="text-[11px] leading-none font-medium text-muted-foreground">
+                            Driver
+                          </p>
+                          <p className="mt-1 text-sm leading-snug font-semibold break-words text-foreground">
+                            {driverName}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className={mobileListCardMetaPanel}>
+                      <div className="flex gap-2">
+                        <MapPin
+                          className="size-5 shrink-0 stroke-[2.25] text-primary"
+                          aria-hidden
+                        />
+                        <div className="min-w-0">
+                          <p className="text-[11px] leading-none font-medium text-muted-foreground">
+                            Site
+                          </p>
+                          <p className="mt-1 text-sm leading-snug font-semibold break-words text-foreground">
+                            {siteName}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  <div className="min-w-0">
                     {vehicle.document ? (
                       <a
                         href={vehicle.document}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-xs font-medium text-primary"
+                        className="flex max-w-full items-center justify-between gap-3 rounded-lg py-2 text-primary transition-colors hover:bg-primary/10 hover:text-primary"
                       >
-                        <ExternalLink className="size-3" />
-                        Document
+                        <span className="flex min-w-0 items-center gap-2">
+                          <FileText
+                            className="size-5 shrink-0 stroke-[2.35]"
+                            aria-hidden
+                          />
+                          <span className="truncate text-sm font-semibold">
+                            Document
+                          </span>
+                        </span>
+                        <ChevronRight
+                          className="size-5 shrink-0 text-primary opacity-80"
+                          aria-hidden
+                        />
                       </a>
                     ) : (
-                      <span className="text-xs text-muted-foreground">
-                        No document
+                      <span className="flex items-center gap-2 rounded-lg py-2 text-sm font-medium text-muted-foreground">
+                        <FileQuestion
+                          className="size-5 shrink-0 stroke-[2.25] opacity-70"
+                          aria-hidden
+                        />
+                        No document on file
                       </span>
                     )}
+                  </div>
 
-                    <div className="flex flex-wrap items-center justify-end gap-1.5">
+                  <div className="border-border border-t border-dashed pt-3 dark:border-border">
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                       {canAssignDriver ? (
                         <>
                           <Button
                             variant="outline"
-                            size="xs"
+                            size="sm"
                             disabled={busy}
+                            className={mobileListCardActionBtn}
                             onClick={() => openAssignPicker(vehicle._id)}
                           >
-                            <UserPlus className="size-3.5" />
+                            <UserPlus className="size-[18px]" />
                             {vehicle.driver ? "Change" : "Assign"}
                           </Button>
                           {vehicle.driver ? (
                             <Button
                               variant="outline"
-                              size="xs"
-                              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                              size="sm"
+                              className={mobileListCardDangerBtn}
                               disabled={busy}
                               onClick={() => void handleUnassignDriver(vehicle)}
                             >
-                              <UserMinus className="size-3.5" />
+                              <UserMinus className="size-[18px]" />
                               Unassign
                             </Button>
                           ) : null}
                         </>
-                      ) : (
-                        <span className="text-[11px] text-muted-foreground">
-                          Approve vehicle to assign a driver
-                        </span>
-                      )}
+                      ) : null}
                       <Button
                         variant="outline"
-                        size="xs"
+                        size="sm"
+                        disabled={busy || qrBusy}
+                        className={mobileListCardActionBtn}
+                        onClick={() => void handleDownloadVehicleQr(vehicle)}
+                        aria-label={`Download QR for ${vehicle.registrationNumber}`}
+                      >
+                        <QrCode className="size-[18px]" />
+                        QR
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={mobileListCardActionBtn}
                         onClick={() => openEditDialog(vehicle)}
                       >
-                        <Pencil className="size-3.5" />
+                        <Pencil className="size-[18px]" />
                         Edit
                       </Button>
-                      {driverPhone ? (
-                        <Button variant="outline" size="xs" asChild>
+                    </div>
+                    {driverPhone ? (
+                      <div className="mt-2 flex justify-start">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            mobileListCardActionBtn,
+                            "min-w-[calc(50%-4px)] sm:min-w-[7.5rem]"
+                          )}
+                          asChild
+                        >
                           <a href={`tel:${driverPhone}`}>
-                            <Phone className="size-3.5" />
+                            <Phone className="size-[18px]" />
                             Call
                           </a>
                         </Button>
-                      ) : null}
-                    </div>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </OpsCard>

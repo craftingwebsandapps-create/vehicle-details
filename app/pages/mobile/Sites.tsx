@@ -1,16 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { Pencil, Phone } from "lucide-react"
+import { Mail, MapPin, Pencil, Phone, UserRound } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAppDispatch, useAppSelector } from "~/hooks"
+import {
+  mobileListCardActionBtn,
+  mobileListCardIconTile,
+  mobileListCardMetaPanel,
+} from "~/components/mobile/ops/mobile-list-card-styles"
 import {
   OpsApprovalPill,
   OpsCard,
   OpsEmptyState,
   OpsListHeader,
   OpsListSkeleton,
-  OpsStatusPill,
 } from "~/components/mobile/ops/OpsListPrimitives"
 import { FormBuilder } from "~/components/form"
 import { Button } from "~/components/ui/button"
@@ -30,6 +34,7 @@ import type {
   UpdateSiteRequest,
 } from "~/features/sites/types"
 import { getSiteDialogFormConfig } from "~/schemas/site-dialog-form-config"
+import { cn } from "~/lib/utils"
 
 const initialFormState: CreateSiteRequest = {
   name: "",
@@ -323,69 +328,112 @@ export default function Sites() {
             return (
               <OpsCard key={site.id}>
                 <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-sm leading-tight font-semibold text-foreground">
+                  <div className="flex items-start gap-3">
+                    <div className={mobileListCardIconTile} aria-hidden>
+                      <MapPin className="size-6 stroke-[2]" />
+                    </div>
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      <p className="text-lg leading-tight font-bold break-words text-foreground">
                         {site.name}
                       </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
+                      <p className="mt-0.5 text-xs break-words text-muted-foreground">
                         {site.location}
                       </p>
                     </div>
-
-                    <div className="flex items-center gap-1">
-                      <OpsApprovalPill status={site.approvalStatus} />
+                    <div className="shrink-0 pt-0.5">
+                      <OpsApprovalPill
+                        appearance="badge"
+                        status={site.approvalStatus}
+                      />
                     </div>
                   </div>
 
-                  <div className="rounded-xl bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
-                    <p>
-                      Contact:{" "}
-                      <span className="text-foreground">
-                        {site.contactPerson}
-                      </span>
-                    </p>
-                    <p className="mt-0.5">
-                      Mobile:{" "}
-                      <span className="text-foreground">{site.mobileNumber}</span>
-                    </p>
-                    <p className="mt-0.5 truncate">
-                      Email:{" "}
-                      <span className="text-foreground">{site.email}</span>
-                    </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className={mobileListCardMetaPanel}>
+                      <div className="flex gap-2">
+                        <UserRound
+                          className="size-5 shrink-0 stroke-[2.25] text-primary"
+                          aria-hidden
+                        />
+                        <div className="min-w-0">
+                          <p className="text-[11px] leading-none font-medium text-muted-foreground">
+                            Contact
+                          </p>
+                          <p className="mt-1 text-sm leading-snug font-semibold break-words text-foreground">
+                            {site.contactPerson}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className={mobileListCardMetaPanel}>
+                      <div className="flex gap-2">
+                        <Phone
+                          className="size-5 shrink-0 stroke-[2.25] text-primary"
+                          aria-hidden
+                        />
+                        <div className="min-w-0">
+                          <p className="text-[11px] leading-none font-medium text-muted-foreground">
+                            Mobile
+                          </p>
+                          <p className="mt-1 text-sm leading-snug font-semibold break-words tabular-nums text-foreground">
+                            {site.mobileNumber}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={mobileListCardMetaPanel}>
+                    <div className="flex gap-2">
+                      <Mail
+                        className="size-5 shrink-0 stroke-[2.25] text-primary"
+                        aria-hidden
+                      />
+                      <div className="min-w-0">
+                        <p className="text-[11px] leading-none font-medium text-muted-foreground">
+                          Email
+                        </p>
+                        <p className="mt-1 text-sm leading-snug font-semibold break-words text-foreground">
+                          {site.email}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   {adminNote ? (
                     <p
-                      className={
+                      className={cn(
+                        "rounded-xl px-3 py-2 text-xs",
                         siteIsRejected(site)
-                          ? "rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive"
-                          : "rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground"
-                      }
+                          ? "border border-destructive/30 bg-destructive/5 text-destructive"
+                          : "border border-border bg-muted/30 text-muted-foreground"
+                      )}
                     >
                       <span className="font-medium text-foreground">Note: </span>
                       {adminNote}
                     </p>
                   ) : null}
 
-                  <div className="flex items-center justify-end gap-2">
-                    <div className="flex items-center gap-1.5">
+                  <div className="border-border border-t border-dashed pt-3 dark:border-border">
+                    <div className="grid grid-cols-2 gap-2">
                       <Button
                         variant="outline"
-                        size="xs"
-                        onClick={() => {
-                          window.location.href = `tel:${site.mobileNumber}`
-                        }}
+                        size="sm"
+                        className={mobileListCardActionBtn}
+                        asChild
                       >
-                        <Phone className="size-3.5" />
-                        Call
+                        <a href={`tel:${site.mobileNumber}`}>
+                          <Phone className="size-[18px]" />
+                          Call
+                        </a>
                       </Button>
                       <Button
                         variant="outline"
-                        size="xs"
+                        size="sm"
+                        className={mobileListCardActionBtn}
                         onClick={() => openEditDialog(site)}
                       >
-                        <Pencil className="size-3.5" />
+                        <Pencil className="size-[18px]" />
                         Edit
                       </Button>
                     </div>

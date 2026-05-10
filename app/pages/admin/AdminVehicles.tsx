@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react"
 
-import { ChevronLeft, ChevronRight, Eye, RefreshCw } from "lucide-react"
+import {
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  QrCode,
+  RefreshCw,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { OpsApprovalPill } from "~/components/mobile/ops/OpsListPrimitives"
@@ -33,6 +39,7 @@ import {
   listPlatformVehicles,
   rejectVehicle,
 } from "~/features/admin/api"
+import { downloadVehicleQrPng } from "~/features/vehicles/api"
 import type { Contractor, Vehicle } from "~/types/vehicle"
 import { formatPaginationSummary } from "~/utils/pagination-summary"
 
@@ -65,6 +72,7 @@ export default function AdminVehicles() {
   const [query, setQuery] = useState("")
   const [debouncedQuery, setDebouncedQuery] = useState("")
   const [actingId, setActingId] = useState<string | null>(null)
+  const [qrDownloadingId, setQrDownloadingId] = useState<string | null>(null)
 
   const [rejectOpen, setRejectOpen] = useState(false)
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null)
@@ -179,6 +187,18 @@ export default function AdminVehicles() {
       setActingId(null)
     }
   }
+
+  const handleDownloadVehicleQr = useCallback(async (vehicleId: string) => {
+    setQrDownloadingId(vehicleId)
+    try {
+      await downloadVehicleQrPng(vehicleId)
+      toast.success("Vehicle QR downloaded")
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Unable to download QR")
+    } finally {
+      setQrDownloadingId(null)
+    }
+  }, [])
 
   const canPrev = page > 1
   const canNext = page < totalPages
@@ -318,6 +338,7 @@ export default function AdminVehicles() {
                   items.map((v) => {
                     const pending = isPendingApproval(v.approvalStatus)
                     const busy = actingId === v._id
+                    const qrBusy = qrDownloadingId === v._id
                     return (
                       <tr key={v._id} className="hover:bg-muted/30">
                         <td className="px-4 py-3 font-medium tabular-nums">
@@ -368,6 +389,20 @@ export default function AdminVehicles() {
                             >
                               <Eye className="size-3.5" />
                               View
+                            </Button>
+                            <Button
+                              type="button"
+                              size="xs"
+                              variant="ghost"
+                              className="text-muted-foreground hover:text-foreground"
+                              disabled={busy || qrBusy}
+                              onClick={() => void handleDownloadVehicleQr(v._id)}
+                              aria-label={`Download QR for ${v.registrationNumber}`}
+                            >
+                              <QrCode
+                                className={`size-3.5 ${qrBusy ? "opacity-50" : ""}`}
+                              />
+                              QR
                             </Button>
                             {pending ? (
                               <>

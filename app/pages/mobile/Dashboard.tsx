@@ -14,7 +14,6 @@ type StatCardProps = {
   pending: number
   rejected: number
   icon: React.ElementType
-  accentClass: string
 }
 
 function StatCard({
@@ -24,7 +23,6 @@ function StatCard({
   pending,
   rejected,
   icon: Icon,
-  accentClass,
 }: StatCardProps) {
   return (
     <article className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
@@ -32,22 +30,25 @@ function StatCard({
         <span className="text-xs font-medium text-muted-foreground">
           {label}
         </span>
-        <div className={`rounded-lg p-1.5 ${accentClass}`}>
-          <Icon className="size-4" />
+        <div className="rounded-xl bg-primary/15 p-1.5 text-primary dark:bg-primary/22">
+          <Icon className="size-4 stroke-[2.25]" />
         </div>
       </div>
       <p className="text-3xl font-semibold text-foreground">{total}</p>
-      <div className="flex items-center gap-3 text-xs">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
         <span className="flex items-center gap-1">
-          <span className="size-1.5 rounded-full bg-emerald-500" />
+          <span className="size-1.5 shrink-0 rounded-full bg-primary" />
           <span className="text-muted-foreground">{approved} approved</span>
         </span>
         <span className="flex items-center gap-1">
-          <span className="size-1.5 rounded-full bg-amber-500" />
+          <span className="size-1.5 shrink-0 rounded-full bg-muted-foreground" />
           <span className="text-muted-foreground">{pending} pending</span>
         </span>
       </div>
-      <div className="text-xs text-muted-foreground">{rejected} rejected</div>
+      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        <span className="size-1.5 shrink-0 rounded-full bg-destructive" />
+        <span>{rejected} rejected</span>
+      </div>
     </article>
   )
 }
@@ -109,7 +110,7 @@ export default function Dashboard() {
       {status === "loading" && !data ? (
         <DashboardSkeleton />
       ) : status === "failed" ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-600">
+        <div className="rounded-2xl border border-destructive/35 bg-destructive/10 p-4 text-sm text-destructive">
           {errorCode === "FORBIDDEN_TENANT_ONLY"
             ? "Tenant access required. Sign in with a contractor account to view this dashboard."
             : "Failed to load dashboard data. Tap refresh to try again."}
@@ -117,7 +118,7 @@ export default function Dashboard() {
       ) : data ? (
         <>
           {/* ── Hero banner ── */}
-          <section className="rounded-[28px] bg-primary p-5 text-primary-foreground shadow-[0_18px_48px_-28px_rgba(234,88,12,0.5)]">
+          <section className="rounded-[28px] bg-primary p-5 text-primary-foreground shadow-xl shadow-primary/25 ring-1 ring-primary/15">
             <p className="text-sm opacity-80">Active assignments</p>
             <p className="mt-1 text-4xl font-semibold">
               {data.activeDriverAssignments ?? 0}
@@ -151,7 +152,6 @@ export default function Dashboard() {
               pending={data.drivers?.pending ?? 0}
               rejected={data.drivers?.rejected ?? 0}
               icon={Users}
-              accentClass="bg-blue-100 text-blue-600"
             />
             <StatCard
               label="Vehicles"
@@ -160,7 +160,6 @@ export default function Dashboard() {
               pending={data.vehicles?.pending ?? 0}
               rejected={data.vehicles?.rejected ?? 0}
               icon={Car}
-              accentClass="bg-amber-100 text-amber-600"
             />
             <StatCard
               label="Sites"
@@ -169,7 +168,6 @@ export default function Dashboard() {
               pending={data.sites?.pending ?? 0}
               rejected={data.sites?.rejected ?? 0}
               icon={MapPin}
-              accentClass="bg-emerald-100 text-emerald-600"
             />
           </section>
         </>

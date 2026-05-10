@@ -8,6 +8,7 @@ import type {
   UpdateVehicleRequest,
   Vehicle,
   VehicleListResponse,
+  VehicleQrQuery,
 } from "~/types/vehicle"
 
 type VehicleApiResponse = {
@@ -246,4 +247,88 @@ export const patchVehicleDriver = async (
 export const uploadVehicleDocument = async (file: File): Promise<string> => {
   const { url } = await uploadAuthenticatedFile(file)
   return url
+}
+
+const parseContentDispositionFilename = (
+  header: string | null
+): string | undefined => {
+  if (!header) return undefined
+  const quoted = /filename\s*=\s*"([^"]+)"/i.exec(header)
+  if (quoted?.[1]) return quoted[1]
+  const plain = /filename\s*=\s*([^;\s]+)/i.exec(header)
+  const raw = plain?.[1]
+  if (!raw) return undefined
+  return raw.replace(/^"|"$/g, "")
+}
+
+/**
+ * GET `/vehicles/:id/qr` — PNG bytes (not JSON). Use blob URLs for `<img>` or
+ * {@link triggerVehicleQrDownload} for save-as.
+ */
+export const fetchVehicleQrPng = async (
+  vehicleId: string,
+  query?: VehicleQrQuery,
+  accessToken = getAuthToken()
+): Promise<{ blob: Blob; filename?: string }> => {
+  if (!vehicleId) {
+    throw new Error("Vehicle id is required")
+  }
+
+  const params = new URLSearchParams()
+  if (query?.download) {
+    params.set("download", "true")
+  }
+
+  const qs = params.toString()
+  const path = qs ? `/vehicles/${vehicleId}/qr?${qs}` : `/vehicles/${vehicleId}/qr`
+
+  const { blob, headers } = await apiClient.getBlobWithAuth(path, accessToken)
+
+  const cd = headers.get("Content-Disposition")
+
+  return {
+    blob,
+    filename: parseContentDispositionFilename(cd),
+  }
+}
+
+export const triggerVehicleQrDownload = (
+  blob: Blob,
+  fallbackFilename: string
+): void => {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement("a")
+  anchor.href = url
+  anchor.download = fallbackFilename
+  anchor.click()
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+/** Convenience: `download=true` plus anchor click with server filename when available */
+export const downloadVehicleQrPng = async (
+  vehicleId: string,
+  accessToken = getAuthToken()
+): Promise<void> => {
+  const { blob, filename } = await fetchVehicleQrPng(
+    vehicleId,
+    { download: true },
+    accessToken
+  )
+
+  triggerVehicleQrDownload(blob, filename ?? `vehicle-qr-${vehicleId}.png`)
+}
+
+/** Object URL for `<img src={url} />` — call `revoke()` on unmount */
+export const createVehicleQrObjectUrl = async (
+  vehicleId: string,
+  accessToken?: string
+): Promise<{ url: string; revoke: () => void }> => {
+  const token = accessToken ?? getAuthToken()
+  const { blob } = await fetchVehicleQrPng(vehicleId, undefined, token)
+  const url = URL.createObjectURL(blob)
+
+  return {
+    url,
+    revoke: () => URL.revokeObjectURL(url),
+  }
 }

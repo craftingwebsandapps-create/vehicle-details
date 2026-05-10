@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 
 import type { LucideIcon } from "lucide-react"
-import { Filter, RefreshCcw } from "lucide-react"
+import { Check, Clock, Filter, RefreshCcw, XCircle } from "lucide-react"
 
 import { Button } from "~/components/ui/button"
 import {
@@ -167,8 +167,11 @@ export function OpsStatusPill({
 
 export function OpsApprovalPill({
   status,
+  appearance = "dot",
 }: {
   status: "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | string | undefined
+  /** `badge` — solid pill with icon (e.g. vehicle cards). `dot` — compact list pill */
+  appearance?: "dot" | "badge"
 }) {
   if (!status) return null
 
@@ -188,20 +191,41 @@ export function OpsApprovalPill({
     normalized === "approved"
       ? {
           label: "Approved",
-          dot: "bg-emerald-500",
-          pill: "bg-emerald-500/10 text-emerald-700",
+          dot: "bg-primary",
+          pill: "bg-primary/12 text-primary dark:bg-primary/18",
+          badgeClass:
+            "bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/25",
+          BadgeIcon: Check,
         }
       : normalized === "rejected"
         ? {
             label: "Rejected",
-            dot: "bg-red-500",
-            pill: "bg-red-500/10 text-red-700",
+            dot: "bg-destructive",
+            pill: "bg-destructive/12 text-destructive dark:bg-destructive/18",
+            badgeClass:
+              "bg-destructive text-primary-foreground shadow-sm ring-1 ring-destructive/35",
+            BadgeIcon: XCircle,
           }
         : {
             label: "Pending",
-            dot: "bg-amber-500",
-            pill: "bg-amber-500/10 text-amber-700",
+            dot: "bg-muted-foreground",
+            pill: "bg-muted text-muted-foreground",
+            badgeClass:
+              "bg-secondary text-secondary-foreground shadow-sm ring-1 ring-border",
+            BadgeIcon: Clock,
           }
+
+  if (appearance === "badge") {
+    const Icon = config.BadgeIcon
+    return (
+      <span
+        className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${config.badgeClass}`}
+      >
+        <Icon className="size-3.5 stroke-[2.75]" aria-hidden />
+        {config.label}
+      </span>
+    )
+  }
 
   return (
     <span

@@ -1,9 +1,9 @@
 import { format } from "date-fns"
-import { ExternalLink } from "lucide-react"
-import type { ReactNode } from "react"
+import { ExternalLink, QrCode } from "lucide-react"
+import { useState, type ReactNode } from "react"
+import { toast } from "sonner"
 
 import { OpsApprovalPill } from "~/components/mobile/ops/OpsListPrimitives"
-import { Badge } from "~/components/ui/badge"
 import { Button } from "~/components/ui/button"
 import {
   Dialog,
@@ -14,6 +14,9 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog"
 import { Separator } from "~/components/ui/separator"
+import { cn } from "~/lib/utils"
+import { downloadVehicleQrPng } from "~/features/vehicles/api"
+import { getApiErrorMeta } from "~/services/api-error"
 import { API_BASE_URL } from "~/utils/constants"
 import type { EmbeddedSite, Vehicle } from "~/types/vehicle"
 
@@ -76,7 +79,6 @@ function siteRows(site: EmbeddedSite | string | null | undefined) {
   return [
     { label: "Name", value: dash(site.name) },
     { label: "Location", value: dash(site.location) },
-    { label: "Status", value: dash(site.status) },
     { label: "Contact", value: dash(site.contactPerson) },
     { label: "Mobile", value: dash(site.mobileNumber) },
     { label: "Email", value: dash(site.email) },
@@ -100,6 +102,8 @@ export function VehicleDetailDialog({
   open,
   onOpenChange,
 }: VehicleDetailDialogProps) {
+  const [qrDownloading, setQrDownloading] = useState(false)
+
   if (!vehicle) return null
 
   const docUrl = vehicle.document?.trim()
@@ -121,6 +125,20 @@ export function VehicleDetailDialog({
       dash(docUrl ?? null)
     )
 
+  const handleDownloadQr = () => {
+    void (async () => {
+      setQrDownloading(true)
+      try {
+        await downloadVehicleQrPng(vehicle._id)
+        toast.success("Vehicle QR downloaded")
+      } catch (e) {
+        toast.error(getApiErrorMeta(e).message)
+      } finally {
+        setQrDownloading(false)
+      }
+    })()
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[min(90vh,760px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
@@ -132,12 +150,6 @@ export function VehicleDetailDialog({
             <span className="tabular-nums">{dash(vehicle.registrationNumber)}</span>
             <span className="text-muted-foreground">·</span>
             <span>{dash(vehicle.type)}</span>
-            <Badge
-              variant={vehicle.status === "ACTIVE" ? "secondary" : "outline"}
-              className="ml-1"
-            >
-              {vehicle.status}
-            </Badge>
             <OpsApprovalPill status={vehicle.approvalStatus} />
           </DialogDescription>
         </DialogHeader>
@@ -202,14 +214,6 @@ export function VehicleDetailDialog({
                         value: dash(vehicle.contractor.mobileNumber),
                       },
                       { label: "Email", value: dash(vehicle.contractor.email) },
-                      ...(vehicle.contractor.status?.trim()
-                        ? [
-                            {
-                              label: "Status",
-                              value: dash(vehicle.contractor.status),
-                            },
-                          ]
-                        : []),
                     ]
                   : [
                       {
@@ -268,10 +272,6 @@ export function VehicleDetailDialog({
                         value: dash(vehicle.driver.mobileNumber),
                       },
                       {
-                        label: "Status",
-                        value: dash(vehicle.driver.status),
-                      },
-                      {
                         label: "Approval",
                         value: (
                           <OpsApprovalPill status={vehicle.driver.approvalStatus} />
@@ -303,7 +303,7 @@ export function VehicleDetailDialog({
           </section>
         </div>
 
-        <div className={dialogActionsFooterClass}>
+        <div className={cn(dialogActionsFooterClass, "justify-between")}>
           <Button
             type="button"
             variant="ghost"
@@ -312,6 +312,16 @@ export function VehicleDetailDialog({
             onClick={() => onOpenChange(false)}
           >
             Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={qrDownloading}
+            onClick={handleDownloadQr}
+          >
+            <QrCode className="size-4" />
+            {qrDownloading ? "Downloading…" : "Download QR"}
           </Button>
         </div>
       </DialogContent>
