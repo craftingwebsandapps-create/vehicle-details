@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import { Link } from "react-router"
 import {
   Car,
   ClipboardList,
@@ -246,22 +247,27 @@ export default function Dashboard() {
               </p>
             </article>
 
-            <article className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
-              <div className="mb-3 flex items-center gap-2">
-                <div className="rounded-lg bg-teal-100 p-1.5 text-teal-600">
-                  <Users className="size-4" />
+            <Link
+              to="/mobile/organization"
+              className="block rounded-2xl transition-colors hover:border-primary/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            >
+              <article className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
+                <div className="mb-3 flex items-center gap-2">
+                  <div className="rounded-lg bg-teal-100 p-1.5 text-teal-600">
+                    <Users className="size-4" />
+                  </div>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Contractors
+                  </span>
                 </div>
-                <span className="text-xs font-medium text-muted-foreground">
-                  Contractors
-                </span>
-              </div>
-              <p className="text-3xl font-semibold text-foreground">
-                {data.contractors?.total ?? 0}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {data.contractors?.active ?? 0} active
-              </p>
-            </article>
+                <p className="text-3xl font-semibold text-foreground">
+                  {data.contractors?.total ?? 0}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {data.contractors?.active ?? 0} active · profile
+                </p>
+              </article>
+            </Link>
           </section>
         </>
       ) : null}

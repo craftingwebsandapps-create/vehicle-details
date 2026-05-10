@@ -3,9 +3,11 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import { mobileLogin } from "~/features/auth/api"
 import {
   clearAccessToken,
+  getAccessToken,
   setAccessToken,
   setRefreshToken,
 } from "~/features/auth/auth-storage"
+import { getContractorIdFromAccessToken } from "~/features/auth/jwt-utils"
 import type { MobileLoginPayload } from "~/features/auth/types"
 
 export type AuthUser = {
@@ -53,8 +55,17 @@ const buildUserFromEmail = (email: string): AuthUser => {
 type AuthState = {
   isAuthenticated: boolean
   user: AuthUser | null
+  /** From JWT `contractorId`; null for superadmin or missing claim (UX only). */
+  contractorId: string | null
   status: "idle" | "loading" | "succeeded" | "failed"
   error: string | null
+}
+
+const readStoredContractorId = (): string | null => {
+  if (typeof window === "undefined") {
+    return null
+  }
+  return getContractorIdFromAccessToken(getAccessToken())
 }
 
 const hasToken = () => {
@@ -68,6 +79,7 @@ const hasToken = () => {
 const initialState: AuthState = {
   isAuthenticated: hasToken(),
   user: hasToken() ? demoUser : null,
+  contractorId: readStoredContractorId(),
   status: "idle",
   error: null,
 }
@@ -93,6 +105,7 @@ const authSlice = createSlice({
       clearAccessToken()
       state.isAuthenticated = false
       state.user = null
+      state.contractorId = null
       state.status = "idle"
       state.error = null
     },
@@ -108,6 +121,9 @@ const authSlice = createSlice({
         setRefreshToken(action.payload.refreshToken)
         state.isAuthenticated = true
         state.user = buildUserFromEmail(action.meta.arg.email)
+        state.contractorId = getContractorIdFromAccessToken(
+          action.payload.accessToken
+        )
         state.status = "succeeded"
         state.error = null
       })

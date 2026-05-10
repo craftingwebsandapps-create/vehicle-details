@@ -11,6 +11,7 @@ const AdminLogin = lazy(() => import("~/pages/admin/AdminLogin"))
 const AdminVehicles = lazy(() => import("~/pages/admin/AdminVehicles"))
 const AdminDrivers = lazy(() => import("~/pages/admin/AdminDrivers"))
 const AdminSites = lazy(() => import("~/pages/admin/AdminSites"))
+const AdminContractors = lazy(() => import("~/pages/admin/AdminContractors"))
 
 const withSuspense = (Component: React.ComponentType) => (
   <Suspense fallback={<PageLoader />}>
@@ -31,6 +32,7 @@ export const adminRoutes: RouteObject[] = [
     children: [
       { index: true, element: withSuspense(AdminDashboard) },
       { path: "dashboard", element: withSuspense(AdminDashboard) },
+      { path: "contractors", element: withSuspense(AdminContractors) },
       { path: "vehicles", element: withSuspense(AdminVehicles) },
       { path: "drivers", element: withSuspense(AdminDrivers) },
       { path: "sites", element: withSuspense(AdminSites) },

@@ -18,6 +18,36 @@ class ApiClient {
 
   private refreshPromise: Promise<string | null> | null = null
 
+  private async parseSuccessBody<T>(response: Response): Promise<T> {
+    if (response.status === 204) {
+      return undefined as T
+    }
+    const text = await response.text()
+    if (!text.trim()) {
+      return undefined as T
+    }
+    return JSON.parse(text) as T
+  }
+
+  private async parseErrorBody(response: Response): Promise<never> {
+    const text = await response.text()
+    let message = `Request failed with status ${response.status}`
+    try {
+      const parsed = JSON.parse(text) as {
+        error?: { message?: string; code?: string }
+        message?: string
+      }
+      if (parsed?.error?.message) {
+        message = parsed.error.message
+      } else if (typeof parsed?.message === "string") {
+        message = parsed.message
+      }
+    } catch {
+      // ignore
+    }
+    throw new Error(message)
+  }
+
   private handleSessionExpired() {
     clearAccessToken()
 
@@ -117,20 +147,18 @@ class ApiClient {
           })
 
           if (!retryResponse.ok) {
-            throw new Error(
-              `Request failed with status ${retryResponse.status}`
-            )
+            await this.parseErrorBody(retryResponse)
           }
 
-          return (await retryResponse.json()) as T
+          return await this.parseSuccessBody<T>(retryResponse)
         }
       }
 
       if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}`)
+        await this.parseErrorBody(response)
       }
 
-      return (await response.json()) as T
+      return await this.parseSuccessBody<T>(response)
     } finally {
       window.clearTimeout(timeout)
     }
@@ -188,6 +216,47 @@ class ApiClient {
     options?: RequestOptions
   ) {
     return this.put<T>(path, body, {
+      ...options,
+      headers: {
+        ...(options?.headers ?? {}),
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+    })
+  }
+
+  patch<T>(path: string, body: unknown, options?: RequestOptions) {
+    return this.request<T>(path, {
+      ...options,
+      method: "PATCH",
+      body: JSON.stringify(body),
+    })
+  }
+
+  patchWithAuth<T>(
+    path: string,
+    body: unknown,
+    accessToken?: string,
+    options?: RequestOptions
+  ) {
+    return this.patch<T>(path, body, {
+      ...options,
+      headers: {
+        ...(options?.headers ?? {}),
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+    })
+  }
+
+  delete<T = void>(path: string, options?: RequestOptions) {
+    return this.request<T>(path, { ...options, method: "DELETE" })
+  }
+
+  deleteWithAuth<T = void>(
+    path: string,
+    accessToken?: string,
+    options?: RequestOptions
+  ) {
+    return this.delete<T>(path, {
       ...options,
       headers: {
         ...(options?.headers ?? {}),

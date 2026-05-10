@@ -1,4 +1,5 @@
 import {
+  Building2,
   ClipboardList,
   LayoutDashboard,
   MapPinned,
@@ -46,6 +47,10 @@ export default function MobileHeader({
 
     if (pathname.startsWith("/mobile/dashboard")) {
       return { label: "Live", Icon: LayoutDashboard }
+    }
+
+    if (pathname.startsWith("/mobile/organization")) {
+      return { label: "Org", Icon: Building2 }
     }
 
     return { label: "Synced", Icon: Sparkles }

@@ -1,6 +1,12 @@
 export type VehicleStatus = "ACTIVE" | "INACTIVE"
 export type ApprovalStatus = "PENDING_APPROVAL" | "APPROVED" | "REJECTED"
 
+/** Populated work-type refs from GET /api/contractors when expanded server-side */
+export type ContractorWorkTypeRef = {
+  name: string
+  code: string
+}
+
 export type Contractor = {
   _id: string
   name: string
@@ -10,6 +16,7 @@ export type Contractor = {
   status: string
   createdAt: string
   updatedAt: string
+  workTypeIds?: ContractorWorkTypeRef[]
 }
 
 /** Embedded site shape returned by vehicle aggregation lookups */

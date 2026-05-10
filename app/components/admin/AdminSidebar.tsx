@@ -17,6 +17,7 @@ import {
   Users,
   Car,
   MapPin,
+  Building2,
   LogOut,
   ChevronUp,
   User2,
@@ -33,6 +34,7 @@ import { signOut } from "~/features/auth/authSlice"
 
 const navItems = [
   { title: "Dashboard", url: "/admin/dashboard", icon: Home },
+  { title: "Contractors", url: "/admin/contractors", icon: Building2 },
   { title: "Vehicles", url: "/admin/vehicles", icon: Car },
   { title: "Drivers", url: "/admin/drivers", icon: Users },
   { title: "Sites", url: "/admin/sites", icon: MapPin },
