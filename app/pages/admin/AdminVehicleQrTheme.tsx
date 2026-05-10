@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select"
+import { VehicleQrCanvasPreview } from "~/components/admin/VehicleQrCanvasPreview"
 import {
   getAdminVehicleQrTheme,
   updateAdminVehicleQrTheme,
@@ -195,6 +196,7 @@ export default function AdminVehicleQrTheme() {
   const [saving, setSaving] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const [previewReg, setPreviewReg] = useState("AP09DE9989")
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -263,7 +265,7 @@ export default function AdminVehicleQrTheme() {
   }
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-6 px-1 lg:px-0">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-heading flex items-center gap-2 text-2xl font-semibold tracking-tight">
@@ -342,201 +344,239 @@ export default function AdminVehicleQrTheme() {
           <Skeleton className="h-48 w-full rounded-xl" />
         </div>
       ) : (
-        <>
-          <Card>
-            <CardHeader>
-              <CardTitle>Tag lines</CardTitle>
-              <CardDescription>
-                Strings rendered on the QR artwork (1–80 characters each).
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1.5">
-                <label htmlFor="vq-tag1" className="text-sm font-medium">
-                  Tag line 1
-                </label>
-                <Input
-                  id="vq-tag1"
-                  value={theme.tagLine1}
-                  maxLength={80}
-                  onChange={(e) => patch({ tagLine1: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="vq-tag2" className="text-sm font-medium">
-                  Tag line 2
-                </label>
-                <Input
-                  id="vq-tag2"
-                  value={theme.tagLine2}
-                  maxLength={80}
-                  onChange={(e) => patch({ tagLine2: e.target.value })}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Colours</CardTitle>
-              <CardDescription>
-                Six-digit hex values (<code className="text-xs">#RRGGBB</code>
-                ).
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <HexRow
-                label="QR section background"
-                value={theme.qrSectionBg}
-                onChange={(v) => patch({ qrSectionBg: v })}
-              />
-              <HexRow
-                label="Middle section background"
-                value={theme.midSectionBg}
-                onChange={(v) => patch({ midSectionBg: v })}
-              />
-              <HexRow
-                label="Footer section background"
-                value={theme.footerSectionBg}
-                onChange={(v) => patch({ footerSectionBg: v })}
-              />
-              <HexRow
-                label="Tag text colour"
-                value={theme.tagColor}
-                onChange={(v) => patch({ tagColor: v })}
-              />
-              <HexRow
-                label="Registration text colour"
-                value={theme.regColor}
-                onChange={(v) => patch({ regColor: v })}
-              />
-              <HexRow
-                label="Page background"
-                value={theme.pageBg}
-                onChange={(v) => patch({ pageBg: v })}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Typography & layout</CardTitle>
-              <CardDescription>
-                Numeric bounds match server validation.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_460px] lg:items-start">
+          <div className="flex min-w-0 flex-col gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Tag lines</CardTitle>
+                <CardDescription>
+                  Strings rendered on the QR artwork (1–80 characters each).
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="space-y-1.5">
-                  <span className="text-sm font-medium">Tag font weight</span>
-                  <Select
-                    value={String(theme.tagFontWeight)}
-                    onValueChange={(v) =>
-                      patch({ tagFontWeight: Number.parseInt(v, 10) })
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FONT_WEIGHTS.map((w) => (
-                        <SelectItem key={w} value={String(w)}>
-                          {w}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <label htmlFor="vq-tag1" className="text-sm font-medium">
+                    Tag line 1
+                  </label>
+                  <Input
+                    id="vq-tag1"
+                    value={theme.tagLine1}
+                    maxLength={80}
+                    onChange={(e) => patch({ tagLine1: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-1.5">
-                  <span className="text-sm font-medium">
-                    Registration font weight
-                  </span>
-                  <Select
-                    value={String(theme.regFontWeight)}
-                    onValueChange={(v) =>
-                      patch({ regFontWeight: Number.parseInt(v, 10) })
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FONT_WEIGHTS.map((w) => (
-                        <SelectItem key={w} value={String(w)}>
-                          {w}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <label htmlFor="vq-tag2" className="text-sm font-medium">
+                    Tag line 2
+                  </label>
+                  <Input
+                    id="vq-tag2"
+                    value={theme.tagLine2}
+                    maxLength={80}
+                    onChange={(e) => patch({ tagLine2: e.target.value })}
+                  />
                 </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <NumberField
-                  label="Tag font max (px)"
-                  value={theme.tagFontMaxPx}
-                  min={24}
-                  max={960}
-                  onChange={(n) => patch({ tagFontMaxPx: n })}
+            <Card>
+              <CardHeader>
+                <CardTitle>Colours</CardTitle>
+                <CardDescription>
+                  Six-digit hex values (<code className="text-xs">#RRGGBB</code>
+                  ).
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4 sm:grid-cols-2">
+                <HexRow
+                  label="QR section background"
+                  value={theme.qrSectionBg}
+                  onChange={(v) => patch({ qrSectionBg: v })}
                 />
-                <NumberField
-                  label="Registration font max (px)"
-                  value={theme.regFontMaxPx}
-                  min={24}
-                  max={960}
-                  onChange={(n) => patch({ regFontMaxPx: n })}
+                <HexRow
+                  label="Middle section background"
+                  value={theme.midSectionBg}
+                  onChange={(v) => patch({ midSectionBg: v })}
                 />
-                <NumberField
-                  label="Tag strip height (px)"
-                  value={theme.tagStripHeightPx}
-                  min={120}
-                  max={280}
-                  onChange={(n) => patch({ tagStripHeightPx: n })}
+                <HexRow
+                  label="Footer section background"
+                  value={theme.footerSectionBg}
+                  onChange={(v) => patch({ footerSectionBg: v })}
                 />
-                <NumberField
-                  label="Tag vertical padding (px)"
-                  value={theme.tagVerticalPaddingPx}
-                  min={4}
-                  max={48}
-                  onChange={(n) => patch({ tagVerticalPaddingPx: n })}
+                <HexRow
+                  label="Tag text colour"
+                  value={theme.tagColor}
+                  onChange={(v) => patch({ tagColor: v })}
                 />
-              </div>
+                <HexRow
+                  label="Registration text colour"
+                  value={theme.regColor}
+                  onChange={(v) => patch({ regColor: v })}
+                />
+                <HexRow
+                  label="Page background"
+                  value={theme.pageBg}
+                  onChange={(v) => patch({ pageBg: v })}
+                />
+              </CardContent>
+            </Card>
 
-              <div className="max-w-xs space-y-1.5">
-                <label htmlFor="vq-stroke" className="text-sm font-medium">
-                  Tag stroke ratio (0–0.15)
-                </label>
-                <Input
-                  id="vq-stroke"
-                  type="number"
-                  min={0}
-                  max={0.15}
-                  step={0.001}
-                  value={
-                    Number.isFinite(theme.tagStrokeRatio)
-                      ? theme.tagStrokeRatio
-                      : ""
-                  }
-                  onChange={(e) => {
-                    const raw = e.target.value
-                    if (raw === "") {
-                      patch({ tagStrokeRatio: NaN })
-                      return
+            <Card>
+              <CardHeader>
+                <CardTitle>Typography & layout</CardTitle>
+                <CardDescription>
+                  Numeric bounds match server validation.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <span className="text-sm font-medium">Tag font weight</span>
+                    <Select
+                      value={String(theme.tagFontWeight)}
+                      onValueChange={(v) =>
+                        patch({ tagFontWeight: Number.parseInt(v, 10) })
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {FONT_WEIGHTS.map((w) => (
+                          <SelectItem key={w} value={String(w)}>
+                            {w}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-sm font-medium">
+                      Registration font weight
+                    </span>
+                    <Select
+                      value={String(theme.regFontWeight)}
+                      onValueChange={(v) =>
+                        patch({ regFontWeight: Number.parseInt(v, 10) })
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {FONT_WEIGHTS.map((w) => (
+                          <SelectItem key={w} value={String(w)}>
+                            {w}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <NumberField
+                    label="Tag font max (px)"
+                    value={theme.tagFontMaxPx}
+                    min={24}
+                    max={960}
+                    onChange={(n) => patch({ tagFontMaxPx: n })}
+                  />
+                  <NumberField
+                    label="Registration font max (px)"
+                    value={theme.regFontMaxPx}
+                    min={24}
+                    max={960}
+                    onChange={(n) => patch({ regFontMaxPx: n })}
+                  />
+                  <NumberField
+                    label="Tag strip height (px)"
+                    value={theme.tagStripHeightPx}
+                    min={120}
+                    max={280}
+                    onChange={(n) => patch({ tagStripHeightPx: n })}
+                  />
+                  <NumberField
+                    label="Tag vertical padding (px)"
+                    value={theme.tagVerticalPaddingPx}
+                    min={4}
+                    max={48}
+                    onChange={(n) => patch({ tagVerticalPaddingPx: n })}
+                  />
+                </div>
+
+                <div className="max-w-xs space-y-1.5">
+                  <label htmlFor="vq-stroke" className="text-sm font-medium">
+                    Tag stroke ratio (0–0.15)
+                  </label>
+                  <Input
+                    id="vq-stroke"
+                    type="number"
+                    min={0}
+                    max={0.15}
+                    step={0.001}
+                    value={
+                      Number.isFinite(theme.tagStrokeRatio)
+                        ? theme.tagStrokeRatio
+                        : ""
                     }
-                    patch({ tagStrokeRatio: Number(raw) })
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
+                    onChange={(e) => {
+                      const raw = e.target.value
+                      if (raw === "") {
+                        patch({ tagStrokeRatio: NaN })
+                        return
+                      }
+                      patch({ tagStrokeRatio: Number(raw) })
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
-          <p className="text-muted-foreground text-xs">
-            API:{" "}
-            <code className="rounded bg-muted px-1 py-0.5">
-              GET / PUT /api/admin/vehicle-qr-theme
-            </code>
-          </p>
-        </>
+            <p className="text-muted-foreground text-xs">
+              API:{" "}
+              <code className="rounded bg-muted px-1 py-0.5">
+                GET / PUT /api/admin/vehicle-qr-theme
+              </code>
+            </p>
+          </div>
+
+          <aside className="flex flex-col gap-4 lg:sticky lg:top-20 lg:self-start">
+            <Card className="shadow-md overflow-visible">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Live preview</CardTitle>
+                <CardDescription className="text-xs">
+                  Canvas + client QR — not identical to production PNGs (fonts,
+                  logo, print scale).
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="vq-preview-reg" className="text-sm font-medium">
+                    Sample registration (QR payload)
+                  </label>
+                  <Input
+                    id="vq-preview-reg"
+                    value={previewReg}
+                    onChange={(e) =>
+                      setPreviewReg(e.target.value.toUpperCase())
+                    }
+                    placeholder="AP09DE9989"
+                    maxLength={32}
+                    className="font-mono uppercase"
+                    spellCheck={false}
+                  />
+                </div>
+                <VehicleQrCanvasPreview
+                  theme={theme}
+                  registrationNumber={previewReg}
+                  logicalWidth={600}
+                  className="[&_.text-muted-foreground]:text-[0.62rem]"
+                />
+              </CardContent>
+            </Card>
+          </aside>
+        </div>
       )}
     </div>
   )

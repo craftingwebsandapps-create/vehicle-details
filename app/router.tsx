@@ -3,7 +3,7 @@ import { createBrowserRouter, redirect } from "react-router"
 import Root from "./root"
 import NotFoundPage from "~/pages/NotFoundPage"
 import { mobileRoutes } from "~/routes/mobile-routes"
-import { webRoutes } from "~/routes/web-routes"
+import { webRootHomeRoute, webRoutes } from "~/routes/web-routes"
 import { adminRoutes } from "~/routes/admin-routes"
 
 export const router = createBrowserRouter([
@@ -11,13 +11,10 @@ export const router = createBrowserRouter([
     path: "/",
     Component: Root,
     children: [
-      {
-        index: true,
-        loader: () => redirect("/web"),
-      },
+      webRootHomeRoute,
       {
         path: "home",
-        loader: () => redirect("/web"),
+        loader: () => redirect("/"),
       },
       {
         path: "app",

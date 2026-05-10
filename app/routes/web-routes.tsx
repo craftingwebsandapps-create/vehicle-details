@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react"
 import type { RouteObject } from "react-router"
+import { redirect } from "react-router"
 
 import WebLayout from "~/layouts/WebLayout"
 import { PageLoader } from "~/components/ui/PageLoader"
@@ -14,12 +15,18 @@ const withSuspense = (Component: React.ComponentType) => (
   </Suspense>
 )
 
+/** Pathless layout: marketing home at `/` (same shell as `/web/*`). */
+export const webRootHomeRoute: RouteObject = {
+  Component: WebLayout,
+  children: [{ index: true, element: withSuspense(Home) }],
+}
+
 export const webRoutes: RouteObject[] = [
   {
     path: "web",
     Component: WebLayout,
     children: [
-      { index: true, element: withSuspense(Home) },
+      { index: true, loader: () => redirect("/") },
       { path: "about", element: withSuspense(About) },
       { path: "contact", element: withSuspense(Contact) },
     ],
