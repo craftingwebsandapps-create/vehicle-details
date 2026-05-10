@@ -1,4 +1,4 @@
-import { Outlet } from "react-router"
+import { Outlet, useLocation } from "react-router"
 import { AdminSidebar } from "~/components/admin/AdminSidebar"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "~/components/ui/sidebar"
 import { Separator } from "~/components/ui/separator"
@@ -11,7 +11,22 @@ import {
   BreadcrumbSeparator,
 } from "~/components/ui/breadcrumb"
 
+function adminSectionTitle(pathname: string) {
+  if (pathname === "/admin" || pathname === "/admin/") {
+    return "Dashboard"
+  }
+  const segment = pathname.match(/^\/admin\/([^/]+)/)?.[1]
+  if (!segment || segment === "dashboard") {
+    return "Dashboard"
+  }
+  const raw = segment.replace(/-/g, " ")
+  return raw.charAt(0).toUpperCase() + raw.slice(1)
+}
+
 export default function AdminLayout() {
+  const { pathname } = useLocation()
+  const sectionTitle = adminSectionTitle(pathname)
+
   return (
     <SidebarProvider>
       <AdminSidebar />
@@ -28,7 +43,7 @@ export default function AdminLayout() {
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
-                <BreadcrumbPage>Dashboard</BreadcrumbPage>
+                <BreadcrumbPage>{sectionTitle}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
