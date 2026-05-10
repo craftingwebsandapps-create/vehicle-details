@@ -4,6 +4,7 @@ import Root from "./root"
 import NotFoundPage from "~/pages/NotFoundPage"
 import { mobileRoutes } from "~/routes/mobile-routes"
 import { webRoutes } from "~/routes/web-routes"
+import { adminRoutes } from "~/routes/admin-routes"
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
       },
       ...mobileRoutes,
       ...webRoutes,
+      ...adminRoutes,
       {
         path: "*",
         Component: NotFoundPage,
