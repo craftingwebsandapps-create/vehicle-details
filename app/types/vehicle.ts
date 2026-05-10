@@ -1,3 +1,5 @@
+import type { ObjectIdString } from "~/types/object-id"
+
 export type VehicleStatus = "ACTIVE" | "INACTIVE"
 export type ApprovalStatus = "PENDING_APPROVAL" | "APPROVED" | "REJECTED"
 
@@ -136,36 +138,28 @@ export type ListVehiclesParams = {
 
 export type VehicleListFilters = Omit<ListVehiclesParams, "page" | "limit">
 
-export type VehicleUpsertRequest = {
+/** POST /api/vehicles — tenant should omit `contractor` */
+export type CreateVehicleRequest = {
   name: string
   type: string
   registrationNumber: string
   document: string
-  status: VehicleStatus
-  site: string
+  site: ObjectIdString
+  contractor?: ObjectIdString
 }
 
-export type CreateVehicleRequest = VehicleUpsertRequest
-
-export type UpdateVehicleRequest = VehicleUpsertRequest
+/** PATCH /api/vehicles/:id */
+export type UpdateVehicleRequest = Partial<
+  Omit<CreateVehicleRequest, "site">
+> & {
+  site?: ObjectIdString
+  driver?: ObjectIdString | null
+}
 
 export type VehicleFormValues = {
   name: string
   type: string
   registrationNumber: string
   document: string | File | null
-  status: VehicleStatus
   site: string
-}
-
-export type UploadSingleFileResponse = {
-  success: boolean
-  message: string
-  data?: {
-    filename: string
-    originalName: string
-    mimeType: string
-    size: number
-    url: string
-  }
 }

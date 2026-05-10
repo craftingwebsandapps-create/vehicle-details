@@ -1,12 +1,11 @@
 import { mapPlatformVehiclePayload } from "~/features/admin/vi-normalize"
 import { getAccessToken } from "~/features/auth/auth-storage"
 import { apiClient } from "~/services/api-client"
-import { API_BASE_URL } from "~/utils/constants"
+import { uploadAuthenticatedFile } from "~/features/files/api"
 import type {
   CreateVehicleRequest,
   ListVehiclesParams,
   UpdateVehicleRequest,
-  UploadSingleFileResponse,
   Vehicle,
   VehicleListResponse,
 } from "~/types/vehicle"
@@ -205,7 +204,7 @@ export const updateVehicle = async (
   const response = await apiClient.request<VehicleApiResponse>(
     `${CONTRACTOR_V1_PREFIX}/vehicles/${id}`,
     {
-      method: "PUT",
+      method: "PATCH",
       body: JSON.stringify(payload),
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -240,26 +239,6 @@ export const updateVehicle = async (
 }
 
 export const uploadVehicleDocument = async (file: File): Promise<string> => {
-  const formData = new FormData()
-  formData.append("file", file)
-
-  const token = getAuthToken()
-  const response = await fetch(`${API_BASE_URL}/upload/single`, {
-    method: "POST",
-    body: formData,
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-
-  if (!response.ok) {
-    throw new Error("Unable to upload vehicle document")
-  }
-
-  const data = (await response.json()) as UploadSingleFileResponse
-  if (!data.success) {
-    throw new Error(data.message || "Unable to upload vehicle document")
-  }
-
-  return data.data?.url || ""
+  const { url } = await uploadAuthenticatedFile(file)
+  return url
 }

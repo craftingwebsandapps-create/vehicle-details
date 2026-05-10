@@ -1,3 +1,5 @@
+import type { ObjectIdString } from "~/types/object-id"
+
 export type DriverStatus = "ACTIVE" | "INACTIVE"
 export type ApprovalStatus = "PENDING_APPROVAL" | "APPROVED" | "REJECTED"
 
@@ -96,37 +98,23 @@ export type ListDriversParams = {
   approvalStatus?: ApprovalStatus
 }
 
-export type DriverBaseRequest = {
+/** POST /api/drivers — tenant should omit `contractor` */
+export type CreateDriverRequest = {
   name: string
   licenceNumber: string
   licenceUrl: string
   mobileNumber: string
-  status: DriverStatus
+  contractor?: ObjectIdString
 }
 
-export type CreateDriverRequest = DriverBaseRequest
-
-export type UpdateDriverRequest = DriverBaseRequest & {
-  contractor: string
-}
+/** PATCH /api/drivers/:id */
+export type UpdateDriverRequest = Partial<CreateDriverRequest>
 
 export type DriverFormValues = {
   name: string
   licenceNumber: string
   licenceUrl: string | File | null
   mobileNumber: string
-  contractor: string
-  status: DriverStatus
-}
-
-export type UploadSingleFileResponse = {
-  success: boolean
-  message: string
-  data?: {
-    filename: string
-    originalName: string
-    mimeType: string
-    size: number
-    url: string
-  }
+  /** Optional; tenant flows leave empty and omit from API body */
+  contractor?: string
 }

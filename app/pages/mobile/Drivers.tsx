@@ -44,7 +44,6 @@ const initialFormState: DriverFormValues = {
   licenceUrl: null,
   mobileNumber: "",
   contractor: "",
-  status: "ACTIVE",
 }
 
 type DriverSegment = "all" | "active" | "inactive" | "assigned"
@@ -207,7 +206,6 @@ export default function Drivers() {
       licenceUrl: driver.licenceUrl ?? "",
       mobileNumber: driver.mobileNumber,
       contractor: driver.contractor?.id ?? "",
-      status: driver.status,
     })
     setIsDriverDialogOpen(true)
   }
@@ -227,12 +225,17 @@ export default function Drivers() {
         throw new Error("Please upload a licence file")
       }
 
+      const mobileNumber = values.mobileNumber.replace(/\s+/g, "").trim()
+
       const createPayload: CreateDriverRequest = {
         name: values.name.trim(),
         licenceNumber: values.licenceNumber.trim(),
         licenceUrl,
-        mobileNumber: values.mobileNumber.trim(),
-        status: values.status,
+        mobileNumber,
+      }
+      const contractorId = values.contractor?.trim()
+      if (contractorId) {
+        createPayload.contractor = contractorId
       }
 
       if (dialogMode === "edit") {
@@ -242,7 +245,6 @@ export default function Drivers() {
 
         const updatePayload: UpdateDriverRequest = {
           ...createPayload,
-          contractor: values.contractor.trim(),
         }
 
         await updateDriver(editingDriverId, updatePayload)

@@ -4,36 +4,44 @@ import { FileUploadField } from "~/components/form/FileUploadField"
 import type { VehicleFormValues } from "~/types/vehicle"
 import type { FormConfig } from "~/types/form-builder"
 
-const STATUS_OPTIONS = [
-  { label: "ACTIVE", value: "ACTIVE" },
-  { label: "INACTIVE", value: "INACTIVE" },
-]
+const OBJECT_ID_HEX = /^[a-fA-F0-9]{24}$/
 
-const getVehicleDialogSchema = (isEditMode: boolean) =>
+const getVehicleDialogSchema = () =>
   z.object({
     name: z
       .string()
       .trim()
-      .min(2, "Vehicle name must be at least 2 characters"),
-    type: z.string().trim().min(1, "Vehicle type is required"),
+      .min(1, "Vehicle name is required")
+      .max(200, "Vehicle name must be at most 200 characters"),
+    type: z
+      .string()
+      .trim()
+      .min(1, "Vehicle type is required")
+      .max(100, "Vehicle type must be at most 100 characters"),
     registrationNumber: z
       .string()
       .trim()
-      .min(2, "Registration number must be at least 2 characters"),
+      .min(1, "Registration number is required")
+      .max(80, "Registration number must be at most 80 characters"),
     document: z
-      .union([z.string().trim().min(1), z.instanceof(File)])
+      .union([
+        z.string().trim().min(1).max(2048, "Document reference is too long"),
+        z.instanceof(File),
+      ])
       .refine(
         (v) => v instanceof File || (typeof v === "string" && v.length > 0),
         {
           message: "Document is required",
         }
       ),
-    status: z.enum(["ACTIVE", "INACTIVE"]),
-    site: z.string().trim().min(1, "Site is required"),
+    site: z
+      .string()
+      .trim()
+      .regex(OBJECT_ID_HEX, "Select an approved site"),
   })
 
 export const getVehicleDialogFormConfig = (
-  isEditMode: boolean,
+  _isEditMode: boolean,
   sites: Array<{ _id?: string; id?: string; name: string }>
 ): FormConfig<VehicleFormValues> => {
   const siteOptions = sites.map((site) => ({
@@ -43,8 +51,8 @@ export const getVehicleDialogFormConfig = (
 
   return {
     id: "vehicle-dialog-form",
-    schema: getVehicleDialogSchema(isEditMode),
-    submitLabel: isEditMode ? "Update" : "Create",
+    schema: getVehicleDialogSchema(),
+    submitLabel: _isEditMode ? "Update" : "Create",
     resetLabel: "Reset",
     gridColumns: 12,
     fields: [
@@ -55,7 +63,7 @@ export const getVehicleDialogFormConfig = (
         placeholder: "Enter vehicle name",
         validation: {
           required: "Vehicle name is required",
-          minLength: 2,
+          maxLength: 200,
         },
         grid: { colSpan: 12 },
       },
@@ -66,6 +74,7 @@ export const getVehicleDialogFormConfig = (
         placeholder: "Enter vehicle type",
         validation: {
           required: "Vehicle type is required",
+          maxLength: 100,
         },
         grid: { colSpan: 6 },
       },
@@ -76,7 +85,7 @@ export const getVehicleDialogFormConfig = (
         placeholder: "Enter registration number",
         validation: {
           required: "Registration number is required",
-          minLength: 2,
+          maxLength: 80,
         },
         grid: { colSpan: 6 },
       },
@@ -88,17 +97,6 @@ export const getVehicleDialogFormConfig = (
         options: siteOptions,
         validation: {
           required: "Site is required",
-        },
-        grid: { colSpan: 12 },
-      },
-      {
-        type: "select",
-        name: "status",
-        label: "Status",
-        placeholder: "Select status",
-        options: STATUS_OPTIONS,
-        validation: {
-          required: "Status is required",
         },
         grid: { colSpan: 12 },
       },

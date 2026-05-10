@@ -44,7 +44,6 @@ const initialFormState: VehicleFormValues = {
   type: "",
   registrationNumber: "",
   document: null,
-  status: "ACTIVE",
   site: "",
 }
 
@@ -172,7 +171,6 @@ export default function Vehicles() {
       type: vehicle.type,
       registrationNumber: vehicle.registrationNumber,
       document: vehicle.document ?? "",
-      status: vehicle.status,
       site:
         typeof vehicle.site === "string"
           ? vehicle.site
@@ -200,8 +198,7 @@ export default function Vehicles() {
         name: values.name.trim(),
         type: values.type.trim(),
         registrationNumber: values.registrationNumber.trim(),
-        document: documentUrl,
-        status: values.status,
+        document: documentUrl.trim(),
         site: values.site.trim(),
       }
 
@@ -211,7 +208,11 @@ export default function Vehicles() {
         }
 
         const updatePayload: UpdateVehicleRequest = {
-          ...payload,
+          name: payload.name,
+          type: payload.type,
+          registrationNumber: payload.registrationNumber,
+          document: payload.document,
+          site: payload.site,
         }
 
         await updateVehicle(editingVehicleId, updatePayload)

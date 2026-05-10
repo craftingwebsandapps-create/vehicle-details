@@ -4,20 +4,28 @@ import { FileUploadField } from "~/components/form/FileUploadField"
 import type { DriverFormValues } from "~/types/driver"
 import type { FormConfig } from "~/types/form-builder"
 
-const STATUS_OPTIONS = [
-  { label: "ACTIVE", value: "ACTIVE" },
-  { label: "INACTIVE", value: "INACTIVE" },
-]
-
-const getDriverDialogSchema = (isEditMode: boolean) =>
+const getDriverDialogSchema = () =>
   z.object({
-    name: z.string().trim().min(2, "Driver name must be at least 2 characters"),
+    name: z
+      .string()
+      .trim()
+      .min(1, "Driver name is required")
+      .max(200, "Driver name must be at most 200 characters"),
     licenceNumber: z
       .string()
       .trim()
-      .min(3, "Licence number must be at least 3 characters"),
+      .min(1, "Licence number is required")
+      .max(80, "Licence number must be at most 80 characters"),
     licenceUrl: z
-      .union([z.string().trim().min(1), z.instanceof(File)])
+      .union([
+        z
+          .string()
+          .trim()
+          .min(1)
+          .max(2048, "Licence URL is too long")
+          .url("Enter a valid licence URL"),
+        z.instanceof(File),
+      ])
       .refine(
         (v) => v instanceof File || (typeof v === "string" && v.length > 0),
         {
@@ -27,17 +35,17 @@ const getDriverDialogSchema = (isEditMode: boolean) =>
     mobileNumber: z
       .string()
       .trim()
-      .regex(/^\d{10}$/, "Mobile number must be 10 digits"),
-    contractor: z.string().trim().optional().default(""),
-    status: z.enum(["ACTIVE", "INACTIVE"]),
+      .transform((v) => v.replace(/\s+/g, ""))
+      .refine((v) => /^\+?[0-9]{8,15}$/.test(v), "Enter a valid mobile number"),
+    contractor: z.string().trim().optional(),
   })
 
 export const getDriverDialogFormConfig = (
-  isEditMode: boolean
+  _isEditMode: boolean
 ): FormConfig<DriverFormValues> => ({
   id: "driver-dialog-form",
-  schema: getDriverDialogSchema(isEditMode),
-  submitLabel: isEditMode ? "Update" : "Create",
+  schema: getDriverDialogSchema(),
+  submitLabel: _isEditMode ? "Update" : "Create",
   resetLabel: "Reset",
   gridColumns: 12,
   fields: [
@@ -48,7 +56,7 @@ export const getDriverDialogFormConfig = (
       placeholder: "Enter driver name",
       validation: {
         required: "Driver name is required",
-        minLength: 2,
+        maxLength: 200,
       },
       grid: { colSpan: 12 },
     },
@@ -59,6 +67,7 @@ export const getDriverDialogFormConfig = (
       placeholder: "Enter licence number",
       validation: {
         required: "Licence number is required",
+        maxLength: 80,
       },
       grid: { colSpan: 12 },
     },
@@ -66,10 +75,10 @@ export const getDriverDialogFormConfig = (
       type: "text",
       name: "mobileNumber",
       label: "Mobile number",
-      placeholder: "Enter mobile number",
+      placeholder: "e.g. +447911123456",
       validation: {
         required: "Mobile number is required",
-        pattern: /^\d{10}$/,
+        pattern: /^\+?[0-9\s]{8,22}$/,
       },
       grid: { colSpan: 12 },
     },
@@ -77,17 +86,6 @@ export const getDriverDialogFormConfig = (
       type: "hidden",
       name: "contractor",
       defaultValue: "",
-    },
-    {
-      type: "select",
-      name: "status",
-      label: "Status",
-      placeholder: "Select status",
-      options: STATUS_OPTIONS,
-      validation: {
-        required: "Status is required",
-      },
-      grid: { colSpan: 12 },
     },
     {
       type: "text",

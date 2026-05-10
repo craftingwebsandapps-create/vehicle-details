@@ -1,6 +1,6 @@
 import { getAccessToken } from "~/features/auth/auth-storage"
+import { uploadAuthenticatedFile } from "~/features/files/api"
 import { apiClient } from "~/services/api-client"
-import { API_BASE_URL } from "~/utils/constants"
 
 import type {
   CreateDriverRequest,
@@ -10,7 +10,6 @@ import type {
   ListDriversParams,
   DriverMeta,
   UpdateDriverRequest,
-  UploadSingleFileResponse,
 } from "~/types/driver"
 
 type DriverApiResponse = {
@@ -217,7 +216,7 @@ export const updateDriver = async (
   const response = await apiClient.request<DriverApiResponse>(
     `${CONTRACTOR_V1_PREFIX}/drivers/${driverId}`,
     {
-      method: "PUT",
+      method: "PATCH",
       body: JSON.stringify(payload),
       headers: {
         Authorization: `Bearer ${accessToken}`,
