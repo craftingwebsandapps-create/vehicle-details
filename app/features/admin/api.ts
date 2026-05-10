@@ -6,8 +6,6 @@ import { mapPlatformVehiclePayload } from "~/features/admin/vi-normalize"
 import type { PlatformDriverRecord } from "~/types/platform-driver"
 import type { PlatformSiteRecord } from "~/types/platform-site"
 import type {
-  ContractorsListResponse,
-  ListContractorsParams,
   ListPlatformDriversParams,
   ListPlatformSitesParams,
   ListPlatformVehiclesParams,
@@ -35,30 +33,7 @@ const getAuthToken = () => {
   return accessToken
 }
 
-/** GET /api/contractors — superadmin sees all tenants; tenant JWT scoped to own contractor. */
-export const listContractors = async (
-  params?: ListContractorsParams
-): Promise<ContractorsListResponse> => {
-  const token = getAuthToken()
-  const query = new URLSearchParams()
-  if (params?.page) query.set("page", String(params.page))
-  if (params?.limit) query.set("limit", String(params.limit))
-  if (params?.search) query.set("search", params.search)
-
-  const qs = query.toString()
-  const url = qs ? `/contractors?${qs}` : "/contractors"
-
-  const response = await apiClient.getWithAuth<ContractorsListResponse>(
-    url,
-    token
-  )
-
-  if (!response.success) {
-    throw new Error("Unable to fetch contractors")
-  }
-
-  return response
-}
+export { listContractors } from "~/features/admin/contractors-admin-api"
 
 /** GET /api/vehicles — enriched rows. Omit `contractor` for superadmin to list all tenants (backend permitting). */
 export const listPlatformVehicles = async (

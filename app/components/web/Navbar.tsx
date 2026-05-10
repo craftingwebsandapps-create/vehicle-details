@@ -1,6 +1,6 @@
 import { Link, NavLink } from "react-router"
 
-import { cn } from "~/app/lib/utils"
+import { cn } from "~/lib/utils"
 
 const navLinks = [
   { to: "/web", label: "Home" },

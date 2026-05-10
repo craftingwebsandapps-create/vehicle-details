@@ -18,6 +18,7 @@ import {
   Car,
   MapPin,
   Building2,
+  UserCog,
   LogOut,
   ChevronUp,
   User2,
@@ -29,12 +30,13 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu"
 import { useLocation, Link, useNavigate } from "react-router"
-import { useAppDispatch } from "~/app/hooks"
+import { useAppDispatch } from "~/hooks"
 import { signOut } from "~/features/auth/authSlice"
 
 const navItems = [
   { title: "Dashboard", url: "/admin/dashboard", icon: Home },
   { title: "Contractors", url: "/admin/contractors", icon: Building2 },
+  { title: "Users", url: "/admin/users", icon: UserCog },
   { title: "Vehicles", url: "/admin/vehicles", icon: Car },
   { title: "Drivers", url: "/admin/drivers", icon: Users },
   { title: "Sites", url: "/admin/sites", icon: MapPin },

@@ -6,9 +6,13 @@ import {
   UserSquare2,
 } from "lucide-react"
 
-export const API_BASE_URL =
+const rawApiUrl =
+  import.meta.env.VITE_API_URL ??
   import.meta.env.VITE_API_BASE_URL ??
   "https://vi-backend.theamaravaticity.com/api"
+
+/** Base URL for `/auth/*`, `/contractors`, etc. (no trailing slash). */
+export const API_BASE_URL = rawApiUrl.replace(/\/+$/, "")
 
 export const QUERY_KEYS = {
   vehicles: ["mobile", "vehicles"] as const,

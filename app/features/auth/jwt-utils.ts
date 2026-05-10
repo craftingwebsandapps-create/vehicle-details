@@ -42,3 +42,29 @@ export function getContractorIdFromAccessToken(
   }
   return null
 }
+
+/** Current user Mongo id from JWT (UX only); used e.g. to block self-delete. */
+export function getUserIdFromAccessToken(
+  accessToken: string | null | undefined
+): string | null {
+  if (!accessToken?.trim()) {
+    return null
+  }
+  const payload = decodeJwtPayload(accessToken.trim())
+  if (!payload) {
+    return null
+  }
+  const candidates = [
+    payload.userId,
+    payload.user_id,
+    payload.sub,
+    payload.id,
+    payload._id,
+  ]
+  for (const c of candidates) {
+    if (typeof c === "string" && OBJECT_ID_HEX.test(c)) {
+      return c
+    }
+  }
+  return null
+}

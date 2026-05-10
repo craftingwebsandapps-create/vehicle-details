@@ -7,6 +7,7 @@ import {
   setRefreshToken,
 } from "~/features/auth/auth-storage"
 import type { RefreshTokenApiResponse } from "~/features/auth/types"
+import { ApiRequestError } from "~/services/api-error"
 
 type RequestOptions = RequestInit & {
   timeoutMs?: number
@@ -32,11 +33,14 @@ class ApiClient {
   private async parseErrorBody(response: Response): Promise<never> {
     const text = await response.text()
     let message = `Request failed with status ${response.status}`
+    let code: string | undefined
     try {
       const parsed = JSON.parse(text) as {
+        success?: boolean
         error?: { message?: string; code?: string }
         message?: string
       }
+      code = parsed?.error?.code
       if (parsed?.error?.message) {
         message = parsed.error.message
       } else if (typeof parsed?.message === "string") {
@@ -45,7 +49,10 @@ class ApiClient {
     } catch {
       // ignore
     }
-    throw new Error(message)
+    throw new ApiRequestError(message, {
+      status: response.status,
+      code,
+    })
   }
 
   private handleSessionExpired() {
@@ -55,8 +62,11 @@ class ApiClient {
       return
     }
 
-    if (window.location.pathname !== "/mobile/login") {
-      window.location.replace("/mobile/login")
+    const path = window.location.pathname
+    const login = path.startsWith("/admin") ? "/admin/login" : "/mobile/login"
+
+    if (path !== login) {
+      window.location.replace(login)
     }
   }
 

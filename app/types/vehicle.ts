@@ -3,6 +3,7 @@ export type ApprovalStatus = "PENDING_APPROVAL" | "APPROVED" | "REJECTED"
 
 /** Populated work-type refs from GET /api/contractors when expanded server-side */
 export type ContractorWorkTypeRef = {
+  _id?: string
   name: string
   code: string
 }

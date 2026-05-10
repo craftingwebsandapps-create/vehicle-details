@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { ClipboardList, UserSquare2 } from "lucide-react"
 import { toast } from "sonner"
 
-import { useAppDispatch, useAppSelector } from "~/app/hooks"
+import { useAppDispatch, useAppSelector } from "~/hooks"
 import {
   OpsActionSheet,
   OpsCard,

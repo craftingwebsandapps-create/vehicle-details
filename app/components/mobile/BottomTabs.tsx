@@ -1,6 +1,6 @@
 import { NavLink } from "react-router"
 
-import { cn } from "~/app/lib/utils"
+import { cn } from "~/lib/utils"
 import { MOBILE_TABS } from "~/utils/constants"
 
 export default function BottomTabs() {

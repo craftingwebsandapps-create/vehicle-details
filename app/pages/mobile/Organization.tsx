@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Building2, Pencil, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
-import { useAppSelector } from "~/app/hooks"
+import { useAppSelector } from "~/hooks"
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert"
 import { Button } from "~/components/ui/button"
 import {

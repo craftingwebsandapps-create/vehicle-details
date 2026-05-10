@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react"
 import { Navigate, useNavigate } from "react-router"
 
-import { useAppDispatch, useAppSelector } from "~/app/hooks"
+import { useAppDispatch, useAppSelector } from "~/hooks"
 import { Button } from "~/components/ui/button"
 import { Input } from "~/components/ui/input"
 import { loginMobileThunk } from "~/features/auth/authSlice"

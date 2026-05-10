@@ -6,11 +6,12 @@ export type MobileLoginPayload = {
 export type MobileLoginResponse = {
   accessToken: string
   refreshToken: string
+  expiresIn?: number
 }
 
 export type MobileLoginApiResponse = {
   success: boolean
-  message: string
+  message?: string
   data: MobileLoginResponse
 }
 
