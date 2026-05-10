@@ -64,6 +64,7 @@ export const toDriver = (entity: DriverApiEntity): Driver => ({
   approvalNote: entity.approvalNote,
   approvedAt: entity.approvedAt,
   rejectedAt: entity.rejectedAt,
+  approvedBy: entity.approvedBy,
   deletedAt: entity.deletedAt,
   licenceUrl: entity.licenceUrl,
   contractor: (() => {
@@ -80,19 +81,36 @@ export const toDriver = (entity: DriverApiEntity): Driver => ({
   })(),
   site: (() => {
     const siteRef = normalizeEntityRef(entity.site)
-
-    if (!siteRef) {
-      return undefined
+    if (siteRef) {
+      return {
+        id: siteRef.id,
+        name: siteRef.name,
+        location: (siteRef.raw as { location?: string }).location,
+      }
     }
 
-    return {
-      id: siteRef.id,
-      name: siteRef.name,
-      location: (siteRef.raw as { location?: string }).location,
+    const assigned = entity.assignedVehicle
+    if (
+      assigned &&
+      typeof assigned === "object" &&
+      assigned.site &&
+      typeof assigned.site === "object"
+    ) {
+      const nested = normalizeEntityRef(assigned.site)
+      if (nested) {
+        return {
+          id: nested.id,
+          name: nested.name,
+          location: (nested.raw as { location?: string }).location,
+        }
+      }
     }
+
+    return undefined
   })(),
   vehicle: (() => {
-    const vehicleRef = normalizeEntityRef(entity.vehicle)
+    const vehicleSource = entity.vehicle ?? entity.assignedVehicle
+    const vehicleRef = normalizeEntityRef(vehicleSource)
 
     if (!vehicleRef) {
       return undefined

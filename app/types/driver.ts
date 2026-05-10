@@ -13,6 +13,7 @@ export type Driver = {
   approvalNote?: string | null
   approvedAt?: string | null
   rejectedAt?: string | null
+  approvedBy?: string | null
   deletedAt?: string | null
   licenceUrl?: string
   contractor?: {
@@ -66,6 +67,16 @@ export type DriverVehicleApiEntity = {
   status?: string
 }
 
+/** Current vehicle assignment from enriched GET /api/drivers rows */
+export type DriverAssignedVehicleApiEntity = DriverVehicleApiEntity & {
+  document?: string
+  site?: string | DriverSiteApiEntity
+  approvalStatus?: string
+  approvalNote?: string | null
+  approvedAt?: string | null
+  rejectedAt?: string | null
+}
+
 export type DriverApiEntity = {
   id?: string
   _id?: string
@@ -78,11 +89,14 @@ export type DriverApiEntity = {
   approvalNote?: string | null
   approvedAt?: string | null
   rejectedAt?: string | null
+  approvedBy?: string | null
   deletedAt?: string | null
   licenceUrl?: string
   contractor?: string | DriverContractorApiEntity
   site?: string | DriverSiteApiEntity
   vehicle?: string | DriverVehicleApiEntity
+  /** Backend may send this instead of (or alongside) `vehicle` */
+  assignedVehicle?: string | DriverAssignedVehicleApiEntity
   createdAt?: string
   updatedAt?: string
 }

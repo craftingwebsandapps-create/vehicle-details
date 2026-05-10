@@ -1,6 +1,5 @@
 import { useEffect } from "react"
-import { Link } from "react-router"
-import { Car, MapPin, RefreshCw, Users, Briefcase } from "lucide-react"
+import { Car, MapPin, RefreshCw, Users } from "lucide-react"
 
 import { useAppDispatch, useAppSelector } from "~/hooks"
 import { fetchDashboardThunk } from "~/features/dashboard/dashboardSlice"
@@ -173,23 +172,6 @@ export default function Dashboard() {
               accentClass="bg-emerald-100 text-emerald-600"
             />
           </section>
-
-          <Link
-            to="/mobile/organization"
-            className="block rounded-2xl border border-border/60 bg-card p-4 text-sm text-foreground shadow-sm transition-colors hover:border-primary/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="font-medium">Organization</p>
-                <p className="text-xs text-muted-foreground">
-                  View contractor profile details
-                </p>
-              </div>
-              <div className="rounded-lg bg-muted p-2 text-muted-foreground">
-                <Briefcase className="size-4" />
-              </div>
-            </div>
-          </Link>
         </>
       ) : null}
     </div>
