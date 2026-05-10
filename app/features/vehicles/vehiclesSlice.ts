@@ -79,7 +79,7 @@ const vehiclesSlice = createSlice({
       })
       .addCase(fetchVehiclesThunk.fulfilled, (state, action) => {
         state.status = "succeeded"
-        state.items = action.payload.response.data.data
+        state.items = action.payload.response.data.items
         state.currentFilters = action.payload.filters
         state.currentPage = action.payload.response.data.meta.page
         state.hasNextPage =
@@ -98,7 +98,7 @@ const vehiclesSlice = createSlice({
       })
       .addCase(fetchMoreVehiclesThunk.fulfilled, (state, action) => {
         state.loadMoreStatus = "succeeded"
-        state.items = [...state.items, ...action.payload.data.data]
+        state.items = [...state.items, ...action.payload.data.items]
         state.currentPage = action.payload.data.meta.page
         state.hasNextPage =
           action.payload.data.meta.page < action.payload.data.meta.totalPages

@@ -1,3 +1,4 @@
+import { mapPlatformVehiclePayload } from "~/features/admin/vi-normalize"
 import { getAccessToken } from "~/features/auth/auth-storage"
 import { apiClient } from "~/services/api-client"
 import { API_BASE_URL } from "~/utils/constants"
@@ -22,6 +23,21 @@ type VehicleApiResponse = {
 }
 
 const CONTRACTOR_V1_PREFIX = "/v1/contractor"
+
+function toVehicleApprovalQuery(
+  v: ListVehiclesParams["approvalStatus"]
+): string | undefined {
+  if (v === undefined) return undefined
+  if (typeof v !== "string") return undefined
+  const lower = v.toLowerCase()
+  if (lower === "pending" || lower === "approved" || lower === "rejected") {
+    return lower
+  }
+  if (v === "PENDING_APPROVAL") return "pending"
+  if (v === "APPROVED") return "approved"
+  if (v === "REJECTED") return "rejected"
+  return undefined
+}
 
 const getAuthToken = () => {
   const accessToken = getAccessToken()
@@ -73,6 +89,24 @@ export const listAvailableVehicles = async (params?: {
   }
 }
 
+type VehiclesListApiEnvelope = {
+  success: boolean
+  message?: string
+  data?: {
+    items?: unknown[]
+    data?: unknown[]
+    meta?: {
+      page: number
+      limit: number
+      total: number
+      totalPages: number
+      hasNextPage?: boolean
+      hasPrevPage?: boolean
+    }
+  }
+  error?: { message?: string; code?: string }
+}
+
 export const listVehicles = async (
   params?: ListVehiclesParams
 ): Promise<VehicleListResponse> => {
@@ -80,30 +114,55 @@ export const listVehicles = async (
   const query = new URLSearchParams()
   if (params?.page) query.set("page", String(params.page))
   if (params?.limit) query.set("limit", String(params.limit))
-  if (params?.search) query.set("search", params.search)
-  if (params?.name) query.set("name", params.name)
-  if (params?.site) query.set("site", params.site)
-  if (params?.type) query.set("type", params.type)
-  if (params?.registrationNumber) {
-    query.set("registrationNumber", params.registrationNumber)
+  if (params?.search?.trim()) query.set("search", params.search.trim())
+  if (params?.name?.trim()) query.set("name", params.name.trim())
+  if (params?.site?.trim()) query.set("site", params.site.trim())
+  if (params?.type?.trim()) query.set("type", params.type.trim())
+  if (params?.registrationNumber?.trim()) {
+    query.set("registrationNumber", params.registrationNumber.trim())
   }
   if (params?.status) query.set("status", params.status)
-  if (params?.approvalStatus) {
-    query.set("approvalStatus", params.approvalStatus)
-  }
+  const approvalQs = toVehicleApprovalQuery(params?.approvalStatus)
+  if (approvalQs) query.set("approvalStatus", approvalQs)
 
   const queryString = query.toString()
-  const url = queryString
-    ? `${CONTRACTOR_V1_PREFIX}/vehicles?${queryString}`
-    : `${CONTRACTOR_V1_PREFIX}/vehicles`
+  const url = queryString ? `/vehicles?${queryString}` : "/vehicles"
 
-  const response = await apiClient.getWithAuth<VehicleListResponse>(url, token)
+  const response = await apiClient.getWithAuth<VehiclesListApiEnvelope>(
+    url,
+    token
+  )
 
-  if (!response.success) {
-    throw new Error(response.message || "Unable to fetch vehicles")
+  if (!response.success || !response.data?.meta) {
+    throw new Error(response.error?.message || "Unable to fetch vehicles")
   }
 
-  return response
+  const rawItems = Array.isArray(response.data.items)
+    ? response.data.items
+    : Array.isArray(response.data.data)
+      ? response.data.data
+      : []
+
+  const items = rawItems.map((row) =>
+    mapPlatformVehiclePayload(row as Record<string, unknown>)
+  )
+
+  const { meta } = response.data
+  const hasNextPage =
+    meta.hasNextPage ?? meta.page < meta.totalPages
+
+  return {
+    success: true,
+    message: response.message,
+    data: {
+      items,
+      meta: {
+        ...meta,
+        hasNextPage,
+        hasPrevPage: meta.hasPrevPage ?? meta.page > 1,
+      },
+    },
+  }
 }
 
 export const createVehicle = async (

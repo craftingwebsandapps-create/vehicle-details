@@ -1,15 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { ExternalLink, Fuel, Pencil, Phone } from "lucide-react"
+import { ExternalLink, Pencil, Phone } from "lucide-react"
 import { toast } from "sonner"
 
 import { useAppDispatch, useAppSelector } from "~/hooks"
 import {
-  OpsActionSheet,
   OpsApprovalPill,
   OpsCard,
   OpsEmptyState,
-  OpsFloatingFilterButton,
   OpsListHeader,
   OpsListSkeleton,
   OpsStatusPill,
@@ -48,15 +46,7 @@ const initialFormState: VehicleFormValues = {
   site: "",
 }
 
-type VehicleSegment = "all" | "active" | "inactive" | "assigned"
 type VehicleApprovalFilter = "all" | ApprovalStatus
-
-const VEHICLE_SEGMENTS: Array<{ label: string; value: VehicleSegment }> = [
-  { label: "All", value: "all" },
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-  { label: "Assigned", value: "assigned" },
-]
 
 const VEHICLE_APPROVAL_FILTERS: Array<{
   label: string
@@ -88,10 +78,8 @@ export default function Vehicles() {
 
   const [query, setQuery] = useState("")
   const [debouncedQuery, setDebouncedQuery] = useState("")
-  const [segment, setSegment] = useState<VehicleSegment>("all")
   const [approvalFilter, setApprovalFilter] =
     useState<VehicleApprovalFilter>("all")
-  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
@@ -100,12 +88,6 @@ export default function Vehicles() {
     [dialogMode, sites]
   )
 
-  const serverStatusFilter =
-    segment === "active"
-      ? "ACTIVE"
-      : segment === "inactive"
-        ? "INACTIVE"
-        : undefined
   const serverApprovalFilter =
     approvalFilter === "all" ? undefined : approvalFilter
 
@@ -120,12 +102,11 @@ export default function Vehicles() {
   useEffect(() => {
     void dispatch(
       fetchVehiclesThunk({
-        status: serverStatusFilter,
         approvalStatus: serverApprovalFilter,
         search: debouncedQuery || undefined,
       })
     )
-  }, [dispatch, serverStatusFilter, serverApprovalFilter, debouncedQuery])
+  }, [dispatch, serverApprovalFilter, debouncedQuery])
 
   useEffect(() => {
     void dispatch(
@@ -142,15 +123,6 @@ export default function Vehicles() {
           ? vehicle.site
           : (vehicle.site?.name ?? "")
 
-      const matchesSegment =
-        segment === "all"
-          ? true
-          : segment === "active"
-            ? vehicle.status === "ACTIVE"
-            : segment === "inactive"
-              ? vehicle.status === "INACTIVE"
-              : Boolean(vehicle.driver?.name)
-
       const matchesSearch =
         term.length === 0
           ? true
@@ -159,9 +131,9 @@ export default function Vehicles() {
               .toLowerCase()
               .includes(term)
 
-      return matchesSegment && matchesSearch
+      return matchesSearch
     })
-  }, [vehicles, query, segment])
+  }, [vehicles, query])
 
   useEffect(() => {
     const node = loadMoreRef.current
@@ -189,7 +161,6 @@ export default function Vehicles() {
   const refreshVehicles = () => {
     void dispatch(
       fetchVehiclesThunk({
-        status: serverStatusFilter,
         approvalStatus: serverApprovalFilter,
         search: debouncedQuery || undefined,
       })
@@ -267,7 +238,6 @@ export default function Vehicles() {
 
       await dispatch(
         fetchVehiclesThunk({
-          status: serverStatusFilter,
           approvalStatus: serverApprovalFilter,
           search: debouncedQuery || undefined,
         })
@@ -305,9 +275,9 @@ export default function Vehicles() {
         createLabel="Create"
         onCreate={openCreateDialog}
         onRefresh={refreshVehicles}
-        segments={VEHICLE_SEGMENTS}
-        activeSegment={segment}
-        onSegmentChange={setSegment}
+        segments={[{ label: "All", value: "all" }]}
+        activeSegment="all"
+        onSegmentChange={() => {}}
         approvalSegments={VEHICLE_APPROVAL_FILTERS}
         activeApprovalSegment={approvalFilter}
         onApprovalSegmentChange={setApprovalFilter}
@@ -462,27 +432,6 @@ export default function Vehicles() {
         </section>
       ) : null}
 
-      <OpsFloatingFilterButton onClick={() => setIsFilterSheetOpen(true)} />
-
-      <OpsActionSheet
-        open={isFilterSheetOpen}
-        onOpenChange={setIsFilterSheetOpen}
-        title="Vehicle Filters"
-        actions={[
-          ...VEHICLE_SEGMENTS.map((item) => ({
-            key: `segment-${item.value}`,
-            label: `${item.label}${segment === item.value ? " • selected" : ""}`,
-            icon: Fuel,
-            onClick: () => setSegment(item.value),
-          })),
-          ...VEHICLE_APPROVAL_FILTERS.map((item) => ({
-            key: `approval-${item.value}`,
-            label: `${item.label}${approvalFilter === item.value ? " • selected" : ""}`,
-            icon: Fuel,
-            onClick: () => setApprovalFilter(item.value),
-          })),
-        ]}
-      />
     </div>
   )
 }

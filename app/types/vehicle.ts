@@ -103,12 +103,19 @@ export type VehicleMeta = {
   hasPrevPage: boolean
 }
 
+/** Normalized contractor/admin list envelope after GET /api/vehicles */
 export type VehicleListResponse = {
   success: boolean
-  message: string
+  message?: string
   data: {
-    data: Vehicle[]
-    meta: VehicleMeta
+    items: Vehicle[]
+    meta: Pick<
+      VehicleMeta,
+      "total" | "page" | "limit" | "totalPages"
+    > & {
+      hasNextPage?: boolean
+      hasPrevPage?: boolean
+    }
   }
 }
 
@@ -121,7 +128,8 @@ export type ListVehiclesParams = {
   type?: string
   registrationNumber?: string
   status?: VehicleStatus
-  approvalStatus?: ApprovalStatus
+  /** Sent as lowercase pending|approved|rejected when querying /api/vehicles */
+  approvalStatus?: ApprovalStatus | "pending" | "approved" | "rejected"
 }
 
 export type VehicleUpsertRequest = {
