@@ -1,5 +1,14 @@
 import { getAccessToken } from "~/features/auth/auth-storage"
 import { apiClient } from "~/services/api-client"
+import { mapPlatformVehiclePayload } from "~/features/admin/vi-normalize"
+import type {
+  ContractorsListResponse,
+  ListContractorsParams,
+  ListPlatformVehiclesParams,
+  PlatformVehiclesListResponse,
+  ViPaginatedMeta,
+} from "~/types/vi-platform"
+import type { Vehicle } from "~/types/vehicle"
 
 const ADMIN_API_PREFIX = "/admin"
 
@@ -15,6 +24,62 @@ const getAuthToken = () => {
     throw new Error("Access token is required")
   }
   return accessToken
+}
+
+/** GET /api/contractors — superadmin sees all tenants; tenant JWT scoped to own contractor. */
+export const listContractors = async (
+  params?: ListContractorsParams
+): Promise<ContractorsListResponse> => {
+  const token = getAuthToken()
+  const query = new URLSearchParams()
+  if (params?.page) query.set("page", String(params.page))
+  if (params?.limit) query.set("limit", String(params.limit))
+  if (params?.search) query.set("search", params.search)
+
+  const qs = query.toString()
+  const url = qs ? `/contractors?${qs}` : "/contractors"
+
+  const response = await apiClient.getWithAuth<ContractorsListResponse>(
+    url,
+    token
+  )
+
+  if (!response.success) {
+    throw new Error("Unable to fetch contractors")
+  }
+
+  return response
+}
+
+/** GET /api/vehicles — enriched rows. Omit `contractor` for superadmin to list all tenants (backend permitting). */
+export const listPlatformVehicles = async (
+  params?: ListPlatformVehiclesParams
+): Promise<{ items: Vehicle[]; meta: ViPaginatedMeta }> => {
+  const token = getAuthToken()
+  const query = new URLSearchParams()
+  if (params?.page) query.set("page", String(params.page))
+  if (params?.limit) query.set("limit", String(params.limit))
+  if (params?.search) query.set("search", params.search)
+  if (params?.contractor?.trim()) {
+    query.set("contractor", params.contractor.trim())
+  }
+  if (params?.site) query.set("site", params.site)
+
+  const qs = query.toString()
+  const url = qs ? `/vehicles?${qs}` : "/vehicles"
+
+  const response =
+    await apiClient.getWithAuth<PlatformVehiclesListResponse>(url, token)
+
+  if (!response.success) {
+    throw new Error("Unable to fetch vehicles")
+  }
+
+  const items = response.data.items.map((row) =>
+    mapPlatformVehiclePayload(row)
+  )
+
+  return { items, meta: response.data.meta }
 }
 
 export const approveVehicle = async (vehicleId: string) => {

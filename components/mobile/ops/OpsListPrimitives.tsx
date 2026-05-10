@@ -170,14 +170,26 @@ export function OpsApprovalPill({
 }) {
   if (!status) return null
 
+  const normalized =
+    status === "APPROVED" ||
+    status.toLowerCase() === "approved"
+      ? "approved"
+      : status === "REJECTED" ||
+          status.toLowerCase() === "rejected"
+        ? "rejected"
+        : status === "PENDING_APPROVAL" ||
+            status.toLowerCase() === "pending"
+          ? "pending"
+          : "pending"
+
   const config =
-    status === "APPROVED"
+    normalized === "approved"
       ? {
           label: "Approved",
           dot: "bg-emerald-500",
           pill: "bg-emerald-500/10 text-emerald-700",
         }
-      : status === "REJECTED"
+      : normalized === "rejected"
         ? {
             label: "Rejected",
             dot: "bg-red-500",
