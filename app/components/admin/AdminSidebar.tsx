@@ -30,7 +30,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu"
-import { useLocation, Link } from "react-router"
+import { useLocation, Link, useNavigate } from "react-router"
+import { useAppDispatch } from "~/app/hooks"
+import { signOut } from "~/features/auth/authSlice"
 
 const navItems = [
   { title: "Dashboard", url: "/admin/dashboard", icon: Home },
@@ -47,6 +49,13 @@ const secondaryItems = [
 
 export function AdminSidebar() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const dispatch = useAppDispatch()
+
+  const handleLogout = () => {
+    dispatch(signOut())
+    navigate("/admin/login", { replace: true })
+  }
 
   return (
     <Sidebar collapsible="icon">
@@ -134,7 +143,7 @@ export function AdminSidebar() {
                   <Settings className="mr-2 size-4" />
                   Account Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 size-4 text-destructive" />
                   <span className="text-destructive">Log out</span>
                 </DropdownMenuItem>

@@ -2,9 +2,12 @@ import { lazy, Suspense } from "react"
 import type { RouteObject } from "react-router"
 
 import AdminLayout from "~/layouts/AdminLayout"
+import AdminAuthLayout from "~/layouts/AdminAuthLayout"
 import { PageLoader } from "~/components/ui/PageLoader"
+import { adminProtectedLoader } from "~/routes/protected-route"
 
 const AdminDashboard = lazy(() => import("~/pages/admin/AdminDashboard"))
+const AdminLogin = lazy(() => import("~/pages/admin/AdminLogin"))
 
 const withSuspense = (Component: React.ComponentType) => (
   <Suspense fallback={<PageLoader />}>
@@ -14,7 +17,13 @@ const withSuspense = (Component: React.ComponentType) => (
 
 export const adminRoutes: RouteObject[] = [
   {
+    path: "admin/login",
+    Component: AdminAuthLayout,
+    children: [{ index: true, element: withSuspense(AdminLogin) }],
+  },
+  {
     path: "admin",
+    loader: adminProtectedLoader,
     Component: AdminLayout,
     children: [
       { index: true, element: withSuspense(AdminDashboard) },
