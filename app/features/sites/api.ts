@@ -1,5 +1,6 @@
 import { getAccessToken } from "~/features/auth/auth-storage"
 import { apiClient } from "~/services/api-client"
+import { normalizeApprovalStatus } from "~/features/admin/vi-normalize"
 
 import type {
   CreateSiteRequest,
@@ -8,34 +9,33 @@ import type {
   UpdateSiteRequest,
 } from "~/features/sites/types"
 
-type SiteApiEntity = Omit<Site, "id"> & {
-  id?: string
-  _id?: string
-}
-
 type SitesMeta = {
-  total: number
   page: number
   limit: number
+  total: number
   totalPages: number
-  hasNextPage: boolean
-  hasPrevPage: boolean
 }
 
-type BaseSiteApiResponse<T> = {
+type ListSitesApiResponse = {
   success: boolean
-  message: string
-  data: T
+  data?: {
+    items: unknown[]
+    meta: SitesMeta
+  }
+  error?: { message?: string; code?: string }
 }
 
-type ListSitesApiResponse = BaseSiteApiResponse<{
-  data: SiteApiEntity[]
-  meta: SitesMeta
-}>
-
-type CreateOrUpdateSiteApiResponse = BaseSiteApiResponse<SiteApiEntity>
-
-const CONTRACTOR_V1_PREFIX = "/v1/contractor"
+function toApprovalStatusQuery(v: unknown): string | undefined {
+  if (typeof v !== "string") return undefined
+  const lower = v.toLowerCase()
+  if (lower === "pending" || lower === "approved" || lower === "rejected") {
+    return lower
+  }
+  if (v === "PENDING_APPROVAL") return "pending"
+  if (v === "APPROVED") return "approved"
+  if (v === "REJECTED") return "rejected"
+  return undefined
+}
 
 const getAuthToken = () => {
   const accessToken = getAccessToken()
@@ -47,16 +47,42 @@ const getAuthToken = () => {
   return accessToken
 }
 
-const toSite = (site: SiteApiEntity): Site => {
-  const id = site.id ?? site._id
+const toSite = (raw: unknown): Site => {
+  const site = raw as Record<string, unknown>
+  const id = (site.id ?? site._id) as string | undefined
 
-  if (!id) {
-    throw new Error("Site id is missing")
-  }
+  if (!id) throw new Error("Site id is missing")
+  const approvalStatus = normalizeApprovalStatus(site.approvalStatus)
 
   return {
-    ...site,
     id,
+    _id: typeof site._id === "string" ? site._id : undefined,
+    name: String(site.name ?? ""),
+    contractor: typeof site.contractor === "string" ? site.contractor : undefined,
+    contactPerson: String(site.contactPerson ?? ""),
+    mobileNumber: String(site.mobileNumber ?? ""),
+    email: String(site.email ?? ""),
+    location: String(site.location ?? ""),
+    status: (site.status as Site["status"]) ?? "ACTIVE",
+    approvalStatus: approvalStatus as Site["approvalStatus"],
+    approvedBy:
+      site.approvedBy === null || typeof site.approvedBy === "string"
+        ? (site.approvedBy as string | null)
+        : undefined,
+    approvedAt:
+      site.approvedAt === null || typeof site.approvedAt === "string"
+        ? (site.approvedAt as string | null)
+        : undefined,
+    rejectedNote:
+      site.rejectedNote === null || typeof site.rejectedNote === "string"
+        ? (site.rejectedNote as string | null)
+        : undefined,
+    deletedAt:
+      site.deletedAt === null || typeof site.deletedAt === "string"
+        ? (site.deletedAt as string | null)
+        : undefined,
+    createdAt: String(site.createdAt ?? ""),
+    updatedAt: String(site.updatedAt ?? ""),
   }
 }
 
@@ -81,23 +107,22 @@ export const listSites = async (params: ListSitesParams = {}) => {
   }
 
   if (params.approvalStatus) {
-    query.set("approvalStatus", params.approvalStatus)
+    const qs = toApprovalStatusQuery(params.approvalStatus)
+    if (qs) query.set("approvalStatus", qs)
   }
 
-  const path = query.toString()
-    ? `${CONTRACTOR_V1_PREFIX}/sites?${query.toString()}`
-    : `${CONTRACTOR_V1_PREFIX}/sites`
+  const path = query.toString() ? `/sites?${query.toString()}` : "/sites"
   const response = await apiClient.getWithAuth<ListSitesApiResponse>(
     path,
     accessToken
   )
 
-  if (!response.success || !response.data?.data) {
-    throw new Error(response.message || "Unable to fetch sites")
+  if (!response.success || !response.data?.items) {
+    throw new Error(response.error?.message || "Unable to fetch sites")
   }
 
   return {
-    items: response.data.data.map(toSite),
+    items: response.data.items.map(toSite),
     meta: response.data.meta,
   }
 }
@@ -105,18 +130,14 @@ export const listSites = async (params: ListSitesParams = {}) => {
 export const createSite = async (payload: CreateSiteRequest): Promise<Site> => {
   const accessToken = getAuthToken()
 
-  const response = await apiClient.post<CreateOrUpdateSiteApiResponse>(
-    `${CONTRACTOR_V1_PREFIX}/sites`,
+  const response = await apiClient.postWithAuth<{ success: boolean; data?: unknown }>(
+    "/sites",
     payload,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
+    accessToken
   )
 
   if (!response.success || !response.data) {
-    throw new Error(response.message || "Unable to create site")
+    throw new Error("Unable to create site")
   }
 
   return toSite(response.data)
@@ -132,8 +153,8 @@ export const updateSite = async (
     throw new Error("Site id is required")
   }
 
-  const response = await apiClient.request<CreateOrUpdateSiteApiResponse>(
-    `${CONTRACTOR_V1_PREFIX}/sites/${siteId}`,
+  const response = await apiClient.request<{ success: boolean; data?: unknown }>(
+    `/sites/${siteId}`,
     {
       method: "PUT",
       body: JSON.stringify(payload),
@@ -144,7 +165,7 @@ export const updateSite = async (
   )
 
   if (!response.success || !response.data) {
-    throw new Error(response.message || "Unable to update site")
+    throw new Error("Unable to update site")
   }
 
   return toSite(response.data)

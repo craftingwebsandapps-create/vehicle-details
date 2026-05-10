@@ -8,13 +8,19 @@ export interface PaginationParams {
 
 export interface Site {
   id: string
+  _id?: string
   name: string
+  contractor?: string
   contactPerson: string
   mobileNumber: string
   email: string
   location: string
   status: SiteStatus
   approvalStatus?: SiteApprovalStatus
+  approvedBy?: string | null
+  approvedAt?: string | null
+  rejectedNote?: string | null
+  deletedAt?: string | null
   createdAt: string
   updatedAt: string
 }
