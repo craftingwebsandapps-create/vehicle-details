@@ -4,7 +4,16 @@ import { VitePWA } from "vite-plugin-pwa"
 import { defineConfig } from "vite"
 import { visualizer } from "rollup-plugin-visualizer"
 
+/** Where the app is hosted (affects `/assets/...` URLs in `dist`). Root = `/`. */
+function viteBase(raw: string | undefined): string {
+  const v = (raw ?? "").trim()
+  if (!v || v === "/") return "/"
+  const lead = v.startsWith("/") ? v : `/${v}`
+  return lead.endsWith("/") ? lead : `${lead}/`
+}
+
 export default defineConfig({
+  base: viteBase(process.env.BASE_URL),
   plugins: [
     tailwindcss(),
     react(),
