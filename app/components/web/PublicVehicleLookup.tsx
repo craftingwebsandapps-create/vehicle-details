@@ -14,8 +14,10 @@ import {
   CardTitle,
 } from "~/components/ui/card"
 import { Input } from "~/components/ui/input"
-import { Skeleton } from "~/components/ui/skeleton"
-import { PublicVehicleDashboard } from "~/components/web/public-vehicle-dashboard"
+import {
+  PublicVehicleDashboard,
+  PublicVehicleDashboardSkeleton,
+} from "~/components/web/public-vehicle-dashboard"
 import { fetchPublicVehicleByRegistration } from "~/features/public/api"
 import { ApiRequestError } from "~/services/api-error"
 import type { PublicVehicleLookupData } from "~/types/public-vehicle"
@@ -189,25 +191,6 @@ export function PublicVehicleLookup() {
               </p>
             </div>
           </form>
-
-          {loading ? (
-            <div
-              role="status"
-              aria-live="polite"
-              aria-atomic="true"
-              className="space-y-3 rounded-xl border border-border/70 bg-muted/25 px-4 py-4"
-            >
-              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                <Loader2
-                  className="size-4 shrink-0 animate-spin text-primary"
-                  aria-hidden
-                />
-                Looking up registration…
-              </div>
-              <Skeleton className="h-11 w-full rounded-lg" />
-              <Skeleton className="h-11 w-4/5 max-w-md rounded-lg" />
-            </div>
-          ) : null}
         </CardContent>
       </Card>
 
@@ -237,6 +220,8 @@ export function PublicVehicleLookup() {
           </AlertDescription>
         </Alert>
       ) : null}
+
+      {loading ? <PublicVehicleDashboardSkeleton /> : null}
 
       {result && !error ? <PublicVehicleDashboard data={result} /> : null}
     </section>
