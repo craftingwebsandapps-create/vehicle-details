@@ -13,7 +13,6 @@ import {
 } from "~/components/ui/sidebar"
 import {
   Home,
-  Settings,
   Users,
   Car,
   MapPin,
@@ -23,15 +22,7 @@ import {
   ScrollText,
   QrCode,
   LogOut,
-  ChevronUp,
-  User2,
 } from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu"
 import { useLocation, Link, useNavigate } from "react-router"
 import { useAppDispatch } from "~/hooks"
 import { signOut } from "~/features/auth/authSlice"
@@ -73,13 +64,13 @@ export function AdminSidebar() {
                 className="min-w-0"
                 aria-label="Vehicle Info — Admin Portal. Go to dashboard."
               >
-                <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg group-data-[collapsible=icon]:size-8">
+                <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg group-data-[collapsible=icon]:size-8">
                   <img
                     src={`${import.meta.env.BASE_URL}logo.png`}
                     alt=""
-                    width={40}
-                    height={40}
-                    className="size-7 object-contain group-data-[collapsible=icon]:size-6"
+                    width={48}
+                    height={48}
+                    className="size-10 object-contain group-data-[collapsible=icon]:size-7"
                     decoding="async"
                   />
                 </div>
@@ -120,36 +111,15 @@ export function AdminSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  size="lg"
-                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                >
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                    <User2 className="size-4" />
-                  </div>
-                  <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="font-semibold">Administrator</span>
-                    <span className="text-xs text-muted-foreground">admin@example.com</span>
-                  </div>
-                  <ChevronUp className="ml-auto size-4" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="top"
-                className="w-(--radix-dropdown-menu-trigger-width)"
-              >
-                <DropdownMenuItem>
-                  <Settings className="mr-2 size-4" />
-                  Account Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 size-4 text-destructive" />
-                  <span className="text-destructive">Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <SidebarMenuButton
+              type="button"
+              tooltip="Log out"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={handleLogout}
+            >
+              <LogOut className="size-4" />
+              <span className="group-data-[collapsible=icon]:hidden">Log out</span>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

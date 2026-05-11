@@ -38,7 +38,17 @@ export default function Login() {
   }
 
   return (
-    <section className="rounded-[28px] border border-border/70 bg-background p-5 shadow-[0_20px_50px_-28px_rgba(15,23,42,0.5)] sm:p-6">
+    <section className="rounded-[28px] border border-border/70 bg-background p-5 sm:p-6">
+      <div className="mb-5 flex justify-center">
+        <img
+          src={`${import.meta.env.BASE_URL}logo.png`}
+          alt="Vehicle Information"
+          width={200}
+          height={80}
+          className="h-16 w-auto max-w-[12rem] object-contain sm:h-[4.5rem] sm:max-w-[14rem]"
+          decoding="async"
+        />
+      </div>
       <p className="text-xs tracking-[0.16em] text-muted-foreground uppercase">
         Mobile login
       </p>
