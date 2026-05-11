@@ -67,14 +67,27 @@ export function AdminSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link to="/admin/dashboard">
-                <div className="flex ">
-                  <img src="/logo.png" alt="Vehicle Info" className="w-10 h-auto" />
+            <SidebarMenuButton size="lg" asChild tooltip="Vehicle Info · Admin">
+              <Link
+                to="/admin/dashboard"
+                className="min-w-0"
+                aria-label="Vehicle Info — Admin Portal. Go to dashboard."
+              >
+                <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg group-data-[collapsible=icon]:size-8">
+                  <img
+                    src={`${import.meta.env.BASE_URL}logo.png`}
+                    alt=""
+                    width={40}
+                    height={40}
+                    className="size-7 object-contain group-data-[collapsible=icon]:size-6"
+                    decoding="async"
+                  />
                 </div>
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">Vehicle Info</span>
-                  <span className="text-xs text-muted-foreground">Admin Portal</span>
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
+                  <span className="truncate font-semibold">Vehicle Info</span>
+                  <span className="text-muted-foreground truncate text-xs">
+                    Admin Portal
+                  </span>
                 </div>
               </Link>
             </SidebarMenuButton>
