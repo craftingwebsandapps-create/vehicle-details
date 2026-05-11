@@ -69,8 +69,8 @@ export function AdminSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link to="/admin/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <Car className="size-4" />
+                <div className="flex ">
+                  <img src="/logo.png" alt="Vehicle Info" className="w-10 h-auto" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
                   <span className="font-semibold">Vehicle Info</span>
