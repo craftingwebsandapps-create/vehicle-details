@@ -4,6 +4,7 @@ import { Navigate, useNavigate } from "react-router"
 import { useAppDispatch, useAppSelector } from "~/hooks"
 import { Button } from "~/components/ui/button"
 import { Input } from "~/components/ui/input"
+import { PasswordField } from "~/components/ui/password-field"
 import { loginMobileThunk } from "~/features/auth/authSlice"
 import { routeAfterLogin } from "~/features/auth/post-login-route"
 import { getAccessToken } from "~/features/auth/auth-storage"
@@ -84,9 +85,8 @@ export default function AdminLogin() {
           >
             Password
           </label>
-          <Input
+          <PasswordField
             id="password"
-            type="password"
             autoComplete="current-password"
             placeholder="********"
             value={password}
