@@ -23,6 +23,11 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# ignore lock files
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
 # OS
 .DS_Store
 Thumbs.db
